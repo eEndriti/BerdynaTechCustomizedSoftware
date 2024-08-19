@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Button, Container, Row, Col, Table, Form } from "react-bootstrap";
 import SearchInput from "./SearchInput";
 import KerkoProduktin from "./KerkoProduktin";
-import { MdOutlineChangeCircle,MdDeleteForever  } from "react-icons/md";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; // Import the specific icon
 
 export default function Shitje() {
   const navigate = useNavigate();  
@@ -21,7 +22,15 @@ export default function Shitje() {
     const total = products.reduce((acc, product) => {
       const cmimiPerCope = parseFloat(product.cmimiPerCope) || 0;
       const sasiaShitjes = parseFloat(product.sasiaShitjes) || 0;
-      return acc + (cmimiPerCope * sasiaShitjes);
+      const cmimiBlerjes = parseFloat(product.cmimiBlerjes) || 0;
+
+      const totali = cmimiPerCope * sasiaShitjes;
+      const profit = totali - (cmimiBlerjes * sasiaShitjes);
+
+      // Store the profit in the product object (but don't display it)
+      product.profiti = profit;
+
+      return acc + totali;
     }, 0);
     setTotaliPerPagese(total);
   }, [products]);
@@ -65,6 +74,18 @@ export default function Shitje() {
   const handleAnulo = () => {
     navigate('/faqjaKryesore')
   }
+
+  const handleRegjistro = () => {
+    console.log(products)
+  }
+  const regjistroShitjenNeDatabaz = () =>{
+    
+  }
+  const handleDeleteRow = (index) => {
+    const updatedProducts = products.filter((_, i) => i !== index);
+    setProducts(updatedProducts);
+  };
+
   return (
     <Container fluid className="mt-2 d-flex flex-column" style={{ minHeight: "95vh" }}>
       <Row className="d-flex flex-row justify-content-between">
@@ -180,8 +201,10 @@ export default function Shitje() {
                         />
                       </td>
                       <td >
-                        <span><MdDeleteForever /></span>
-                      </td>
+                      <span className="text-danger  text-center" onClick={() => handleDeleteRow(index)} style={{ cursor: 'pointer' }}>
+                          {product.shifra && <FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} />}
+                        </span>                      
+                        </td>
                     </tr>
                   );
                 })}
@@ -213,7 +236,7 @@ export default function Shitje() {
       <Row className="section3 my-5 d-flex justify-content-end">
         <Col xs={12} md={6} className="d-flex justify-content-center align-items-end">
           <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleAnulo}>Anulo</Button>
-          <Button variant="success" size="lg" className="mx-2 fs-1" disabled={!selectedSubjekti.subjektiID} >Regjistro</Button>
+          <Button variant="success" size="lg" className="mx-2 fs-1" disabled={!(selectedSubjekti.subjektiID) || !(products.length>1)} onClick={handleRegjistro} >Regjistro</Button>
         </Col>
 
         <Col xs={12} md={6} className="d-flex flex-column align-items-end">
