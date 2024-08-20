@@ -9,13 +9,22 @@ import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; // Import the sp
 export default function Shitje() {
   const navigate = useNavigate();  
   const [llojiShitjes, setLlojiShitjes] = useState("dyqan");
-  const [menyraPageses, setMenyraPageses] = useState("");
+  const [menyraPagesesID, setMenyraPagesesID] = useState(0);
   const [selectedSubjekti, setSelectedSubjekti] = useState({ emertimi: "", kontakti: "", subjektiID: null });
   const [products, setProducts] = useState([{}]);
   const [showModal, setShowModal] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [totaliPerPagese, setTotaliPerPagese] = useState(0);
   const [totaliPageses, setTotaliPageses] = useState(0);
+  const [komentiShitjes,setKomentiShitjes] = useState('')
+  const [nrPorosise,setNrPorosise] = useState(0)
+  const [menyratPageses,setMenyratPageses] = useState([])
+
+  useEffect(() => {
+    window.api.fetchTableMenyratPageses().then(receivedData => {
+      setMenyratPageses(receivedData);
+    });
+  }, []);
 
   useEffect(() => {
     // Update the total per pagese whenever products change
@@ -52,9 +61,13 @@ export default function Shitje() {
     setShowModal(true);
   };
 
-  const handleButtonClick = (lloji) => {
+  const handleLlojiShitjesClick = (lloji) => {
     setLlojiShitjes(lloji);
     setTotaliPageses(0);
+  };
+  const handleMenyraPagesesID = (menyraPagesesID) => {
+    setMenyraPagesesID(menyraPagesesID);
+    console.log(products)
   };
 
   const handleSelectSubjekti = (result) => {
@@ -75,16 +88,52 @@ export default function Shitje() {
     navigate('/faqjaKryesore')
   }
 
-  const handleRegjistro = () => {
-    console.log(products)
-  }
-  const regjistroShitjenNeDatabaz = () =>{
+  const handleRegjistro = async () => {
+    const perdoruesiID = localStorage.getItem('perdoruesiID');
+  
+    // Prepare the data to be sent to the 'insert-transaksioni-and-shitje' function
+    if(perdoruesiID && menyraPagesesID){
+      const data = {
+        lloji: llojiShitjes,
+        komenti: komentiShitjes,
+        totaliPerPagese: totaliPerPagese,
+        totaliPageses: totaliPageses,
+        mbetjaPerPagese: mbetjaPerPagese,
+        dataShitjes: new Date().toISOString(),
+        nrPorosise: nrPorosise, 
+        menyraPagesesID: menyraPagesesID,
+        perdoruesiID: perdoruesiID,
+        subjektiID: selectedSubjekti.subjektiID,
+        nderrimiID: 1 ,
+        produktet:products
+      };
     
-  }
+      // Call the Electron API to insert both transaksioni and shitje
+      const result = await window.api.insertTransaksioniAndShitje(data);
+    
+      if (result.success) {
+        alert('Data inserted successfully');
+        navigate('/faqjaKryesore');
+      } else {
+        alert('Failed to insert data: ' + result.error);
+      }
+    }else{
+      alert('Ju Lutem Plotesoni te Gjitha Fushat!')
+    }
+    
+    }
+
   const handleDeleteRow = (index) => {
     const updatedProducts = products.filter((_, i) => i !== index);
     setProducts(updatedProducts);
   };
+  const handleKomentiShitjesChange = (event) =>{
+    setKomentiShitjes(event.target.value)
+  }
+
+  const handleNrPorosiseChange = (event) =>{
+    setNrPorosise(event.target.value)
+  }
 
   return (
     <Container fluid className="mt-2 d-flex flex-column" style={{ minHeight: "95vh" }}>
@@ -108,7 +157,7 @@ export default function Shitje() {
             variant={llojiShitjes === "dyqan" ? "primary" : "outline-primary"}
             size="lg"
             className="mx-1 w-25"
-            onClick={() => handleButtonClick("dyqan")}
+            onClick={() => handleLlojiShitjesClick("dyqan")}
           >
             Shitje ne Dyqan
           </Button>
@@ -116,7 +165,7 @@ export default function Shitje() {
             variant={llojiShitjes === "online" ? "primary" : "outline-primary"}
             size="lg"
             className="mx-1 w-25"
-            onClick={() => handleButtonClick("online")}
+            onClick={() => handleLlojiShitjesClick("online")}
           >
             Shitje Online
           </Button>
@@ -229,7 +278,7 @@ export default function Shitje() {
           <Button variant="primary" size="lg">Apliko Kestet</Button>
         </Col>
         <Col xs={12} md={6} className="d-flex justify-content-center">
-          <Form.Control as="textarea" rows={3} className="p-3" placeholder="Shkruaj komentin..." />
+          <Form.Control as="textarea" onChange={handleKomentiShitjesChange} rows={3} className="p-3" placeholder="Shkruaj komentin..." />
         </Col>
       </Row>
 
@@ -240,7 +289,7 @@ export default function Shitje() {
         </Col>
 
         <Col xs={12} md={6} className="d-flex flex-column align-items-end">
-          <div className="d-flex w-100 justify-content-end">
+          <div className="d-flex flex-column w-100 justify-content-end">
             <div className="d-flex flex-column w-100">
               <Form.Group as={Row} controlId="totaliPerPageseShuma" className="mb-2">
                 <Form.Label column xs={6} className="text-end">Totali Per Pagese:</Form.Label>
@@ -278,10 +327,21 @@ export default function Shitje() {
               <Form.Group as={Row} controlId="nrPorosiseShuma" className="mb-2">
               <Form.Label column xs={6} className="text-end">Nr. Porosise:</Form.Label>
               <Col xs={6}>
-                <Form.Control type="number" />
+                <Form.Control type="number" onChange={handleNrPorosiseChange} />
               </Col>
             </Form.Group>
             }
+            </div>
+            <div className="d-flex flex-row justify-content-end">
+              {menyratPageses.map((menyraPageses) => (
+                <Button
+                  key={menyraPageses.menyraPagesesID}
+                  onClick={() => handleMenyraPagesesID(menyraPageses.menyraPagesesID)}
+                  className={menyraPagesesID === menyraPageses.menyraPagesesID ? 'bg-primary mx-2' : 'mx-2 bg-transparent text-primary'}
+                >
+                  {menyraPageses.emertimi}
+                </Button>
+              ))}
             </div>
           </div>
         </Col>

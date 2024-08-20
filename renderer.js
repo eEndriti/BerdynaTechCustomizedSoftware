@@ -6,6 +6,8 @@ contextBridge.exposeInMainWorld('api', {
     fetchTableShitje: () => ipcRenderer.invoke('fetchTableShitje'),
     fetchTableServisi: () => ipcRenderer.invoke('fetchTableServisi'),
     fetchTableSubjekti: () => ipcRenderer.invoke('fetchTableSubjekti'),
-    fetchTableProdukti: () => ipcRenderer.invoke('fetchTableProdukti')
-
+    fetchTableProdukti: () => ipcRenderer.invoke('fetchTableProdukti'),
+    fetchTableMenyratPageses: () => ipcRenderer.invoke('fetchTableMenyratPageses'),
+    
+    insertTransaksioniAndShitje: (data) => ipcRenderer.invoke('insert-transaksioni-and-shitje', data) 
 });
