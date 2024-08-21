@@ -2,6 +2,8 @@ body {
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+   
+
 }
 *{
     font-size: 14px;
@@ -13,3 +15,20 @@ body {
 span{
     display:block;
 }
+.tabeleMeMaxHeight{
+    max-height: calc(7 * 2.5rem); /* Approximate height of 7 rows */
+    overflow-y: auto;
+}
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100% ;
+    
+  }
+  
+  .sidebar-content {
+    flex-grow: 1; /* Allow sidebar content to take up remaining space */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Space between items */
+  }

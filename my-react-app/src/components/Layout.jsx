@@ -30,25 +30,25 @@ function Layout() {
         </div>
       </div>
 
-      <Container fluid className='h-100'>
-      <Row className='h-100'>
+      <Container fluid >
+      <Row >
         {/* Sidebar */}
-        <Col xs={12} sm={4} md={2} className='bg-light d-flex flex-column h-100'>
+        <Col xs={12} sm={4} md={2} className='bg-light d-flex flex-column sidebar'>
           <div className='logo d-flex justify-content-center my-4'>
             <img className='w-75' src={logo} alt="logo" />
           </div>
-          <div className='butonat d-flex flex-column flex-grow-1 h-100 justify-content-between '>
-              <Link className='fs-4' to='/faqjaKryesore'>Kryefaqja</Link>
-              <Link className='fs-4' to='/shitje'>Shitje</Link>              
-              <Link className='fs-4' to='/shitje'>Shitje</Link>
-              <Link className='fs-4' to='/shitje'>Shitje</Link>
-              <Link className='fs-4' to='/shitje'>Shitje</Link>
-              <Link className='fs-4' to='/shitje'>Shitje</Link>
-              <Link className='fs-4' to='/shitje'>Shitje</Link>
-              <Link className='fs-4' to='/shitje'>Shitje</Link>
-              <Link className='fs-4' to='/shitje'>Shitje</Link>
-              <Link className='fs-4' to='/shitje'>Shitje</Link>
-              <Link className='fs-4' to='/shitje'>Shitje</Link>
+          <div className='sidebar-content d-flex flex-column mx-2'>
+            <Link className='fs-4' to='/faqjaKryesore'>Kryefaqja</Link>
+            <Link className='fs-4' to='/shitje'>Shitje</Link>              
+            <Link className='fs-4' to='/shpenzim'>Shpenzim</Link>
+            <Link className='fs-4' to='/shitje'>Blerje</Link>
+            <Link className='fs-4' to='/shitje'>Stoku</Link>
+            <Link className='fs-4' to='/shitje'>Klient</Link>
+            <Link className='fs-4' to='/shitje'>Furnitor</Link>
+            <Link className='fs-4' to='/shitje'>Nderrimet</Link>
+            <Link className='fs-4' to='/shitje'>Evidenca</Link>
+            <Link className='fs-4' to='/shitje'>Transaksionet</Link>
+            <Link className='fs-4' to='/shitje'>Parametrat</Link>
             <div className='current-url p-3'>
               <p>Current URL: {location.pathname}</p> {/* Display the current URL */}
             </div>
@@ -60,6 +60,7 @@ function Layout() {
           <Outlet />
         </Col>
       </Row>
+
     </Container>
     </div>
   );

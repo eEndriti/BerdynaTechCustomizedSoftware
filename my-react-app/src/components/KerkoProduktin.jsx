@@ -5,6 +5,7 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
   const [queryShifra, setQueryShifra] = useState("");
   const [queryEmertimi, setQueryEmertimi] = useState("");
   const [queryPershkrimi, setQueryPershkrimi] = useState("");
+  const [eliminoVleratZero, setEliminoVleratZero] = useState(true);
   const [results, setResults] = useState([]);
   const [produktet, setProduktet] = useState([]);
 
@@ -13,25 +14,30 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
     const fetchAndFilterData = async () => {
       const receivedData = await window.api.fetchTableProdukti();
       setProduktet(receivedData);
-      
+
       // Perform filtering
-      const filteredResults = receivedData.filter(
-        (item) =>
-          item.shifra.toLowerCase().includes(queryShifra.toLowerCase()) &&
-          item.emertimi.toLowerCase().includes(queryEmertimi.toLowerCase()) &&
-          item.pershkrimi.toLowerCase().includes(queryPershkrimi.toLowerCase())
-      );
+      const filteredResults = receivedData.filter((item) => {
+        const matchesShifra = item.shifra.toLowerCase().includes(queryShifra.toLowerCase());
+        const matchesEmertimi = item.emertimi.toLowerCase().includes(queryEmertimi.toLowerCase());
+        const matchesPershkrimi = item.pershkrimi.toLowerCase().includes(queryPershkrimi.toLowerCase());
+        const matchesSasia = eliminoVleratZero ? item.sasia > 0 : true;
+        return matchesShifra && matchesEmertimi && matchesPershkrimi && matchesSasia;
+      });
       setResults(filteredResults);
     };
 
     fetchAndFilterData();
-  }, [queryShifra, queryEmertimi, queryPershkrimi]); // Re-fetch data and filter results when filters change
+  }, [queryShifra, queryEmertimi, queryPershkrimi, eliminoVleratZero]); // Re-fetch data and filter results when filters change
 
   const handleSelect = (item) => {
-    item.cmimiPerCope = item.cmimiShitjes
-    item.sasiaShitjes = 1;
-    onSelect(item);  // Ensure the selected item is passed back to the parent
-    onHide();        // Close the modal after selection
+    item.cmimiPerCope = item.cmimiShitjes;
+    if(item.sasia > 0){
+      item.sasiaShitjes = 1;
+    }else{
+      item.sasiaShitjes = 0
+    }
+    onSelect(item); // Ensure the selected item is passed back to the parent
+    onHide(); // Close the modal after selection
   };
 
   return (
@@ -66,6 +72,14 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
               value={queryPershkrimi}
               onChange={(e) => setQueryPershkrimi(e.target.value)}
               placeholder="Kërko Pershkrimi..."
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Elimino Vlerat Zero</Form.Label>
+            <Form.Check
+              type="checkbox"
+              checked={eliminoVleratZero}
+              onChange={(e) => setEliminoVleratZero(e.target.checked)}
             />
           </Form.Group>
         </div>

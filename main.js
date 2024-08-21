@@ -257,30 +257,18 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
       .query(insertShitjeQuery);
 
     const shitjeID = shitjeResult.recordset[0].shitjeID;
-    console.log('in11')
 
     // Now insert into the 'shitjeProdukti' table with the retrieved 'shitjeID'
     const insertShitjeProduktiQuery = `
-      INSERT INTO shitjeProdukti (
-        shitjeID, produktiID, sasia, cmimiShitjesPerCope,totaliProduktit,komenti,profitiProduktit
-      ) VALUES (
-        @shitjeID, @produktiID, @sasia, @cmimiShitjesPerCope,@totaliProduktit,@komenti,@profitiProduktit
-      )
+    INSERT INTO shitjeProdukti (
+      shitjeID, produktiID, sasia, cmimiShitjesPerCope, totaliProduktit, komenti, profitiProduktit
+    ) VALUES (
+      @shitjeID, @produktiID, @sasia, @cmimiShitjesPerCope, @totaliProduktit, @komenti, @profitiProduktit
+    )
     `;
-    console.log('in')
-    console.log(data.produktet)
-    console.log('out')
+
     for (const produkt of data.produktet) {
-      console.log({
-        shitjeID,
-        produktID: produkt.produktiID,
-        sasia: produkt.sasiaShitjes,
-        cmimiShitjesPerCope: produkt.cmimiPerCope,
-        totaliProduktit: produkt.cmimiPerCope * produkt.sasiaShitjes,
-        komenti: data.komenti,
-        profitiProduktit: produkt.profiti
-      });
-    
+    if (produkt.produktiID && produkt.sasiaShitjes && produkt.cmimiPerCope && produkt.profiti !== null) {
       await connection.request()
         .input('shitjeID', sql.Int, shitjeID)
         .input('produktiID', sql.Int, produkt.produktiID)
@@ -290,9 +278,21 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
         .input('komenti', sql.VarChar, data.komenti)
         .input('profitiProduktit', sql.Decimal(18, 2), produkt.profiti)
         .query(insertShitjeProduktiQuery);
+      
+      // Update the 'sasia' in 'produkti' table
+      const updateProduktiQuery = `
+        UPDATE produkti
+        SET sasia = sasia - @sasiaShitjes
+        WHERE produktiID = @produktiID
+      `;
+
+      await connection.request()
+        .input('produktiID', sql.Int, produkt.produktiID)
+        .input('sasiaShitjes', sql.Int, produkt.sasiaShitjes)
+        .query(updateProduktiQuery);
+    }
     }
     
-
     return { success: true };
   } catch (error) {
     console.error('Database error:', error);
@@ -309,7 +309,6 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
 
 const createWindow = () => {
   const win = new BrowserWindow({
-   
     webPreferences: {
       preload: path.join(__dirname, 'renderer.js'), // Ensure the correct path to preload.js
       contextIsolation: true,  // Enable context isolation for security
@@ -318,6 +317,7 @@ const createWindow = () => {
   });
   win.maximize()
   win.loadURL('http://localhost:5173'); // Assuming your React app is running on localhost:3000
+  localStorage.clear()
 };
 
 app.whenReady().then(createWindow);

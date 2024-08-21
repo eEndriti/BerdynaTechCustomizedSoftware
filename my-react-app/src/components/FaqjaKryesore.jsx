@@ -58,10 +58,10 @@ function FaqjaKryesoreAdmin() {
   
   return (
     <div>
-      <div className="container mt-5 tabelaTransaksioneve">
+      <div className="container mt-5 tabelaTransaksioneve ">
         <h3>Transaksionet e Nderrimit:</h3>
-        <div className="table-responsive">
-          <table className="table table-sm table-striped">
+        <div className="table-responsive tabeleMeMaxHeight">
+          <table className="table table-sm table-striped ">
             <thead className="table-light">
               <tr className='fs-5'>
                 <th scope="col">Nr</th>
@@ -75,9 +75,9 @@ function FaqjaKryesoreAdmin() {
               </tr>
             </thead>
             <tbody>
-            {transaksionetENderrimit.map(item => (
-              <tr key={item.transaksioniID}>
-                <th scope="row">1</th>
+            {transaksionetENderrimit.map((item,index) => (
+              <tr key={index}>
+                <th scope="row">{index+1}</th>
                 <td>{item.shifra}</td>
                 <td>{item.lloji}</td>
                 <td>{item.totaliperPagese}</td>
@@ -97,7 +97,7 @@ function FaqjaKryesoreAdmin() {
 
         <div className='tabelaPorosive col-xs-12 col-sm-12 col-md-6 col-lg-6 px-5'>
           <h3>Porosite ne Pritje:</h3>
-          <div className="table-responsive">
+          <div className="table-responsive tabeleMeMaxHeight">
             <table className="table table-sm table-striped">
               <thead className="table-light">
                 <tr className='fs-5'>
@@ -112,9 +112,9 @@ function FaqjaKryesoreAdmin() {
                 </tr>
               </thead>
               <tbody>
-              {porositeNePritje.map(item => (
-                <tr key={item.shitjeID}>
-                  <th scope="row">1</th>
+              {porositeNePritje.map((item,index) => (
+                <tr key={index}>
+                  <th scope="row">{index+1}</th>
                   <td>{item.shifra}</td>
                   <td>{item.nrPorosise}</td>
                   <td>{item.dataShitjes ? new Date(item.dataShitjes).toLocaleDateString() : ''}</td>
@@ -131,9 +131,9 @@ function FaqjaKryesoreAdmin() {
           </div>
         </div>
 
-        <div className='tabelaServiseve col-xs-12 col-sm-12 col-md-6 col-lg-6 px-5'>
+        <div className='tabelaServiseve  col-xs-12 col-sm-12 col-md-6 col-lg-6 px-5'>
           <h3>Serviset Aktive:</h3>
-          <div className="table-responsive">
+          <div className="table-responsive tabeleMeMaxHeight">
             <table className="table table-sm table-striped">
               <thead className="table-light">
                 <tr className='fs-5'>
@@ -146,9 +146,9 @@ function FaqjaKryesoreAdmin() {
                 </tr>
               </thead>
               <tbody>
-              {servisetAktive.map(item => (
-                <tr key={item.servisimiID}>
-                  <th scope="row">1</th>
+              {servisetAktive.map((item,index) => (
+                <tr key={index}>
+                  <th scope="row">{index+1}</th>
                   <td>{item.subjekti}</td>
                   <td>{item.kontakti}</td>
                   <td>{item.komenti}</td>

@@ -67,7 +67,7 @@ export default function Shitje() {
   };
   const handleMenyraPagesesID = (menyraPagesesID) => {
     setMenyraPagesesID(menyraPagesesID);
-    console.log(products)
+
   };
 
   const handleSelectSubjekti = (result) => {
@@ -176,7 +176,7 @@ export default function Shitje() {
 
       <Row className="mt-5">
         <Col xs={12}>
-          <div className="table-responsive">
+          <div className="table-responsive tabeleMeMaxHeight">
             <Table striped bordered hover size="sm">
               <thead>
                 <tr className="fs-5">
@@ -327,7 +327,17 @@ export default function Shitje() {
               <Form.Group as={Row} controlId="nrPorosiseShuma" className="mb-2">
               <Form.Label column xs={6} className="text-end">Nr. Porosise:</Form.Label>
               <Col xs={6}>
-                <Form.Control type="number" onChange={handleNrPorosiseChange} />
+              <Form.Control
+  type="text"  // Use "text" instead of "number"
+  maxLength={8}  // Set maxLength to 8
+  onChange={(e) => {
+    const value = e.target.value;
+    if (/^\d*$/.test(value) && value.length <= 8) {
+      handleNrPorosiseChange(e);
+    }
+  }}
+/>
+      
               </Col>
             </Form.Group>
             }
