@@ -13,6 +13,24 @@ const config = {
     trustServerCertificate: true
   }
 };
+async function getDateTime() {
+  const apiUrl = 'http://worldtimeapi.org/api/ip'; // World Time API endpoint for datetime
+
+  try {
+    // Try to fetch the datetime from the World Time API
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    return data.datetime; // Returns the datetime in ISO 8601 format
+  } catch (error) {
+    console.error('Failed to fetch datetime from online server:', error);
+    // Fallback to local system time if the request fails
+    return new Date().toISOString(); // Return the current local datetime in ISO format
+  }
+}
+
 
 async function fetchTablePerdoruesi() {
   try {
@@ -149,6 +167,47 @@ ipcMain.handle('fetchTableMenyratPageses', async () => {
   return data;
 });
 
+async function fetchTableLlojetShpenzimeve() {
+  try {
+    await sql.connect(config);
+    const result = await sql.query`
+    select * from llojetShpenzimeve
+    `;
+    return result.recordset;
+  } catch (err) {
+    console.error('Error retrieving data:', err);
+    return [];
+  } finally {
+    await sql.close();
+  }
+}
+ipcMain.handle('fetchTableLlojetShpenzimeve', async () => {
+  const data = await fetchTableLlojetShpenzimeve();
+  return data;
+});
+
+async function fetchTableShpenzimet() {
+  try {
+    await sql.connect(config);
+    const result = await sql.query`
+      select sh.shifra,sh.shumaShpenzimit,sh.dataShpenzimit,sh.komenti,lsh.llojetShpenzimeveID,lsh.emertimi,lsh.shumaStandarde,p.emri as 'perdoruesi',t.transaksioniID from shpenzimi sh
+      join llojetShpenzimeve lsh on sh.llojetShpenzimeveID = lsh.llojetShpenzimeveID
+      join Perdoruesi p on sh.perdoruesiID = p.perdoruesiID
+      join transaksioni t on sh.transaksioniID = t.transaksioniID
+    `;
+    return result.recordset;
+  } catch (err) {
+    console.error('Error retrieving data:', err);
+    return [];
+  } finally {
+    await sql.close();
+  }
+}
+ipcMain.handle('fetchTableShpenzimet', async () => {
+  const data = await fetchTableShpenzimet();
+  return data;
+});
+
  const shifra = '' // ketu incializohet shifra globale, pastaj thirret prej ciles tabele kemi nevoje.
 
  async function generateNextShifra(tabela, shtojca) {
@@ -199,12 +258,105 @@ ipcMain.handle('fetchTableMenyratPageses', async () => {
   }
 }
 
+ipcMain.handle('insertShpenzimi', async (event, data) => {
+  let connection;
+  let dataDheOra
+  try {
+    dataDheOra = await getDateTime(); // Await the result of getDateTime
+    // Connect to the database
+    connection = await sql.connect(config);
+
+    // Generate the next unique 'shifra' for transaksioni
+    const shifra = await generateNextShifra('shpenzimi', 'SHP');
+    // Insert into the 'transaksioni' table and get the inserted ID
+
+    const insertTransaksioniQuery = `
+      INSERT INTO transaksioni (
+        shifra, lloji, totaliPerPagese, totaliIPageses, mbetjaPerPagese, dataTransaksionit, perdoruesiID, nderrimiID, komenti
+      ) OUTPUT INSERTED.transaksioniID VALUES (
+        @shifra, @lloji, @totaliPerPagese, @totaliIPageses, @mbetjaPerPagese, @dataTransaksionit, @perdoruesiID, @nderrimiID, @komenti
+      )
+    `;
+    const transaksioniResult = await connection.request()
+      .input('shifra', sql.VarChar, shifra)
+      .input('lloji', sql.VarChar, 'Shpenzim')
+      .input('totaliPerPagese', sql.Decimal(18, 2), data.shumaShpenzimit)
+      .input('totaliIPageses', sql.Decimal(18, 2), data.shumaShpenzimit)
+      .input('mbetjaPerPagese', sql.Decimal(18, 2), 0)
+      .input('dataTransaksionit', sql.Date, dataDheOra)
+      .input('perdoruesiID', sql.Int, data.perdoruesiID)
+      .input('nderrimiID', sql.Int, data.nderrimiID)
+      .input('komenti', sql.VarChar, data.komenti)
+      .query(insertTransaksioniQuery);
+
+    const transaksioniID = transaksioniResult.recordset[0].transaksioniID;
+
+    const insertShpenzimi = `
+      INSERT INTO shpenzimi (
+        shifra, shumaShpenzimit, dataShpenzimit, komenti, llojetShpenzimeveID, perdoruesiID, transaksioniID
+      ) OUTPUT INSERTED.shpenzimiID VALUES (
+        @shifra, @shumaShpenzimit, @dataShpenzimit, @komenti, @llojetShpenzimeveID, @perdoruesiID, @transaksioniID
+      )
+    `;
+
+    const shpenzimiResult = await connection.request()
+      .input('shifra', sql.VarChar, shifra)
+      .input('shumaShpenzimit', sql.Decimal(18,2), data.shumaShpenzimit)
+      .input('dataShpenzimit', sql.Date, dataDheOra)
+      .input('komenti', sql.VarChar, data.komenti)
+      .input('llojetShpenzimeveID', sql.Int, data.llojetShpenzimeveID)
+      .input('perdoruesiID', sql.Int, data.perdoruesiID)
+      .input('transaksioniID', sql.Int, transaksioniID)
+      .query(insertShpenzimi);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+ipcMain.handle('insertLlojiShpenzimit', async (event, data) => {
+  let connection;
+  try {
+    // Connect to the database
+    connection = await sql.connect(config);
+
+    const insertLlojiShpenzimit = `
+      INSERT INTO llojetShpenzimeve (
+        emertimi, shumaStandarde
+      ) OUTPUT INSERTED.llojetShpenzimeveID VALUES (
+        @emertimi, @shumaStandarde
+      )
+    `;
+
+    const llojiShpenzimeveResult = await connection.request()
+      .input('emertimi', sql.VarChar, data.emertimi)
+      .input('shumaStandarde', sql.Decimal(18,2), data.shumaStandarde)
+      .query(insertLlojiShpenzimit);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
 
 ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
   let connection;
+  let dataDheOra
 
   try {
-    // Connect to the database
+    dataDheOra = await getDateTime(); // Await the result of getDateTime
+
     connection = await sql.connect(config);
 
     // Generate the next unique 'shifra' for transaksioni
@@ -220,11 +372,11 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
 
     const transaksioniResult = await connection.request()
       .input('shifra', sql.VarChar, shifra)
-      .input('lloji', sql.VarChar, data.lloji)
+      .input('lloji', sql.VarChar, 'Shitje')
       .input('totaliPerPagese', sql.Decimal(18, 2), data.totaliPerPagese)
       .input('totaliIPageses', sql.Decimal(18, 2), data.totaliPageses)
       .input('mbetjaPerPagese', sql.Decimal(18, 2), data.mbetjaPerPagese)
-      .input('dataTransaksionit', sql.Date, data.dataShitjes)
+      .input('dataTransaksionit', sql.Date, dataDheOra)
       .input('perdoruesiID', sql.Int, data.perdoruesiID)
       .input('nderrimiID', sql.Int, data.nderrimiID)
       .input('komenti', sql.VarChar, data.komenti)
@@ -248,7 +400,7 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
       .input('totaliPerPagese', sql.Decimal(18, 2), data.totaliPerPagese)
       .input('totaliPageses', sql.Decimal(18, 2), data.totaliPageses)
       .input('mbetjaPerPagese', sql.Decimal(18, 2), data.mbetjaPerPagese)
-      .input('dataShitjes', sql.Date, data.dataShitjes)
+      .input('dataShitjes', sql.Date, dataDheOra)
       .input('nrPorosise', sql.Int, data.nrPorosise)
       .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
       .input('perdoruesiID', sql.Int, data.perdoruesiID)
@@ -292,7 +444,7 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
         .query(updateProduktiQuery);
     }
     }
-    
+
     return { success: true };
   } catch (error) {
     console.error('Database error:', error);

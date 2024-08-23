@@ -99,7 +99,6 @@ export default function Shitje() {
         totaliPerPagese: totaliPerPagese,
         totaliPageses: totaliPageses,
         mbetjaPerPagese: mbetjaPerPagese,
-        dataShitjes: new Date().toISOString(),
         nrPorosise: nrPorosise, 
         menyraPagesesID: menyraPagesesID,
         perdoruesiID: perdoruesiID,
@@ -112,10 +111,10 @@ export default function Shitje() {
       const result = await window.api.insertTransaksioniAndShitje(data);
     
       if (result.success) {
-        alert('Data inserted successfully');
+        alert('Shitja u Regjistrua me Sukses !');
         navigate('/faqjaKryesore');
       } else {
-        alert('Failed to insert data: ' + result.error);
+        alert('Gabim gjate regjistrimit: ' + result.error);
       }
     }else{
       alert('Ju Lutem Plotesoni te Gjitha Fushat!')

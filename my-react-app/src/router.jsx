@@ -38,13 +38,7 @@ const router = createBrowserRouter([
         path: '/',
         element: (
           <Navigate
-            to={
-               aKaUser=== 'admin'
-                ? '/faqjakryesoreadmin'
-                : aKaUser === 'perdorues'
-                ? '/faqjakryesoreUser'
-                : '/login'
-            }
+            to='/faqjaKryesore'
             replace
           />
         ),
