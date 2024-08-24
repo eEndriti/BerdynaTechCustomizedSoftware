@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Row, Col, Button, Form } from 'react-bootstrap';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 export default function Shpenzim() {
-  const navigate = useNavigate();  
   const [shpenzimet, setShpenzimet] = useState([]);
   const [filteredShpenzimet, setFilteredShpenzimet] = useState([]);
   const [llojetShpenzimeve, setLlojetShpenzimeve] = useState([]);
@@ -43,7 +44,8 @@ export default function Shpenzim() {
   const handleSelectChange = (event) => {
     const selectedValue = event.target.value;
     setLlojiShpenzimeveSelektuarID(selectedValue);
-    const selectedItem = llojetShpenzimeve.find(item => item.emertimi === selectedValue);
+    console.log(llojetShpenzimeve)
+    const selectedItem = llojetShpenzimeve.find(item => item.llojetShpenzimeveID == selectedValue);
     if (selectedItem) {
       setSelectedShumaStandarde(selectedItem.shumaStandarde);
       setSelectedLlojShpenzimi(selectedItem);
@@ -77,10 +79,13 @@ export default function Shpenzim() {
     };
     const result = await window.api.insertShpenzimi(data);
     if (result.success) {
-      alert('Shpenzimi u Regjistrua me Sukses!');
-      navigate('/shpenzim');
+      toast.success('Shpenzimi u Regjistrua me Sukses!', {
+        position: "top-center",  // Use string directly instead of toast.POSITION.TOP_CENTER
+        autoClose: 1500, // Optional: Delay before auto-close
+        onClose: () => window.location.reload(), // Reload the page after the toast closes
+      });            
     } else {
-      alert('Gabim gjate regjistrimit: ' + result.error);
+      toast.error('Gabim gjate regjistrimit: ' + result.error);
     }
   };
 
@@ -99,10 +104,13 @@ export default function Shpenzim() {
     };
     const result = await window.api.insertLlojiShpenzimit(data);
     if (result.success) {
-      alert('Lloji i Shpenzimit u Regjistrua me Sukses!');
-      window.location.reload();
+      toast.success('Lloji i Shpenzimit u Regjistrua me Sukses!', {
+        position: "top-center",  // Use string directly instead of toast.POSITION.TOP_CENTER
+        autoClose: 1500, // Optional: Delay before auto-close
+        onClose: () => window.location.reload(), // Reload the page after the toast closes
+      });            ;
     } else {
-      alert('Gabim gjate regjistrimit: ' + result.error);
+      toast.error('Gabim gjate regjistrimit: ');
     }
   };
 
@@ -114,7 +122,7 @@ export default function Shpenzim() {
           <div className='d-flex flex-column align-items-center justify-content-center'>
             <Form.Group className='m-3'>
               <Form.Select onChange={handleSelectChange} aria-label="Selekto nje Lloj Shpenzimi">
-                <option value="" disabled hidden>Selekto nje Lloj Shpenzimi</option>
+                <option value="" disabled selected>Selekto nje Lloj Shpenzimi</option>
                 {llojetShpenzimeve.map((item, index) => (
                   <option key={index} value={item.llojetShpenzimeveID}>
                     {item.emertimi}
@@ -123,12 +131,13 @@ export default function Shpenzim() {
               </Form.Select>
             </Form.Group>
             <Form.Group className='mx-2 mb-3'>
-              <Form.Control 
+            <Form.Control 
                 type='number' 
                 placeholder='Shuma per Shpenzim' 
-                defaultValue={selectedShumaStandarde} 
-                onChange={handleShumaStandardeOnChange}
-              />
+                value={selectedShumaStandarde} 
+                onChange={(e) => setSelectedShumaStandarde(e.target.value)}
+                />
+
             </Form.Group>
             <Form.Group>
               <Form.Control as='textarea' cols={25} rows={3} onChange={handleKomentiChange} placeholder='Sheno Komentin e Shpenzimit...'/>
@@ -250,6 +259,7 @@ export default function Shpenzim() {
       <div className='d-flex flex-row justify-content-center mt-5 m-5'>
         <Button className='fs-5'>Kalo nga Stoki ne Shpenzim</Button>
       </div>
+      <ToastContainer/>
     </div>
   );
 }

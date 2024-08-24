@@ -5,6 +5,8 @@ import SearchInput from "./SearchInput";
 import KerkoProduktin from "./KerkoProduktin";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; // Import the specific icon
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Shitje() {
   const navigate = useNavigate();  
@@ -111,14 +113,22 @@ export default function Shitje() {
       const result = await window.api.insertTransaksioniAndShitje(data);
     
       if (result.success) {
-        alert('Shitja u Regjistrua me Sukses !');
+        toast.success('Shitja u Regjistrua me Sukses !', {
+          position: "top-center",  // Use string directly instead of toast.POSITION.TOP_CENTER
+          autoClose: 1500, // Optional: Delay before auto-close
+          onClose: () =>         navigate('/faqjaKryesore')
+        });            ;
         navigate('/faqjaKryesore');
       } else {
-        alert('Gabim gjate regjistrimit: ' + result.error);
+        toast.error('Gabim gjate regjistrimit: ' + result.error);
       }
-    }else{
-      alert('Ju Lutem Plotesoni te Gjitha Fushat!')
-    }
+      }else{
+        toast.warn('Ju Lutem Plotesoni te Gjitha Fushat!',{
+          position: "top-center",
+          autoClose: 1500
+        })
+      }
+      
     
     }
 
@@ -306,7 +316,7 @@ export default function Shitje() {
                 <Col xs={6}>
                   <Form.Control
                     type="number"
-                    value={totaliPageses}
+                    defaultValuevalue={totaliPageses}
                     onChange={handleTotaliPagesesChange}
                     min={0}
                   />
@@ -327,16 +337,15 @@ export default function Shitje() {
               <Form.Label column xs={6} className="text-end">Nr. Porosise:</Form.Label>
               <Col xs={6}>
               <Form.Control
-  type="text"  // Use "text" instead of "number"
-  maxLength={8}  // Set maxLength to 8
-  onChange={(e) => {
-    const value = e.target.value;
-    if (/^\d*$/.test(value) && value.length <= 8) {
-      handleNrPorosiseChange(e);
-    }
-  }}
-/>
-      
+                type="text"  // Use "text" instead of "number"
+                maxLength={8}  // Set maxLength to 8
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value) && value.length <= 8) {
+                    handleNrPorosiseChange(e);
+                  }
+                }}
+              />
               </Col>
             </Form.Group>
             }
@@ -355,6 +364,7 @@ export default function Shitje() {
           </div>
         </Col>
       </Row>
+      <ToastContainer/>
     </Container>
   );
 }

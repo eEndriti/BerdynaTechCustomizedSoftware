@@ -7,11 +7,10 @@ body {
 }
 *{
     font-size: 14px;
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
 }
 
-.mainbar{
-    background-color: red;
-}
 span{
     display:block;
 }
@@ -19,19 +18,7 @@ span{
     max-height: calc(7 * 2.5rem); /* Approximate height of 7 rows */
     overflow-y: auto;
 }
-.sidebar {
-    display: flex;
-    flex-direction: column;
-    height: 100% ;
-    
-  }
-  
-  .sidebar-content {
-    flex-grow: 1; /* Allow sidebar content to take up remaining space */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* Space between items */
-  }
+
   .border-right{
     border-right: 2px solid black;
     border-radius: 10px;

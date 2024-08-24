@@ -1,4 +1,8 @@
 import { useState,useEffect } from 'react'
+import { Button } from 'react-bootstrap'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; 
+import ModalPerPyetje from './ModalPerPyetje'
 
 function FaqjaKryesoreAdmin() {
   const [transaksionet,setTransaksionet] = useState([])
@@ -7,7 +11,7 @@ function FaqjaKryesoreAdmin() {
   const [transaksionetENderrimit,setTransaksionetENderrimit] = useState([])
   const [porositeNePritje,setPorositeNePritje] = useState([])
   const [servisetAktive,setServisetAktive] = useState([])
-
+  const [showModal,setShowModal] = useState(false)
 
   
   useEffect(() => {
@@ -43,27 +47,26 @@ function FaqjaKryesoreAdmin() {
     setServisetAktive(servisetAktive);
   }, [shitjet]);
   
+  const ndryshoTransaksionin = (lloji, transaksioniID) => {
+    alert(`Ndryshimi Transaksionit ${transaksioniID} ne Proces e mesiperm!!`)
+  }
+  const anuloTransaksionin = (lloji, transaksioniID) => {
+    setShowModal(true)
+  }
+  const handleConfirmModal = () => {
+    console.log('Confirmed!');
+  };
 
-    const [comment, setComment] = useState(() => {
-      return localStorage.getItem('userComment') || '';
-    });
-  
-    useEffect(() => {
-      localStorage.setItem('userComment', comment);
-    }, [comment]);
-  
-    const handleChange = (event) => {
-      setComment(event.target.value);
-    };
-  
+  const handleCloseModal = () => setShowModal(false);
+
   return (
     <div>
-      <div className="container mt-5 tabelaTransaksioneve ">
+      <div className="container my-3 tabelaTransaksioneve ">
         <h3>Transaksionet e Nderrimit:</h3>
         <div className="table-responsive tabeleMeMaxHeight">
-          <table className="table table-sm table-striped ">
-            <thead className="table-light">
-              <tr className='fs-5'>
+          <table className="table table-sm table-striped border table-hover">
+            <thead className="table-secondary">
+              <tr className='fs-5 '>
                 <th scope="col">Nr</th>
                 <th scope="col">Shifra</th>
                 <th scope="col">Lloji</th>
@@ -80,12 +83,13 @@ function FaqjaKryesoreAdmin() {
                 <th scope="row">{index+1}</th>
                 <td>{item.shifra}</td>
                 <td>{item.lloji}</td>
-                <td>{item.totaliperPagese}</td>
-                <td>{item.totaliIPageses}</td>
-                <td>{item.mbetjaPerPagese}</td>
+                <td>{item.totaliperPagese.toFixed(2)} €</td>
+                <td className={item.mbetjaPerPagese > 0 ? 'text-danger' : 'text-success'}>{item.totaliIPageses.toFixed(2)} €</td>
+                <td>{item.mbetjaPerPagese.toFixed(2)} €</td>
                 <td>{item.komenti}</td>
                 <td>
-                  Edit/Delete
+                  <Button className='btn btn-primary' onClick={() => ndryshoTransaksionin(item.lloji, item.transaksioniID)}>Ndrysho</Button>
+                  <Button className='btn bg-transparent border-0 text-danger' onClick={() => anuloTransaksionin(item.lloji, item.transaksioniID)}><FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} /></Button>
                 </td>
               </tr>
             ))}
@@ -93,13 +97,15 @@ function FaqjaKryesoreAdmin() {
           </table>
         </div>
       </div>
-      <div className="container mt-5 d-flex flex-row justify-content-between">
+      <hr/>
 
-        <div className='tabelaPorosive col-xs-12 col-sm-12 col-md-6 col-lg-6 px-5'>
+      <div className="container mt-5 d-flex flex-row align-items-top">
+
+        <div className='tabelaPorosive col-xs-12 col-sm-12 col-md-6 col-lg-6'>
           <h3>Porosite ne Pritje:</h3>
           <div className="table-responsive tabeleMeMaxHeight">
-            <table className="table table-sm table-striped">
-              <thead className="table-light">
+            <table className="table table-sm table-striped border table-hover">
+              <thead className="table-secondary">
                 <tr className='fs-5'>
                   <th scope="col">Nr</th>
                   <th scope="col">Shifra</th>
@@ -122,7 +128,8 @@ function FaqjaKryesoreAdmin() {
                   <td>{item.totaliPerPagese}</td>
                   <td>{item.komenti}</td>
                   <td>
-                    Edit/Delete
+                    <Button className='btn btn-primary'>Ndrysho</Button>
+                    <Button className='btn bg-transparent border-0 text-danger'><FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} /></Button>
                   </td>
                 </tr>
               ))}
@@ -131,11 +138,11 @@ function FaqjaKryesoreAdmin() {
           </div>
         </div>
 
-        <div className='tabelaServiseve  col-xs-12 col-sm-12 col-md-6 col-lg-6 px-5'>
+        <div className='tabelaServiseve  col-xs-12 col-sm-12 col-md-6 col-lg-6 px-3'>
           <h3>Serviset Aktive:</h3>
           <div className="table-responsive tabeleMeMaxHeight">
-            <table className="table table-sm table-striped">
-              <thead className="table-light">
+            <table className="table table-sm table-striped border table-hover">
+              <thead className="table-secondary">
                 <tr className='fs-5'>
                   <th scope="col">Nr</th>
                   <th scope="col">Klienti</th>
@@ -154,7 +161,8 @@ function FaqjaKryesoreAdmin() {
                   <td>{item.komenti}</td>
                   <td>{item.pajisjetPercjellese}</td>
                   <td>
-                    Edit/Delete
+                    <Button className='btn btn-primary'>Ndrysho</Button>
+                    <Button className='btn bg-transparent border-0 text-danger'><FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} /></Button>
                   </td>
                 </tr>
               ))}
@@ -162,17 +170,13 @@ function FaqjaKryesoreAdmin() {
             </table>
           </div>
         </div>
+
       </div>
-              <br></br>
-      <div className='komentIPerkohshem d-flex flex-row justify-content-center m-4 fixed-bottom'>
-        <textarea className=''
-          value={comment}
-          cols={100}
-          rows={4}
-          onChange={handleChange}
-          placeholder="Type your comment here..."
-        />
-      </div>
+      <ModalPerPyetje
+        show={showModal}
+        handleClose={handleCloseModal}
+        handleConfirm={handleConfirmModal}
+      />
     </div>
   )
 }
