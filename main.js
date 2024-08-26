@@ -132,7 +132,7 @@ async function fetchTableProdukti() {
   try {
     await sql.connect(config);
     const result = await sql.query`
-    select  p.produktiID,p.shifra,p.emertimi,p.pershkrimi,p.sasia,p.cmimiBlerjes,p.cmimiShitjes,p.dataKrijimit,p.komenti,p.meFatureTeRregullt,k.emertimi as 'emertimiKategorise',k.kategoriaID from produkti p
+    select  p.produktiID,p.shifra,p.emertimi,p.pershkrimi,p.sasia,p.cmimiBlerjes,p.cmimiShitjes,p.dataKrijimit,p.komenti,p.meFatureTeRregullt,k.emertimi as 'emertimiKategorise',k.tvsh,k.kategoriaID from produkti p
 join kategoria k on k.kategoriaID = p.kategoriaID
     `;
     return result.recordset;
@@ -145,6 +145,25 @@ join kategoria k on k.kategoriaID = p.kategoriaID
 }
 ipcMain.handle('fetchTableProdukti', async () => {
   const data = await fetchTableProdukti();
+  return data;
+});
+
+async function fetchTableKategoria() {
+  try {
+    await sql.connect(config);
+    const result = await sql.query`
+    select * from kategoria
+    `;
+    return result.recordset;
+  } catch (err) {
+    console.error('Error retrieving data:', err);
+    return [];
+  } finally {
+    await sql.close();
+  }
+}
+ipcMain.handle('fetchTableKategoria', async () => {
+  const data = await fetchTableKategoria();
   return data;
 });
 
@@ -258,6 +277,40 @@ ipcMain.handle('fetchTableShpenzimet', async () => {
   }
 }
 
+ipcMain.handle('insertLogs', async (event, data) => {
+  let connection;
+  let dataDheOra
+  try {
+    dataDheOra = await getDateTime(); // Await the result of getDateTime
+    // Connect to the database
+    connection = await sql.connect(config);
+
+    const insertLogs = `
+      INSERT INTO logs (
+        perdoruesiID, komponenta, pershkrimi, dataDheOra, nderrimiID
+      ) VALUES (
+        @perdoruesiID, @komponenta, @pershkrimi, @dataDheOra, @nderrimiID
+      )
+    `;
+    const logsResult = await connection.request()
+      .input('perdoruesiID', sql.Int, data.perdoruesiID)
+      .input('komponenta', sql.VarChar, data.komponenta)
+      .input('pershkrimi', sql.VarChar, data.pershkrimi)
+      .input('dataDheOra', sql.Date, dataDheOra)
+      .input('nderrimiID', sql.Int, data.nderrimiID)
+      .query(insertLogs);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
 ipcMain.handle('insertShpenzimi', async (event, data) => {
   let connection;
   let dataDheOra
@@ -338,6 +391,116 @@ ipcMain.handle('insertLlojiShpenzimit', async (event, data) => {
       .input('emertimi', sql.VarChar, data.emertimi)
       .input('shumaStandarde', sql.Decimal(18,2), data.shumaStandarde)
       .query(insertLlojiShpenzimit);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+ipcMain.handle('insertBlerje', async (event, data) => {
+  let connection;
+  let dataDheOra
+
+  try {
+    dataDheOra = await getDateTime(); // Await the result of getDateTime
+
+    connection = await sql.connect(config);
+
+    // Generate the next unique 'shifra' for transaksioni
+    const shifra = await generateNextShifra('blerje', 'B');
+    // Insert into the 'transaksioni' table and get the inserted ID
+    const insertTransaksioniQuery = `
+      INSERT INTO transaksioni (
+        shifra, lloji, totaliPerPagese, totaliIPageses, mbetjaPerPagese, dataTransaksionit, perdoruesiID, nderrimiID, komenti
+      ) OUTPUT INSERTED.transaksioniID VALUES (
+        @shifra, @lloji, @totaliPerPagese, @totaliIPageses, @mbetjaPerPagese, @dataTransaksionit, @perdoruesiID, @nderrimiID, @komenti
+      )
+    `;
+
+    const transaksioniResult = await connection.request()
+      .input('shifra', sql.VarChar, shifra)
+      .input('lloji', sql.VarChar, 'Blerje')
+      .input('totaliPerPagese', sql.Decimal(18, 2), data.totaliPerPagese)
+      .input('totaliIPageses', sql.Decimal(18, 2), data.totaliPageses)
+      .input('mbetjaPerPagese', sql.Decimal(18, 2), data.mbetjaPerPagese)
+      .input('dataTransaksionit', sql.Date, dataDheOra)
+      .input('perdoruesiID', sql.Int, data.perdoruesiID)
+      .input('nderrimiID', sql.Int, data.nderrimiID)
+      .input('komenti', sql.VarChar, data.komenti)
+      .query(insertTransaksioniQuery);
+
+    const transaksioniID = transaksioniResult.recordset[0].transaksioniID;
+
+    // Insert into the 'blerje' table and get the inserted ID
+    const insertBlerjeQuery = `
+      INSERT INTO blerje (
+        shifra, totaliPerPagese, totaliPageses, mbetjaPerPagese,dataBlerjes, dataFatures, komenti, fatureERregullt,nrFatures, perdoruesiID, subjektiID, transaksioniID,menyraPagesesID, nderrimiID
+      ) OUTPUT INSERTED.blerjeID VALUES (
+        @shifra, @totaliPerPagese, @totaliPageses, @mbetjaPerPagese, @dataBlerjes, @dataFatures, @komenti, @fatureERregullt,@nrFatures, @perdoruesiID,@subjektiID, @transaksioniID, @menyraPagesesID,@nderrimiID
+      )
+    `;
+        const fatureERregulltValue = data.fatureERregullt ? 'true' : 'false';
+
+    const blerjeResult = await connection.request()
+      .input('shifra', sql.VarChar, shifra)
+      .input('totaliPerPagese', sql.Decimal(18, 2), data.totaliPerPagese)
+      .input('totaliPageses', sql.Decimal(18, 2), data.totaliPageses)
+      .input('mbetjaPerPagese', sql.Decimal(18, 2), data.mbetjaPerPagese)
+      .input('dataBlerjes', sql.Date, dataDheOra)
+      .input('dataFatures', sql.Date, data.dataFatures)
+      .input('komenti', sql.VarChar, data.komenti)
+      .input('fatureERregullt', sql.VarChar, fatureERregulltValue)
+      .input('nrFatures', sql.VarChar, data.nrFatures)
+      .input('perdoruesiID', sql.Int, data.perdoruesiID)
+      .input('subjektiID', sql.Int, data.subjektiID)
+      .input('transaksioniID', sql.Int, transaksioniID)
+      .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+      .input('nderrimiID', sql.Int, data.nderrimiID)
+      .query(insertBlerjeQuery);
+
+    const blerjeID = blerjeResult.recordset[0].blerjeID;
+
+    const insertBlerjeProdukt = `
+    INSERT INTO blerjeProdukt (
+      cmimiPerCope, sasia, totaliProduktit,totaliTvsh,blerjeID,produktiID
+    ) VALUES (
+       @cmimiPerCope, @sasia, @totaliProduktit,@totaliTvsh,@blerjeID,@produktiID
+    )
+    `;
+
+    for (const produkt of data.produktet) {
+    if (produkt.produktiID && produkt.sasiaShitjes && produkt.cmimiPerCope) {
+      const totali = produkt.cmimiBlerjes * produkt.sasiaBlerjes
+      await connection.request()
+        .input('cmimiPerCope', sql.Decimal(18, 2), produkt.cmimiBlerjes)
+        .input('sasia', sql.Int, produkt.sasiaBlerjes)
+        .input('totaliProduktit', sql.Decimal(18, 2), totali)
+        .input('totaliTvsh', sql.Decimal(18, 2), (totali*produkt.tvsh)/100)
+        .input('blerjeID', sql.Int, blerjeID)
+        .input('produktiID', sql.Int, produkt.produktiID)
+        .query(insertBlerjeProdukt);
+
+ 
+        
+      const updateProduktiQuery = `
+        UPDATE produkti
+        SET sasia += @sasia
+        WHERE produktiID = @produktiID
+      `;
+      
+      await connection.request()
+        .input('produktiID', sql.Int, produkt.produktiID)
+        .input('sasia', sql.Int, produkt.sasiaBlerjes)
+        .query(updateProduktiQuery);
+    
+    }
+    }
 
     return { success: true };
   } catch (error) {
@@ -446,6 +609,89 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
     }
 
     return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+ipcMain.handle('anuloTransaksionin', async (event, data) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+    if (data.lloji === 'Shitje') {
+      // Step 1: Retrieve sold products from shitjeProdukti for the specified transaksioniID
+      const getShitjeProduktiQuery = `
+        SELECT produktiID, sasia 
+        FROM shitjeProdukti 
+        WHERE shitjeID IN (
+          SELECT shitjeID 
+          FROM shitje 
+          WHERE transaksioniID = @transaksioniID
+        )
+      `;
+
+      const shitjeProduktiResult = await connection.request()
+        .input('transaksioniID', sql.Int, data.transaksioniID)
+        .query(getShitjeProduktiQuery);
+
+      const soldProducts = shitjeProduktiResult.recordset;
+
+      // Step 2: Update product quantities in produkti table
+      const updateProduktiQuery = `
+        UPDATE produkti
+        SET sasia = sasia + @sasia
+        WHERE produktiID = @produktiID
+      `;
+
+      for (const produkt of soldProducts) {
+        await connection.request()
+          .input('produktiID', sql.Int, produkt.produktiID)
+          .input('sasia', sql.Int, produkt.sasia)
+          .query(updateProduktiQuery);
+      }
+
+      // Step 3: Delete records from shitjeProdukti, shitje, and transaksioni tables
+      const deleteShitjeProduktiQuery = `
+        DELETE FROM shitjeProdukti 
+        WHERE shitjeID IN (
+          SELECT shitjeID 
+          FROM shitje 
+          WHERE transaksioniID = @transaksioniID
+        )
+      `;
+
+      const deleteShitjeQuery = `
+        DELETE FROM shitje 
+        WHERE transaksioniID = @transaksioniID
+      `;
+
+      const deleteTransaksioniQuery = `
+        DELETE FROM transaksioni 
+        WHERE transaksioniID = @transaksioniID
+      `;
+
+      await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShitjeProduktiQuery);
+      await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShitjeQuery);
+      await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteTransaksioniQuery);
+
+      return { success: true };
+    } 
+    // Additional conditions for 'Blerje' or 'Shpenzim' can be added here.
+    else if(data.lloji == 'Blerje') {
+      console.log('u thirr anulimi blerjes')
+      return { success: false, error: "Lloji i transaksionit nuk mbulohet nga ky funksion blerje." };
+    }else if(data.lloji == 'Shpenzim') {
+      console.log('u thirr anulimi shpenzimit')
+      return { success: false, error: "Lloji i transaksionit nuk mbulohet nga ky funksion shpenzim." };
+    }
+
   } catch (error) {
     console.error('Database error:', error);
     return { success: false, error: error.message };

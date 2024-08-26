@@ -1,26 +1,29 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button, Container, Row, Col, Table, Form } from "react-bootstrap";
-import KerkoSubjektin from "./KerkoSubjektin";
-import KerkoProduktin from "./KerkoProduktin";
+import { useState,useEffect } from "react";
+import { Container, Row,Col,Form, Button,Table } from "react-bootstrap";
+import KerkoSubjektin from './KerkoSubjektin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; // Import the specific icon
+import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import KerkoProduktin from "./KerkoProduktin";
+import { useNavigate } from "react-router-dom";
 
-export default function Shitje() {
+export default function Blerje() {
+
   const navigate = useNavigate();  
-  const [llojiShitjes, setLlojiShitjes] = useState("dyqan");
-  const [menyraPagesesID, setMenyraPagesesID] = useState(0);
   const [selectedSubjekti, setSelectedSubjekti] = useState({ emertimi: "", kontakti: "", subjektiID: null });
+  const [dataEFatures, setDataEFatures] = useState(new Date().toISOString().substring(0, 10));
   const [products, setProducts] = useState([{}]);
   const [showModal, setShowModal] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
+  const [komentiBlerjes,setKomentiBlerjes] = useState()
   const [totaliPerPagese, setTotaliPerPagese] = useState(0);
   const [totaliPageses, setTotaliPageses] = useState(0);
-  const [komentiShitjes,setKomentiShitjes] = useState('')
-  const [nrPorosise,setNrPorosise] = useState(0)
   const [menyratPageses,setMenyratPageses] = useState([])
+  const [menyraPagesesID, setMenyraPagesesID] = useState(0);
+  const [meFatureTeRregullt,setMeFatureTeRregullt] = useState(false)
+  const [totaliTvsh,setTotaliTvsh] = useState(0)
+  const [nrFatures,setNrFatures] = useState()
 
   useEffect(() => {
     window.api.fetchTableMenyratPageses().then(receivedData => {
@@ -28,24 +31,13 @@ export default function Shitje() {
     });
   }, []);
 
-  useEffect(() => {
-    // Update the total per pagese whenever products change
-    const total = products.reduce((acc, product) => {
-      const cmimiPerCope = parseFloat(product.cmimiPerCope) || 0;
-      const sasiaShitjes = parseFloat(product.sasiaShitjes) || 0;
-      const cmimiBlerjes = parseFloat(product.cmimiBlerjes) || 0;
-
-      const totali = cmimiPerCope * sasiaShitjes;
-      const profit = totali - (cmimiBlerjes * sasiaShitjes);
-
-      // Store the profit in the product object (but don't display it)
-      product.profiti = profit;
-
-      return acc + totali;
-    }, 0);
-    setTotaliPerPagese(total);
-  }, [products]);
-
+  const handleSelectSubjekti = (result) => {
+    setSelectedSubjekti({
+      emertimi: result.emertimi,
+      kontakti: result.kontakti,
+      subjektiID: result.subjektiID,
+    });
+  };
   const handleProductSelect = (product) => {
     const updatedProducts = [...products];
     updatedProducts[selectedRow] = product;
@@ -62,23 +54,37 @@ export default function Shitje() {
     setSelectedRow(index);
     setShowModal(true);
   };
-
-  const handleLlojiShitjesClick = (lloji) => {
-    setLlojiShitjes(lloji);
-    setTotaliPageses(0);
+  const handleDeleteRow = (index,productID) => {
+    const updatedProducts = products.filter((_, i) => i !== index);
+    setProducts(updatedProducts);
   };
-  const handleMenyraPagesesID = (menyraPagesesID) => {
-    setMenyraPagesesID(menyraPagesesID);
-
-  };
-
-  const handleSelectSubjekti = (result) => {
-    setSelectedSubjekti({
-      emertimi: result.emertimi,
-      kontakti: result.kontakti,
-      subjektiID: result.subjektiID,
+  const handleKomentiBlerjesChange = (event) =>{
+    setKomentiBlerjes(event.target.value)
+  }
+  const handleMeFatureTeRregullt = () =>{
+    setMeFatureTeRregullt(!meFatureTeRregullt)
+  }
+  useEffect(() => {
+    let totalPerPagese = 0;
+    let llogaritjaETvsh = 0;
+  
+    products.forEach((product) => {
+      const cmimiBlerjes = parseFloat(product.cmimiBlerjes) || 0;
+      const sasiaBlerjes = parseFloat(product.sasiaBlerjes) || 0;
+      const tvsh = parseFloat(product.tvsh) || 0; // Ensure `tvsh` is valid
+      const totali = cmimiBlerjes * sasiaBlerjes;
+  
+      const tvshEProduktit = (totali * tvsh) / 100;
+      
+      llogaritjaETvsh += tvshEProduktit || 0; // Handle NaN case by defaulting to 0
+      totalPerPagese += totali;
     });
-  };
+  
+    setTotaliPerPagese(totalPerPagese);
+    setTotaliTvsh(llogaritjaETvsh);
+  }, [products]);
+  
+
 
   const handleTotaliPagesesChange = (e) => {
     setTotaliPageses(parseFloat(e.target.value) || 0);
@@ -86,34 +92,43 @@ export default function Shitje() {
 
   const mbetjaPerPagese = (totaliPerPagese - totaliPageses).toFixed(2);
 
+  const handleMenyraPagesesID = (menyraPagesesID) => {
+    setMenyraPagesesID(menyraPagesesID);
+
+  };
+  const handleDataFatures = (e) => {
+    setDataEFatures(e.target.value);
+  };
+
   const handleAnulo = () => {
     navigate('/faqjaKryesore')
   }
 
   const handleRegjistro = async () => {
+
     const perdoruesiID = localStorage.getItem('perdoruesiID');
-  
-    // Prepare the data to be sent to the 'insert-transaksioni-and-shitje' function
+    console.log(products)
     if(perdoruesiID && menyraPagesesID){
       const data = {
-        lloji: llojiShitjes,
-        komenti: komentiShitjes,
         totaliPerPagese: totaliPerPagese,
         totaliPageses: totaliPageses,
         mbetjaPerPagese: mbetjaPerPagese,
-        nrPorosise: nrPorosise, 
-        menyraPagesesID: menyraPagesesID,
+        dataFatures:dataEFatures,
+        komenti:komentiBlerjes,
+        fatureERregullt:meFatureTeRregullt,
+        nrFatures:nrFatures,
         perdoruesiID: perdoruesiID,
-        subjektiID: selectedSubjekti.subjektiID,
+        subjektiID:selectedSubjekti.subjektiID,
+        menyraPagesesID: menyraPagesesID,
         nderrimiID: 1 ,
         produktet:products
       };
     
       // Call the Electron API to insert both transaksioni and shitje
-      const result = await window.api.insertTransaksioniAndShitje(data);
+      const result = await window.api.insertBlerje(data);
     
       if (result.success) {
-        toast.success('Shitja u Regjistrua me Sukses !', {
+        toast.success('Blerja u Regjistrua me Sukses !', {
           position: "top-center",  // Use string directly instead of toast.POSITION.TOP_CENTER
           autoClose: 1500, // Optional: Delay before auto-close
           onClose: () =>         navigate('/faqjaKryesore')
@@ -130,25 +145,12 @@ export default function Shitje() {
       
     
     }
-
-  const handleDeleteRow = (index) => {
-    const updatedProducts = products.filter((_, i) => i !== index);
-    setProducts(updatedProducts);
-  };
-  const handleKomentiShitjesChange = (event) =>{
-    setKomentiShitjes(event.target.value)
-  }
-
-  const handleNrPorosiseChange = (event) =>{
-    setNrPorosise(event.target.value)
-  }
-
   return (
-    <Container fluid className="mt-2 d-flex flex-column" style={{ minHeight: "95vh" }}>
-      <Row className="d-flex flex-row justify-content-between">
+    <Container>
+      <Row>
         <Col>
           <Form.Group as={Row} controlId="subjekti" className="mb-2">
-            <Form.Label column xs={6} className="text-start w-auto">Subjekti:</Form.Label>
+            <Form.Label column xs={6} className="text-start w-auto">Furnitori:</Form.Label>
             <Col xs={6}>
               <KerkoSubjektin value={selectedSubjekti.emertimi} onSelect={handleSelectSubjekti} />
             </Col>
@@ -160,52 +162,54 @@ export default function Shitje() {
             </Col>
           </Form.Group>
         </Col>
-        <Col className="d-flex flex-row justify-content-end">
-          <Button
-            variant={llojiShitjes === "dyqan" ? "primary" : "outline-primary"}
-            size="lg"
-            className="mx-1 w-25"
-            onClick={() => handleLlojiShitjesClick("dyqan")}
-          >
-            Shitje ne Dyqan
-          </Button>
-          <Button
-            variant={llojiShitjes === "online" ? "primary" : "outline-primary"}
-            size="lg"
-            className="mx-1 w-25"
-            onClick={() => handleLlojiShitjesClick("online")}
-          >
-            Shitje Online
-          </Button>
+        <Col md={2}>
+          <Form.Group>
+            <Form.Label column xs={6} className="text-start w-auto">Nr i Fatures:</Form.Label>
+            <Form.Control type="text" value={nrFatures} onChange={ (e) => setNrFatures(e.target.value)}/>
+          </Form.Group>
         </Col>
-        <Col className=" d-flex flex-row justify-content-end">
-          <Button variant="info" className="text-dark border fs-5 p-4 m-2">Te Gjitha Shitjet</Button>
+        <Col md={2}>
+          <Form.Group>
+            <Form.Label column xs={6} className="text-start w-auto">Data Fatures:</Form.Label>
+            <Form.Control type="date" value={dataEFatures} onChange={handleDataFatures}/>
+          </Form.Group>
+        </Col>
+        <Col className="d-flex justify-content-center align-items-center">
+          <Button variant="info" className="p-2 fs-5">Te Gjitha Blerjet</Button>
         </Col>
       </Row>
+      <hr/>
+
       <Row className="mt-5">
         <Col xs={12}>
           <div className="table-responsive tabeleMeMaxHeight">
-            <Table striped bordered hover size="sm">
+            <Table striped bordered hover size="sm" className="text-center">
               <thead>
                 <tr className="fs-5">
                   <th scope="col">Nr</th>
-                  <th scope="col">Shifra</th>
+                  <th scope="col">Shifra e Produktit</th>
                   <th scope="col">Emertimi</th>
                   <th scope="col">Pershkrimi</th>
-                  <th scope="col">Cmimi Per Cope</th>
-                  <th scope="col">Sasia e Disponueshme</th>
-                  <th scope="col">Sasia e Shitjes</th>
+                  <th scope="col">Cmimi Blerjes Per Cope</th>
+                  <th scope="col">Sasia Aktuale</th>
+                  <th scope="col">Sasia e Blerjes</th>
                   <th scope="col">Totali</th>
+                  {meFatureTeRregullt?
+                    <>
+                      <th scope="col">TVSH %</th>
+                      <th scope="col">TVSH €</th>
+                    </>:''}
                   <th scope="col">Komenti</th>
                   <th scope="col">Opsionet</th>
                 </tr>
               </thead>
               <tbody>
                 {products.map((product, index) => {
-                  const cmimiPerCope = parseFloat(product.cmimiPerCope) || 0;
-                  const sasiaShitjes = parseFloat(product.sasiaShitjes) || 0;
-                  const totali = (cmimiPerCope * sasiaShitjes).toFixed(2);
-
+                  const sasiaBlerjes = parseFloat(product.sasiaBlerjes) || 0;
+                  const totali = (product.cmimiBlerjes * sasiaBlerjes).toFixed(2);
+                  const tvsh = parseFloat(product.tvsh) || 0; 
+                  const tvshEProduktit = ((totali * tvsh) / 100).toFixed(2);
+              
                   return (
                     <tr key={index}>
                       <td>{index + 1}</td>
@@ -216,47 +220,22 @@ export default function Shitje() {
                       </td>
                       <td>{product.emertimi}</td>
                       <td>{product.pershkrimi}</td>
-                      <td>
-                        <Form.Control className="bg-light border-0"
-                          type="number"
-                          value={product.cmimiPerCope || ''}
-                          onChange={(e) => {
-                            const updatedProducts = [...products];
-                            updatedProducts[index].cmimiPerCope = e.target.value;
-                            setProducts(updatedProducts);
-                          }}
-                        />
-                      </td>
+                      {product.cmimiBlerjes == null ? <td></td> : <td>{product.cmimiBlerjes} €</td>}
                       <td>{product.sasia}</td>
                       <td>
-                        <Form.Control className="bg-light border-0"
-                          type="number"
-                          min={0}
-                          max={product.sasia}
-                          value={product.sasiaShitjes || ''}
-                          onChange={(e) => {
-                            const newValue = Math.min(Number(e.target.value), product.sasia);
-                            const updatedProducts = [...products];
-                            updatedProducts[index] = {
-                              ...updatedProducts[index],
-                              sasiaShitjes: newValue
-                            };
-                            setProducts(updatedProducts);
+                        <Form.Control className="bg-light border-0" type="number" min={0} value={product.sasiaBlerjes}
+                          onChange={(e) => { const updatedProducts = [...products]; updatedProducts[index].sasiaBlerjes = e.target.value;setProducts(updatedProducts);
                           }}
                         />
                       </td>
-                      <td>{totali}</td>
-                      <td>
-                        <Form.Control className="bg-light border-0"
-                          type="text"
-                          value={product.komenti || ''}
-                          onChange={(e) => {
-                            const updatedProducts = [...products];
-                            updatedProducts[index].komenti = e.target.value;
-                            setProducts(updatedProducts);
-                          }}
-                        />
-                      </td>
+                      {isNaN(totali) ? <td></td> : <td>{totali} €</td>}
+                      {meFatureTeRregullt ? (
+                        <>
+                          {tvsh == 0 ? <td></td> : <td>{tvsh} %</td>}
+                          {isNaN(tvshEProduktit) ? <td></td> : <td>{tvshEProduktit} €</td>} 
+                        </>
+                      ) : null}
+                      <td>{product.komenti}</td>
                       <td >
                       <span className="text-danger  text-center" onClick={() => handleDeleteRow(index)} style={{ cursor: 'pointer' }}>
                           {product.shifra && <FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} />}
@@ -277,16 +256,16 @@ export default function Shitje() {
           </div>
         </Col>
       </Row>
-
-      <Row className="mt-auto section2 d-flex justify-content-around bg-light">
-        <Col xs={12} md={6} className="d-flex flex-column align-items-center">
-          <h5 className="p-3">
-            Shtype Garancionin <Form.Check inline />
-          </h5>
-          <Button variant="primary" size="lg">Apliko Kestet</Button>
+            <hr/>
+      <Row>
+        <Col className="d-flex flex-row justify-content-center align-items-center">
+            <Form.Group>
+              <Form.Label>Fature e Rregullt</Form.Label>
+              <Form.Check inline defaultChecked={meFatureTeRregullt} onChange={handleMeFatureTeRregullt} className="px-2"/>
+            </Form.Group>
         </Col>
         <Col xs={12} md={6} className="d-flex justify-content-center">
-          <Form.Control as="textarea" onChange={handleKomentiShitjesChange} rows={3} className="p-3" placeholder="Shkruaj komentin..." />
+          <Form.Control as="textarea" onChange={handleKomentiBlerjesChange} rows={3} className="p-3" placeholder="Shkruaj komentin..." />
         </Col>
       </Row>
 
@@ -299,6 +278,18 @@ export default function Shitje() {
         <Col xs={12} md={6} className="d-flex flex-column align-items-end">
           <div className="d-flex flex-column w-100 justify-content-end">
             <div className="d-flex flex-column w-100">
+            {meFatureTeRregullt?<>
+              <Form.Group as={Row} controlId="totaliTvsh" className="mb-2">
+                <Form.Label column xs={6} className="text-end">Totali i TVSH:</Form.Label>
+                <Col xs={6}>
+                  <Form.Control
+                    type="number"
+                    value={totaliTvsh.toFixed(2)}
+                    readOnly
+                  />
+                </Col>
+              </Form.Group>
+            </>:''}
               <Form.Group as={Row} controlId="totaliPerPageseShuma" className="mb-2">
                 <Form.Label column xs={6} className="text-end">Totali Per Pagese:</Form.Label>
                 <Col xs={6}>
@@ -309,7 +300,6 @@ export default function Shitje() {
                   />
                 </Col>
               </Form.Group>
-              {llojiShitjes == 'dyqan'? <>
                 <Form.Group as={Row} controlId="totaliPageses" className="mb-2">
                 <Form.Label column xs={6} className="text-end">Totali Pageses:</Form.Label>
                 <Col xs={6}>
@@ -331,23 +321,6 @@ export default function Shitje() {
                   />
                 </Col>
               </Form.Group>
-              </>:
-              <Form.Group as={Row} controlId="nrPorosiseShuma" className="mb-2">
-              <Form.Label column xs={6} className="text-end">Nr. Porosise:</Form.Label>
-              <Col xs={6}>
-              <Form.Control
-                type="text"  // Use "text" instead of "number"
-                maxLength={8}  // Set maxLength to 8
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (/^\d*$/.test(value) && value.length <= 8) {
-                    handleNrPorosiseChange(e);
-                  }
-                }}
-              />
-              </Col>
-            </Form.Group>
-            }
             </div>
             <div className="d-flex flex-row justify-content-end">
               {menyratPageses.map((menyraPageses) => (
@@ -365,5 +338,5 @@ export default function Shitje() {
       </Row>
       <ToastContainer/>
     </Container>
-  );
+  )
 }

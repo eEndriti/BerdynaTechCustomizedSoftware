@@ -6,6 +6,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './components/NotFound'; 
 import Shitje from './components/Shitje';
 import Shpenzim from './components/Shpenzim'
+import Blerje from './components/Blerje';
+import Produktet from './components/Produktet';
 let aKaUser = localStorage.getItem('aKaUser')
 
 const router = createBrowserRouter([
@@ -33,6 +35,14 @@ const router = createBrowserRouter([
       {
         path: '/shpenzim',
         element:<Shpenzim />
+      },
+      {
+        path: '/blerje',
+        element:<Blerje />
+      },
+      {
+        path: '/stoku',
+        element:<Produktet />
       },
       {
         path: '/',

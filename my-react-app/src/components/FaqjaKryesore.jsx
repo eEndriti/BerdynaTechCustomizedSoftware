@@ -3,6 +3,8 @@ import { Button } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from './ModalPerPyetje'
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function FaqjaKryesoreAdmin() {
   const [transaksionet,setTransaksionet] = useState([])
@@ -12,8 +14,9 @@ function FaqjaKryesoreAdmin() {
   const [porositeNePritje,setPorositeNePritje] = useState([])
   const [servisetAktive,setServisetAktive] = useState([])
   const [showModal,setShowModal] = useState(false)
-
-  
+  const [burimiThirrjes,setBurimiThirrjes] = useState('')
+  const [llojiPerAnulim,setLlojiPerAnulim] = useState('')
+  const [idPerAnulim,setIdPerAnulim] = useState('')
   useEffect(() => {
     window.api.fetchTableTransaksionet().then(receivedData => {
       setTransaksionet(receivedData);
@@ -50,11 +53,36 @@ function FaqjaKryesoreAdmin() {
   const ndryshoTransaksionin = (lloji, transaksioniID) => {
     alert(`Ndryshimi Transaksionit ${transaksioniID} ne Proces e mesiperm!!`)
   }
-  const anuloTransaksionin = (lloji, transaksioniID) => {
+  const anuloTransaksionin =async () => {
+    const data = {
+      lloji:llojiPerAnulim,
+      transaksioniID:idPerAnulim
+    }
+
+    const result = await window.api.anuloTransaksionin(data)
+
+    if (result.success) {
+      toast.success(`Transaksioni i llojit ${llojiPerAnulim} u Anulua me Sukses !`, {
+        position: "top-center",  
+        autoClose: 1500,
+        onClose: () =>       window.location.reload()
+      });            ;
+      
+    } else {
+      toast.error('Gabim gjate Anulimit: ' + result.error);
+    }
+  }
+  const thirreModal = (lloji,transaksioniID,burimiThirrjes) =>{
     setShowModal(true)
+    setBurimiThirrjes(burimiThirrjes)
+    setLlojiPerAnulim(lloji)
+    setIdPerAnulim(transaksioniID)
   }
   const handleConfirmModal = () => {
     console.log('Confirmed!');
+    if(burimiThirrjes == 'anuloTransaksionin'){
+      anuloTransaksionin()
+    }
   };
 
   const handleCloseModal = () => setShowModal(false);
@@ -89,7 +117,7 @@ function FaqjaKryesoreAdmin() {
                 <td>{item.komenti}</td>
                 <td>
                   <Button className='btn btn-primary' onClick={() => ndryshoTransaksionin(item.lloji, item.transaksioniID)}>Ndrysho</Button>
-                  <Button className='btn bg-transparent border-0 text-danger' onClick={() => anuloTransaksionin(item.lloji, item.transaksioniID)}><FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} /></Button>
+                  <Button className='btn bg-transparent border-0 text-danger' onClick={() => thirreModal(item.lloji, item.transaksioniID,'anuloTransaksionin')}><FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} /></Button>
                 </td>
               </tr>
             ))}
@@ -177,6 +205,7 @@ function FaqjaKryesoreAdmin() {
         handleClose={handleCloseModal}
         handleConfirm={handleConfirmModal}
       />
+      <ToastContainer/>
     </div>
   )
 }

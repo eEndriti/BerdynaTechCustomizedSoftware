@@ -10,11 +10,16 @@ contextBridge.exposeInMainWorld('api', {
     fetchTableMenyratPageses: () => ipcRenderer.invoke('fetchTableMenyratPageses'),
     fetchTableLlojetShpenzimeve: () => ipcRenderer.invoke('fetchTableLlojetShpenzimeve'),
     fetchTableShpenzimet: () => ipcRenderer.invoke('fetchTableShpenzimet'),
-
+    fetchTableKategoria: () => ipcRenderer.invoke('fetchTableKategoria'),
     
     insertTransaksioniAndShitje: (data) => ipcRenderer.invoke('insert-transaksioni-and-shitje', data),
     insertShpenzimi: (data) => ipcRenderer.invoke('insertShpenzimi', data),
-    insertLlojiShpenzimit: (data) => ipcRenderer.invoke('insertLlojiShpenzimit', data) 
+    insertLlojiShpenzimit: (data) => ipcRenderer.invoke('insertLlojiShpenzimit', data) ,
+    insertLogs: (data) => ipcRenderer.invoke('insertLogs', data) ,
+    insertBlerje: (data) => ipcRenderer.invoke('insertBlerje', data) ,
+
+
+    anuloTransaksionin: (data) => ipcRenderer.invoke('anuloTransaksionin', data) 
 
 
 });

@@ -17,7 +17,7 @@ export default function Shpenzim() {
   const [startDate, setStartDate] = useState(new Date().toISOString().substring(0, 10));
   const [endDate, setEndDate] = useState(new Date().toISOString().substring(0, 10));
 
-  useEffect(() => {
+  useEffect(() => {2
     // Fetch all shpenzimet data
     window.api.fetchTableShpenzimet().then(receivedData => {
       setShpenzimet(receivedData);

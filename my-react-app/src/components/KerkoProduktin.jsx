@@ -36,6 +36,7 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
     }else{
       item.sasiaShitjes = 0
     }
+    item.sasiaBlerjes = 0
     onSelect(item); // Ensure the selected item is passed back to the parent
     onHide(); // Close the modal after selection
   };
