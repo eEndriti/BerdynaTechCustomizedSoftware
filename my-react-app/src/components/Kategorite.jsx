@@ -111,6 +111,8 @@ export default function Kategorite() {
 
   return (
     <Container>
+        <h3 className='text-center'>Kategorite:</h3>
+        <hr/>
       <Row>
         <Col lg={3} className="d-flex flex-column justify-content-start bg-light border py-3">
           <h3 className="text-center">Shto nje Kategori</h3>

@@ -87,6 +87,30 @@ ipcMain.handle('fetchTableShitje', async () => {
   return data;
 });
 
+async function fetchTableBlerje() {
+  try {
+    await sql.connect(config);
+    const result = await sql.query`
+      select b.blerjeID,b.shifra,b.totaliPerPagese,b.totaliPageses,b.mbetjaPerPagese,b.dataBlerjes,
+      b.dataFatures,b.komenti,b.fatureERregullt,b.nrFatures,p.emri as 'perdoruesi',s.emertimi as 'klienti',m.emertimi as 'menyraPagesese',b.transaksioniID,n.numriPercjelles,n.dataNderrimit from Blerje b
+
+        join perdoruesi p on p.perdoruesiID = b.perdoruesiID
+        join subjekti s on s.subjektiID = b.subjektiID
+        join menyraPageses m on m.menyraPagesesID = b.menyraPagesesID
+        join nderrimi n on n.nderrimiID = b.nderrimiID
+`;
+    return result.recordset;
+  } catch (err) {
+    console.error('Error retrieving data:', err);
+    return [];
+  } finally {
+    await sql.close();
+  }
+}
+ipcMain.handle('fetchTableBlerje', async () => {
+  const data = await fetchTableBlerje();
+  return data;
+});
 
 async function fetchTableSubjekti() {
   try {
@@ -204,7 +228,17 @@ async function fetchTableLlojetShpenzimeve() {
   try {
     await sql.connect(config);
     const result = await sql.query`
-    select * from llojetShpenzimeve
+        SELECT 
+        llojetShpenzimeve.*, 
+        COUNT(shpenzimi.shpenzimiID) AS total_shpenzime
+    FROM 
+        llojetShpenzimeve
+    LEFT JOIN 
+        shpenzimi ON shpenzimi.llojetShpenzimeveID = llojetShpenzimeve.llojetShpenzimeveID
+    GROUP BY 
+        llojetShpenzimeve.llojetShpenzimeveID,
+        llojetShpenzimeve.emertimi,
+        llojetShpenzimeve.shumaStandarde
     `;
     return result.recordset;
   } catch (err) {
@@ -223,7 +257,7 @@ async function fetchTableShpenzimet() {
   try {
     await sql.connect(config);
     const result = await sql.query`
-      select sh.shifra,sh.shumaShpenzimit,sh.dataShpenzimit,sh.komenti,lsh.llojetShpenzimeveID,lsh.emertimi,lsh.shumaStandarde,p.emri as 'perdoruesi',t.transaksioniID from shpenzimi sh
+      select sh.shpenzimiID,sh.shifra,sh.shumaShpenzimit,sh.dataShpenzimit,sh.komenti,lsh.llojetShpenzimeveID,lsh.emertimi,lsh.shumaStandarde,p.emri as 'perdoruesi',t.transaksioniID from shpenzimi sh
       join llojetShpenzimeve lsh on sh.llojetShpenzimeveID = lsh.llojetShpenzimeveID
       join Perdoruesi p on sh.perdoruesiID = p.perdoruesiID
       join transaksioni t on sh.transaksioniID = t.transaksioniID
@@ -609,15 +643,17 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
   let connection;
   let dataDheOra
 
+  let transaksioniID = 0
+
   try {
-    dataDheOra = await getDateTime(); // Await the result of getDateTime
+    dataDheOra = await getDateTime(); 
 
     connection = await sql.connect(config);
 
-    // Generate the next unique 'shifra' for transaksioni
     const shifra = await generateNextShifra('shitje', 'SH');
-    // Insert into the 'transaksioni' table and get the inserted ID
-    const insertTransaksioniQuery = `
+
+    if(data.lloji == 'dyqan'){
+      const insertTransaksioniQuery = `
       INSERT INTO transaksioni (
         shifra, lloji, totaliPerPagese, totaliIPageses, mbetjaPerPagese, dataTransaksionit, perdoruesiID, nderrimiID, komenti
       ) OUTPUT INSERTED.transaksioniID VALUES (
@@ -637,9 +673,9 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
       .input('komenti', sql.VarChar, data.komenti)
       .query(insertTransaksioniQuery);
 
-    const transaksioniID = transaksioniResult.recordset[0].transaksioniID;
+     transaksioniID = transaksioniResult.recordset[0].transaksioniID;
+    }
 
-    // Insert into the 'shitje' table and get the inserted ID
     const insertShitjeQuery = `
       INSERT INTO shitje (
         shifra, lloji, komenti, totaliPerPagese, totaliPageses, mbetjaPerPagese, dataShitjes, nrPorosise, menyraPagesesID, perdoruesiID, transaksioniID, subjektiID
@@ -843,7 +879,59 @@ ipcMain.handle('deleteKategoria', async (event, idPerAnulim) => {
     }
   }
 });
+ipcMain.handle('deleteShpenzimi', async (event, data) => {
+  let connection;
 
+  try {
+    connection = await sql.connect(config);
+      const deleteShpenzimiFromTransaksioni = `
+         DELETE FROM transaksioni 
+         WHERE transaksioniID = @transaksioniID
+      `
+      await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShpenzimiFromTransaksioni);
+
+      const deleteShpenzimiQuery = `
+        DELETE FROM shpenzimi 
+        WHERE shpenzimiID = @shpenzimiID
+      `;
+
+      await connection.request().input('shpenzimiID', sql.Int, data.idPerAnulim).query(deleteShpenzimiQuery);
+      
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+ipcMain.handle('deleteLlojiShpenzimit', async (event, idPerAnulim) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const deleteLlojetShpenzimeveQuery = `
+        DELETE FROM llojetShpenzimeve 
+        WHERE llojetShpenzimeveID = @llojetShpenzimeveID
+      `;
+
+      await connection.request().input('llojetShpenzimeveID', sql.Int, idPerAnulim).query(deleteLlojetShpenzimeveQuery);
+
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
 
 ipcMain.handle('ndryshoKategorine', async (event, data) => {
   let connection;
@@ -865,6 +953,85 @@ ipcMain.handle('ndryshoKategorine', async (event, data) => {
       .input('komponenta', sql.VarChar, data.komponenta)
       .input('kategoriaID', sql.Int, data.kategoriaID)
       .query(updateKategoriaQuery);   
+
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+ipcMain.handle('ndryshoShpenzimin', async (event, data) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+    // Single request to reuse between queries
+    const request = connection.request()
+      .input('totaliperPagese', sql.Decimal(10,2), data.shumaShpenzimit)
+      .input('totaliIPageses', sql.Decimal(10,2), data.shumaShpenzimit)
+      .input('komenti', sql.VarChar, data.komenti)
+      .input('transaksioniID', sql.Int, data.transaksioniID)
+      .input('llojetShpenzimeveID', sql.Int, data.llojetShpenzimeveID)
+      .input('shumaShpenzimit', sql.Decimal(10,2), data.shumaShpenzimit)
+      .input('shpenzimiID', sql.Int, data.shpenzimiID);
+
+    // Update transaksioni query
+    const updateTransaksioniQuery = `
+      UPDATE transaksioni
+      SET totaliperPagese = @totaliperPagese,
+          totaliIPageses = @totaliIPageses,
+          komenti = @komenti
+      WHERE transaksioniID = @transaksioniID
+    `;
+
+    await request.query(updateTransaksioniQuery);
+
+    // Update shpenzimi query
+    const updateShpenzimiQuery = `
+      UPDATE shpenzimi 
+      SET llojetShpenzimeveID = @llojetShpenzimeveID,
+          shumaShpenzimit = @shumaShpenzimit,
+          komenti = @komenti
+      WHERE shpenzimiID = @shpenzimiID
+    `;
+
+    await request.query(updateShpenzimiQuery);
+
+    return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message }; // Returning a detailed error
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+ipcMain.handle('ndryshoLlojinShpenzimit', async (event, data) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const updateLlojetShpezimeveQuery = `
+        Update llojetShpenzimeve 
+        SET emertimi = @emertimi,
+            shumaStandarde = @shumaStandarde
+        where llojetShpenzimeveID = @llojetShpenzimeveID
+      `;
+
+      await connection.request()
+      .input('emertimi', sql.VarChar, data.emertimi)
+      .input('shumaStandarde', sql.Decimal(10,2), data.shumaStandarde)
+      .input('llojetShpenzimeveID', sql.Int, data.llojetShpenzimeveID)
+      .query(updateLlojetShpezimeveQuery);   
 
       return { success: true };
 

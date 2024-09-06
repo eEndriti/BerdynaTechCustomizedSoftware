@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Container, Row, Col, Table, Form,Spinner } from "react-bootstrap";
+import { Button, Container, Row, Col, Table, Form, Spinner } from "react-bootstrap";
 import KerkoSubjektin from "./KerkoSubjektin";
 import KerkoProduktin from "./KerkoProduktin";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; // Import the specific icon
+import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ShtoNjeProdukt from "./ShtoNjeProdukt";
@@ -19,15 +19,17 @@ export default function Shitje() {
   const [selectedRow, setSelectedRow] = useState(null);
   const [totaliPerPagese, setTotaliPerPagese] = useState(0);
   const [totaliPageses, setTotaliPageses] = useState(0);
-  const [komentiShitjes,setKomentiShitjes] = useState('')
-  const [nrPorosise,setNrPorosise] = useState(0)
-  const [menyratPageses,setMenyratPageses] = useState([])
-  const [showShtoProduktinModal,setShowShtoProduktinModal] = useState(false)
-  const [loading,setLoading] = useState(false)
+  const [komentiShitjes, setKomentiShitjes] = useState('');
+  const [nrPorosise, setNrPorosise] = useState(0);
+  const [menyratPageses, setMenyratPageses] = useState([]);
+  const [showShtoProduktinModal, setShowShtoProduktinModal] = useState(false);
+  const [loading, setLoading] = useState(true); // Set default to true to show loading initially.
 
   useEffect(() => {
+    // Fetching 'menyratPageses' data and simulating a database request
     window.api.fetchTableMenyratPageses().then(receivedData => {
       setMenyratPageses(receivedData);
+      setLoading(false); // Stop loading once data is retrieved.
     });
   }, []);
 
@@ -70,9 +72,9 @@ export default function Shitje() {
     setLlojiShitjes(lloji);
     setTotaliPageses(0);
   };
+  
   const handleMenyraPagesesID = (menyraPagesesID) => {
     setMenyraPagesesID(menyraPagesesID);
-
   };
 
   const handleSelectSubjekti = (result) => {
@@ -90,106 +92,108 @@ export default function Shitje() {
   const mbetjaPerPagese = (totaliPerPagese - totaliPageses).toFixed(2);
 
   const handleAnulo = () => {
-    navigate('/faqjaKryesore')
-  }
+    navigate('/faqjaKryesore');
+  };
 
   const handleRegjistro = async () => {
-    setLoading(true)
     const perdoruesiID = localStorage.getItem('perdoruesiID');
-  
-    if(perdoruesiID && menyraPagesesID){
-      const data = {
-        lloji: llojiShitjes,
-        komenti: komentiShitjes,
-        totaliPerPagese: totaliPerPagese,
-        totaliPageses: totaliPageses,
-        mbetjaPerPagese: mbetjaPerPagese,
-        nrPorosise: nrPorosise, 
-        menyraPagesesID: menyraPagesesID,
-        perdoruesiID: perdoruesiID,
-        subjektiID: selectedSubjekti.subjektiID,
-        nderrimiID: 1 ,
-        produktet:products
-      };
-    
-      const result = await window.api.insertTransaksioniAndShitje(data);
-    
-      try{
-        if (result.success) {
-          toast.success('Shitja u Regjistrua me Sukses !', {
-            position: "top-center",  
-            autoClose: 1500,
-            onClose: () =>         navigate('/faqjaKryesore') 
-          });            ;
-        } else {
-          toast.error('Gabim gjate regjistrimit: ' + result.error);
-        }
-      }catch(error){
-        toast.error('Gabim gjate komunikimit me server ',+error)
-      }finally{
-        setLoading(false)
-      }
-      }else{
-        toast.warn('Ju Lutem Plotesoni te Gjitha Fushat!',{
-          position: "top-center",
-          autoClose: 1500
-        })
-      }
-      
-    
+
+    if (!perdoruesiID || !menyraPagesesID || !selectedSubjekti?.subjektiID || !products?.length) {
+      toast.error('Të gjitha fushat e nevojshme duhet të plotësohen!');
+      return;
     }
+  
+    setLoading(true);  
+    const data = {
+      lloji: llojiShitjes,
+      komenti: komentiShitjes,
+      totaliPerPagese: totaliPerPagese,
+      totaliPageses: totaliPageses,
+      mbetjaPerPagese: mbetjaPerPagese,
+      nrPorosise: nrPorosise, 
+      menyraPagesesID: menyraPagesesID,
+      perdoruesiID: perdoruesiID,
+      subjektiID: selectedSubjekti.subjektiID,
+      nderrimiID: 1,
+      produktet: products.map(product => ({
+        produktID: product.produktID,
+        sasia: product.sasia,
+        cmimi: product.cmimi
+      }))
+    };
+  
+    try {
+      const result = await window.api.insertTransaksioniAndShitje(data);
+      if (result.success) {
+        toast.success('Shitja u Regjistrua me Sukses!', {
+          position: "top-center",  
+          autoClose: 1500
+        }); 
+      } else {
+        toast.error('Gabim gjate regjistrimit: ' + result.error);
+      }
+    } catch (error) {
+      toast.error('Gabim gjate komunikimit me server: ' + error.message);
+    } finally {
+      setLoading(false);
+      navigate('/faqjaKryesore')
+    }
+  };
+  
 
   const handleDeleteRow = (index) => {
     const updatedProducts = products.filter((_, i) => i !== index);
     setProducts(updatedProducts);
   };
-  const handleKomentiShitjesChange = (event) =>{
-    setKomentiShitjes(event.target.value)
-  }
 
-  const handleNrPorosiseChange = (event) =>{
-    setNrPorosise(event.target.value)
-  }
+  const handleKomentiShitjesChange = (event) => {
+    setKomentiShitjes(event.target.value);
+  };
+
+  const handleNrPorosiseChange = (event) => {
+    setNrPorosise(event.target.value);
+  };
 
   const handleCloseShtoProduktinModal = () => setShowShtoProduktinModal(false);
 
+  // Render the page
   return (
     <Container fluid className="mt-2 d-flex flex-column" style={{ minHeight: "95vh" }}>
       <Row className="d-flex flex-row justify-content-between">
-        <Col>
-          <Form.Group as={Row} controlId="subjekti" className="mb-2">
-            <Form.Label column xs={6} className="text-start w-auto">Subjekti:</Form.Label>
-            <Col xs={6}>
-              <KerkoSubjektin value={selectedSubjekti.emertimi} onSelect={handleSelectSubjekti} />
+            <Col>
+              <Form.Group as={Row} controlId="subjekti" className="mb-2">
+                <Form.Label column xs={6} className="text-start w-auto">Subjekti:</Form.Label>
+                <Col xs={6}>
+                  <KerkoSubjektin value={selectedSubjekti.emertimi} onSelect={handleSelectSubjekti} />
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row} controlId="kontakti" className="mb-2">
+                <Form.Label column xs={6} className="text-start w-auto">Kontakti:</Form.Label>
+                <Col xs={6}>
+                  <Form.Control disabled type="number" value={selectedSubjekti.kontakti} />
+                </Col>
+              </Form.Group>
             </Col>
-          </Form.Group>
-          <Form.Group as={Row} controlId="kontakti" className="mb-2">
-            <Form.Label column xs={6} className="text-start w-auto">Kontakti:</Form.Label>
-            <Col xs={6}>
-              <Form.Control disabled type="number" value={selectedSubjekti.kontakti} />
+            <Col className="d-flex flex-row justify-content-end">
+              <Button
+                variant={llojiShitjes === "dyqan" ? "primary" : "outline-primary"}
+                size="lg"
+                className="mx-1 w-25"
+                onClick={() => handleLlojiShitjesClick("dyqan")}
+              >
+                Shitje ne Dyqan
+              </Button>
+              <Button
+                variant={llojiShitjes === "online" ? "primary" : "outline-primary"}
+                size="lg"
+                className="mx-1 w-25"
+                onClick={() => handleLlojiShitjesClick("online")}
+              >
+                Shitje Online
+              </Button>
             </Col>
-          </Form.Group>
-        </Col>
-        <Col className="d-flex flex-row justify-content-end">
-          <Button
-            variant={llojiShitjes === "dyqan" ? "primary" : "outline-primary"}
-            size="lg"
-            className="mx-1 w-25"
-            onClick={() => handleLlojiShitjesClick("dyqan")}
-          >
-            Shitje ne Dyqan
-          </Button>
-          <Button
-            variant={llojiShitjes === "online" ? "primary" : "outline-primary"}
-            size="lg"
-            className="mx-1 w-25"
-            onClick={() => handleLlojiShitjesClick("online")}
-          >
-            Shitje Online
-          </Button>
-        </Col>
         <Col className=" d-flex flex-row justify-content-end">
-          <Button variant="info" className="text-dark border fs-5 p-4 m-2">Te Gjitha Shitjet</Button>
+          <Button variant="info" className="text-dark border fs-5 p-4 m-2" onClick={() => navigate('/shitjet')}>Te Gjitha Shitjet</Button>
         </Col>
       </Row>
       <Row className="mt-5">
@@ -303,7 +307,9 @@ export default function Shitje() {
       <Row className="section3 my-5 d-flex justify-content-end">
         <Col xs={12} md={6} className="d-flex justify-content-center align-items-end">
           <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleAnulo}>Anulo</Button>
-          <Button variant="success" size="lg" className="mx-2 fs-1" disabled={!(selectedSubjekti.subjektiID) || !(products.length>1)} onClick={handleRegjistro} >{loading ? (
+          <Button variant="success" size="lg" className="mx-2 fs-1" 
+          disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || !(menyraPagesesID)} 
+          onClick={handleRegjistro} >{loading ? (
             <>
               <Spinner
                 as="span"
@@ -388,7 +394,6 @@ export default function Shitje() {
       </Row>
 
       <ShtoNjeProdukt show={showShtoProduktinModal} handleClose={handleCloseShtoProduktinModal} />
-
       <ToastContainer/>
     </Container>
   );

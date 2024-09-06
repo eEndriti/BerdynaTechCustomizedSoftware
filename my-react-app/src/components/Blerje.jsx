@@ -1,5 +1,5 @@
 import { useState,useEffect } from "react";
-import { Container, Row,Col,Form, Button,Table } from "react-bootstrap";
+import { Container, Row,Col,Form, Button,Table,Spinner } from "react-bootstrap";
 import KerkoSubjektin from './KerkoSubjektin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; 
@@ -24,6 +24,7 @@ export default function Blerje() {
   const [meFatureTeRregullt,setMeFatureTeRregullt] = useState(false)
   const [totaliTvsh,setTotaliTvsh] = useState(0)
   const [nrFatures,setNrFatures] = useState()
+  const [loading,setLoading] = useState(false)
 
   useEffect(() => {
     window.api.fetchTableMenyratPageses().then(receivedData => {
@@ -105,46 +106,58 @@ export default function Blerje() {
   }
 
   const handleRegjistro = async () => {
-
+    setLoading(true);
     const perdoruesiID = localStorage.getItem('perdoruesiID');
-    console.log(products)
-    if(perdoruesiID && menyraPagesesID){
-      const data = {
-        totaliPerPagese: totaliPerPagese,
-        totaliPageses: totaliPageses,
-        mbetjaPerPagese: mbetjaPerPagese,
-        dataFatures:dataEFatures,
-        komenti:komentiBlerjes,
-        fatureERregullt:meFatureTeRregullt,
-        nrFatures:nrFatures,
-        perdoruesiID: perdoruesiID,
-        subjektiID:selectedSubjekti.subjektiID,
-        menyraPagesesID: menyraPagesesID,
-        nderrimiID: 1 ,
-        produktet:products
-      };
-    
-      // Call the Electron API to insert both transaksioni and shitje
+  
+    if (!perdoruesiID || !menyraPagesesID) {
+      setLoading(false); 
+      return toast.warn('Ju Lutem Plotesoni te Gjitha Fushat!', {
+        position: "top-center",
+        autoClose: 1500,
+      });
+    }
+  
+    const data = {
+      totaliPerPagese,
+      totaliPageses,
+      mbetjaPerPagese,
+      dataFatures: dataEFatures,
+      komenti: komentiBlerjes,
+      fatureERregullt: meFatureTeRregullt,
+      nrFatures,
+      perdoruesiID,
+      subjektiID: selectedSubjekti.subjektiID,
+      menyraPagesesID,
+      nderrimiID: 1,
+      produktet: products,
+    };
+  
+    try {
       const result = await window.api.insertBlerje(data);
-    
+  
       if (result.success) {
-        toast.success('Blerja u Regjistrua me Sukses !', {
-          position: "top-center",  // Use string directly instead of toast.POSITION.TOP_CENTER
-          autoClose: 1500, // Optional: Delay before auto-close
-          onClose: () =>         navigate('/faqjaKryesore')
-        });            ;
-      } else {
-        toast.error('Gabim gjate regjistrimit: ' + result.error);
-      }
-      }else{
-        toast.warn('Ju Lutem Plotesoni te Gjitha Fushat!',{
+        toast.success('Blerja u Regjistrua me Sukses!', {
           position: "top-center",
           autoClose: 1500
-        })
+        });
+        navigate('/faqjaKryesore')
+      } else {
+        toast.error('Gabim gjate regjistrimit: ' + result.error, {
+          position: "top-center",
+          autoClose: 1500,
+        });
       }
-      
-    
+    } catch (error) {
+      toast.error('Gabim gjate komunikimit me server: ' + error.message, {
+        position: "top-center",
+        autoClose: 1500,
+      });
+    } finally {
+      setLoading(false); 
     }
+  };
+  
+  
   return (
     <Container>
       <Row>
@@ -175,7 +188,7 @@ export default function Blerje() {
           </Form.Group>
         </Col>
         <Col className="d-flex justify-content-center align-items-center">
-          <Button variant="info" className="p-2 fs-5">Te Gjitha Blerjet</Button>
+          <Button variant="info" className="p-2 fs-5" onClick={() => navigate('/blerjet')}>Te Gjitha Blerjet</Button>
         </Col>
       </Row>
       <hr/>
@@ -272,7 +285,20 @@ export default function Blerje() {
       <Row className="section3 my-5 d-flex justify-content-end">
         <Col xs={12} md={6} className="d-flex justify-content-center align-items-end">
           <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleAnulo}>Anulo</Button>
-          <Button variant="success" size="lg" className="mx-2 fs-1" disabled={!(selectedSubjekti.subjektiID) || !(products.length>1)} onClick={handleRegjistro} >Regjistro</Button>
+          <Button variant="success" size="lg" className="mx-2 fs-1" disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || nrFatures == null || loading} onClick={handleRegjistro} >{loading ? (
+            <>
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />{' '}
+              Duke ruajtur...
+            </>
+          ) : (
+            'Regjistro...'
+          )}</Button>
         </Col>
 
         <Col xs={12} md={6} className="d-flex flex-column align-items-end">

@@ -9,6 +9,10 @@ import Shpenzim from './components/Shpenzim'
 import Blerje from './components/Blerje';
 import Produktet from './components/Produktet';
 import Kategorite from './components/Kategorite'
+import Furnitor from './components/Furnitor';
+import Klient from './components/Klient';
+import Blerjet from './components/Blerjet';
+import Shitjet from './components/Shitjet';
 
 let aKaUser = localStorage.getItem('aKaUser')
 
@@ -48,6 +52,22 @@ const router = createBrowserRouter([
       },{
         path: '/kategorite',
         element:<Kategorite />
+      },
+      {
+        path: '/klient',
+        element:<Klient />
+      },
+      {
+        path: '/furnitor',
+        element:<Furnitor />
+      },
+      {
+        path: '/blerjet',
+        element:<Blerjet />
+      },
+      {
+        path: '/shitjet',
+        element:<Shitjet />
       },
       {
         path: '/',

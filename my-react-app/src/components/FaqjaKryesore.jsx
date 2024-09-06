@@ -88,6 +88,7 @@ function FaqjaKryesoreAdmin() {
 
   const handleCloseModal = () => setShowModal(false);
 
+
   return (
     <div>
       <div className="container my-3 tabelaTransaksioneve ">
@@ -103,25 +104,38 @@ function FaqjaKryesoreAdmin() {
                 <th scope="col">Totali Pageses</th>
                 <th scope="col">Mbetja Per Pagese</th>
                 <th scope="col">Komenti</th>
+                <th scope="col">Koha</th>
                 <th scope="col">Opsionet</th>
               </tr>
             </thead>
             <tbody>
-            {transaksionetENderrimit.map((item,index) => (
+            {transaksionetENderrimit.slice().reverse().map((item, index) => (
               <tr key={index}>
-                <th scope="row">{index+1}</th>
-                <td>{item.shifra}</td>
-                <td>{item.lloji}</td>
-                <td>{item.totaliperPagese.toFixed(2)} €</td>
-                <td className={item.mbetjaPerPagese > 0 ? 'text-danger' : 'text-success'}>{item.totaliIPageses.toFixed(2)} €</td>
-                <td>{item.mbetjaPerPagese.toFixed(2)} €</td>
-                <td>{item.komenti}</td>
-                <td>
-                  <Button className='btn btn-primary' onClick={() => ndryshoTransaksionin(item.lloji, item.transaksioniID)}>Ndrysho</Button>
-                  <Button className='btn bg-transparent border-0 text-danger' onClick={() => thirreModal(item.lloji, item.transaksioniID,'anuloTransaksionin')}><FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} /></Button>
-                </td>
+                {item.transaksioniID != 0 ? (
+                  <>
+                    <th scope="row">{transaksionetENderrimit.length - index}</th>
+                    <td>{item.shifra}</td>
+                    <td>{item.lloji}</td>
+                    <td>{item.totaliperPagese.toFixed(2)} €</td>
+                    <td className={item.mbetjaPerPagese > 0 ? 'text-danger' : 'text-success'}>
+                      {item.totaliIPageses.toFixed(2)} €
+                    </td>
+                    <td>{item.mbetjaPerPagese.toFixed(2)} €</td>
+                    <td>{item.komenti}</td>
+                    <td>{item.dataTransaksionit.toLocaleTimeString()}</td>
+                    <td>
+                      <Button className='btn btn-primary' onClick={() => ndryshoTransaksionin(item.lloji, item.transaksioniID)}>
+                        Ndrysho
+                      </Button>
+                      <Button className='btn bg-transparent border-0 text-danger' onClick={() => thirreModal(item.lloji, item.transaksioniID, 'anuloTransaksionin')}>
+                        <FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} />
+                      </Button>
+                    </td>
+                  </>
+                ) : null}
               </tr>
             ))}
+
             </tbody>
           </table>
         </div>

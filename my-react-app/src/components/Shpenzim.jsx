@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Row, Col, Button, Form } from 'react-bootstrap';
+import  { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrashCan,faPen } from '@fortawesome/free-solid-svg-icons'; 
+import { Row, Col, Button, Form,Spinner,Modal} from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import ModalPerPyetje from './ModalPerPyetje'
 
 export default function Shpenzim() {
   const [shpenzimet, setShpenzimet] = useState([]);
@@ -16,7 +18,14 @@ export default function Shpenzim() {
   const [shumaStandardeERe, setShumaStandardeERe] = useState('');
   const [startDate, setStartDate] = useState(new Date().toISOString().substring(0, 10));
   const [endDate, setEndDate] = useState(new Date().toISOString().substring(0, 10));
-
+  const [loading,setLoading] = useState(false)
+  const [shfaqLlojetEShpenzimeve,setShfaqLlojetEShpenzimeve] = useState(false)
+  const [showModal,setShowModal] = useState(false)
+  const [selectedRowData,setSelectedRowData] = useState({})
+  const [idPerAnulim,setIdPerAnulim] = useState()
+  const [ShowModalPerPyetje,setShowModalPerPyetje] = useState(false)
+  const [burimiThirrjes,setBurimiThirrjes] = useState()
+  const [transaksioniIDPerDelete,setTransaksioniIDPerDelete] = useState()
   useEffect(() => {2
     // Fetch all shpenzimet data
     window.api.fetchTableShpenzimet().then(receivedData => {
@@ -44,11 +53,9 @@ export default function Shpenzim() {
   const handleSelectChange = (event) => {
     const selectedValue = event.target.value;
     setLlojiShpenzimeveSelektuarID(selectedValue);
-    console.log(llojetShpenzimeve)
     const selectedItem = llojetShpenzimeve.find(item => item.llojetShpenzimeveID == selectedValue);
     if (selectedItem) {
       setSelectedShumaStandarde(selectedItem.shumaStandarde);
-      setSelectedLlojShpenzimi(selectedItem);
     }
   };
 
@@ -69,6 +76,7 @@ export default function Shpenzim() {
   };
 
   const shtoShpenzimin = async () => {
+    setLoading(true)
     const perdoruesiID = localStorage.getItem('perdoruesiID');
     const data = {
       shumaShpenzimit: selectedShumaStandarde,
@@ -79,12 +87,14 @@ export default function Shpenzim() {
     };
     const result = await window.api.insertShpenzimi(data);
     if (result.success) {
+      setLoading(false)
       toast.success('Shpenzimi u Regjistrua me Sukses!', {
         position: "top-center",  // Use string directly instead of toast.POSITION.TOP_CENTER
         autoClose: 1500, // Optional: Delay before auto-close
         onClose: () => window.location.reload(), // Reload the page after the toast closes
       });            
     } else {
+      setLoading(false)
       toast.error('Gabim gjate regjistrimit: ' + result.error);
     }
   };
@@ -98,24 +108,177 @@ export default function Shpenzim() {
   };
 
   const shtoLlojinShpenzimit = async () => {
+    setLoading(true)
     const data = {
       emertimi: shpenzimiRi,
       shumaStandarde: shumaStandardeERe
     };
     const result = await window.api.insertLlojiShpenzimit(data);
     if (result.success) {
+      setLoading(false)
       toast.success('Lloji i Shpenzimit u Regjistrua me Sukses!', {
         position: "top-center",  // Use string directly instead of toast.POSITION.TOP_CENTER
         autoClose: 1500, // Optional: Delay before auto-close
         onClose: () => window.location.reload(), // Reload the page after the toast closes
       });            ;
     } else {
+      setLoading(false)
       toast.error('Gabim gjate regjistrimit: ');
     }
   };
+  const handleEditShpenzimiClick = (item) =>{
+    setSelectedRowData({
+      ...item,
+      lloji:true // 1 nenkupton shpenzim per me bo conditional rendering ma tleht
+    })
+    setShowModal(true)
+    console.log(selectedRowData)
+  }
+  const handleEditLlojiShpenzimitClick = (item) =>{
+    setSelectedRowData({
+      ...item,
+      lloji:false // 0 nenkupton shpenzim per me bo conditional rendering ma tleht
+    })
+    setShowModal(true)
+  }
+  const handleRuajNdryshimet = async () =>{
+    setLoading(true)
+    let result
+    
+    if(selectedRowData.lloji){
+      const data = {
+        llojetShpenzimeveID:llojiShpenzimeveSelektuarID,
+        shumaShpenzimit:selectedRowData.shumaShpenzimit,
+        komenti:selectedRowData.komenti,
+        transaksioniID:selectedRowData.transaksioniID,
+        shpenzimiID:selectedRowData.shpenzimiID
+      }
+       result = await window.api.ndryshoShpenzimin(data)
+    }else{
+      const data = {
+        emertimi:selectedRowData.emertimi,
+        shumaStandarde:selectedRowData.shumaShpenzimit,
+        transaksioniID:selectedRowData.transaksioniID,
+        llojetShpenzimeveID:selectedRowData.llojetShpenzimeveID
+      }
+       result = await window.api.ndryshoLlojinShpenzimit(data)
+    }
 
+    if (result.success) {
+      toast.success('Ndryshimet u ruajten me sukses!', {
+        position: 'top-center',
+        autoClose: 1500,
+        onClose: () => window.location.reload(),
+      });
+    } else {
+      setLoading(false)
+      toast.error('Gabim gjate ndryshimit: ' + result.error);
+    }
+    setShowModal(false);
+  }
+
+  const thirreModalPerPyetje = (idPerAnulim,transaksioniID,burimiThirrjes) =>{
+    setTransaksioniIDPerDelete(transaksioniID)
+    setIdPerAnulim(idPerAnulim)
+    setShowModalPerPyetje(true)
+    setBurimiThirrjes(burimiThirrjes)
+  }
+  const handleCloseModalPerPyetje = () =>{
+    setShowModalPerPyetje(false)
+  }
+  const handleConfirmModal = () =>{
+    handleDelete()
+  }
+  const handleDelete = async () =>{
+    let result
+
+    if(burimiThirrjes == 'Shpenzimi'){
+      const data ={
+        transaksioniIDPerDelete,
+        idPerAnulim
+      }
+      result = await window.api.deleteShpenzimi(data)
+    }else{
+      result =await window.api.deleteLlojiShpenzimit(idPerAnulim)
+    }
+    console.log(result)
+    if (result.success) {
+      toast.success(` u fshi me sukses!`, {
+        position: 'top-center',
+        autoClose: 1500,
+        onClose: () => window.location.reload(),
+      });
+    } else {
+      setLoading(false)
+      toast.error('Gabim gjate fshirjes: ' + result.error);
+    }
+  }
+  
   return (
     <div>
+      <Row>
+        <Col>
+          <Button variant={!shfaqLlojetEShpenzimeve ? 'info' : 'secondary'} className='fs-5 ' onClick={() => setShfaqLlojetEShpenzimeve(!shfaqLlojetEShpenzimeve)}>Llojet e Shpenzimeve</Button>
+        </Col>
+        <Col className=''>
+          <Button className='fs-5'>Kalo nga Stoki ne Shpenzim</Button>
+        </Col>
+      </Row>
+      {shfaqLlojetEShpenzimeve ? <>
+        <Row className='d-flex flex-row justify-content-start m-5 '>
+        <Col lg={5} className='d-flex flex-column justify-content-start bg-light border py-3'>
+          <h3>Shto nje Lloj Shpenzimi te Ri</h3>
+          <Form.Group>
+            <Form.Label>Emertimi:</Form.Label>
+            <Form.Control
+              type='text'
+              placeholder='Emertimi i Shpenzimit te Ri...'
+              onChange={handleShpenzimiRiChange}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Shuma Standarde:</Form.Label>
+            <Form.Control
+              type='number'
+              placeholder='Shuma Standarde...'
+              onChange={handleShumaStandardeEReChange}
+            />
+          </Form.Group>
+          <Button variant='success' className='my-4' onClick={shtoLlojinShpenzimit} disabled={loading}>{loading ? <>
+            <Spinner as="span" animation='border' size='sm' role='status' aria-hidden={true}/>{''}Duke Ruajtur...
+          </>:'Regjistro Llojin e Shpenzimit'}</Button>
+        </Col>
+        <Col className='tabelaLlojeveShpenzimeve col-xs-12 col-sm-12 col-md-6 col-lg-6 px-5'>
+          <h2>Llojet e Shpenzimeve:</h2>
+          <div className="table-responsive tabeleMeMaxHeight">
+            <table className="table table-sm table-striped text-center">
+              <thead className="table-light">
+                <tr className='fs-5'>
+                  <th scope="col">Nr</th>
+                  <th scope="col">Emertimi</th>
+                  <th scope="col">Shuma Standarde</th>
+                  <th scope="col">Opsionet</th>
+                </tr>
+              </thead>
+              <tbody>
+                {llojetShpenzimeve.map((item, index) => (
+                  <tr key={index}>
+                    <th scope="row">{index + 1}</th>
+                    <td>{item.emertimi}</td>
+                    <td>{item.shumaStandarde.toFixed(2)} €</td>
+                    <td>
+                     <Button onClick={() => handleEditLlojiShpenzimitClick(item)}><FontAwesomeIcon icon={faPen}/></Button>
+                     {item.total_shpenzime < 1 ? <>
+                      <Button variant='danger' className='m-1' onClick={() => thirreModalPerPyetje(item.llojetShpenzimeveID,'Lloji i Shpenzimit')}><FontAwesomeIcon icon={faTrashCan}/></Button></>:null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Col>
+      </Row>
+      </> : <>
       <Row className='d-flex flex-row justify-content-start m-5'>
         <Col lg={3} className='d-flex flex-column justify-content-start bg-light border py-3'>          
           <h3 className='text-center'>Shto nje Shpenzim</h3>
@@ -144,7 +307,9 @@ export default function Shpenzim() {
             </Form.Group>
           </div>
           <div className=''>
-            <Button variant='success w-100 mt-3' onClick={shtoShpenzimin}>Regjistro</Button>
+            <Button variant='success w-100 mt-3' onClick={shtoShpenzimin} disabled = {loading}>{loading ? <>
+            <Spinner as="span" animation='border' size='sm' role='status' aria-hidden={true}/>{''}Duke Ruajtur...
+          </>:'Regjistro'}</Button>
           </div>
         </Col>
         <Col className='d-flex flex-column mx-5'>
@@ -182,6 +347,7 @@ export default function Shpenzim() {
                 </thead>
                 <tbody>
                   {filteredShpenzimet.map((item, index) => (
+                    
                     <tr key={index}>
                       <th scope="row">{index + 1}</th>
                       <td>{item.shifra}</td>
@@ -190,7 +356,8 @@ export default function Shpenzim() {
                       <td>{item.komenti}</td>
                       <td>{item.perdoruesi}</td>
                       <td>
-                        Edit/Delete
+                        <Button onClick={() => handleEditShpenzimiClick(item)}><FontAwesomeIcon icon={faPen}/></Button>
+                        <Button variant='danger' className='m-1' onClick={() => thirreModalPerPyetje(item.shpenzimiID,item.transaksioniID,'Shpenzimi')}><FontAwesomeIcon icon={faTrashCan}/></Button>
                       </td>
                     </tr>
                   ))}
@@ -205,61 +372,75 @@ export default function Shpenzim() {
           )}
         </Col>
       </Row>
-      <hr/>
-      <Row className='d-flex flex-row justify-content-start m-5 '>
-        <Col lg={5} className='d-flex flex-column justify-content-start bg-light border py-3'>
-          <h3>Shto nje Lloj Shpenzimi te Ri</h3>
-          <Form.Group>
-            <Form.Label>Emertimi:</Form.Label>
-            <Form.Control
-              type='text'
-              placeholder='Emertimi i Shpenzimit te Ri...'
-              onChange={handleShpenzimiRiChange}
-            />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Shuma Standarde:</Form.Label>
-            <Form.Control
-              type='number'
-              placeholder='Shuma Standarde...'
-              onChange={handleShumaStandardeEReChange}
-            />
-          </Form.Group>
-          <Button variant='success' className='my-4' onClick={shtoLlojinShpenzimit}>Regjistro Llojin e Ri te Shpenzimeve</Button>
-        </Col>
-        <Col className='tabelaLlojeveShpenzimeve col-xs-12 col-sm-12 col-md-6 col-lg-6 px-5'>
-          <h2>Llojet e Shpenzimeve:</h2>
-          <div className="table-responsive tabeleMeMaxHeight">
-            <table className="table table-sm table-striped text-center">
-              <thead className="table-light">
-                <tr className='fs-5'>
-                  <th scope="col">Nr</th>
-                  <th scope="col">Emertimi</th>
-                  <th scope="col">Shuma Standarde</th>
-                  <th scope="col">Opsionet</th>
-                </tr>
-              </thead>
-              <tbody>
-                {llojetShpenzimeve.map((item, index) => (
-                  <tr key={index}>
-                    <th scope="row">{index + 1}</th>
-                    <td>{item.emertimi}</td>
-                    <td>{item.shumaStandarde.toFixed(2)} €</td>
-                    <td>
-                      Edit/Delete
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Col>
-      </Row>
-      <hr/>
-      <div className='d-flex flex-row justify-content-center mt-5 m-5'>
-        <Button className='fs-5'>Kalo nga Stoki ne Shpenzim</Button>
-      </div>
+      </>}
       <ToastContainer/>
+      <ModalPerPyetje show={ShowModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
+  <Modal.Header closeButton>
+    <Modal.Title>{selectedRowData.lloji ? 'Ndrysho Shpenzimin' : 'Ndrysho Llojin e Shpenzimit'}</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <Form.Group>
+      {selectedRowData.lloji && <><Form.Label>Shifra:</Form.Label>
+      <Form.Control
+        type="text"
+        disabled
+        value={selectedRowData.shifra}
+        onChange={(e) => setSelectedRowData({...selectedRowData, shifra: e.target.value})}
+      /></>}
+    </Form.Group>
+    {selectedRowData.lloji ? <>
+      <Form.Group className='m-3'>
+              <Form.Select onChange={handleSelectChange} aria-label="Selekto nje Lloj Shpenzimi">
+                <option value="" disabled selected defaultValue={2}>Selekto nje Lloj Shpenzimi</option>
+                {llojetShpenzimeve.map((item, index) => (
+                  <option key={index} value={item.llojetShpenzimeveID}>
+                    {item.emertimi}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+    </> : <>
+    <Form.Group>
+      <Form.Label>Emertimi:</Form.Label>
+      <Form.Control
+        type="text"
+        value={selectedRowData.emertimi}
+        onChange={(e) => setSelectedRowData({...selectedRowData, emertimi: e.target.value})}
+      />
+    </Form.Group>
+    </>}
+
+    
+    <Form.Group>
+      <Form.Label>Shuma:</Form.Label>
+      <Form.Control
+        type="number"
+        min={0}
+        defaultValue={selectedRowData.shumaStandarde}
+        value={selectedRowData.shumaShpenzimit}
+        onChange={(e) => setSelectedRowData({...selectedRowData, shumaShpenzimit: e.target.value})}
+      />
+    </Form.Group>
+    {selectedRowData.lloji && <>
+      <Form.Group>
+      <Form.Label>Komenti:</Form.Label>
+      <Form.Control
+        as="textarea"
+        value={selectedRowData.komenti}
+        onChange={(e) => setSelectedRowData({...selectedRowData, komenti: e.target.value})}
+      />
+      </Form.Group>
+    </>}
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="secondary" onClick={() => setShowModal(false)}>Mbyll</Button>
+    <Button variant="primary" onClick={handleRuajNdryshimet} disabled={loading}>{loading ? <>
+      <Spinner as="span" animation='border' size='sm' role='status' aria-hidden={true}/>{''}Duke Ruajtur...
+      </> :'Ruaj Ndryshimet'}</Button>
+  </Modal.Footer>
+</Modal>
+
     </div>
   );
 }
