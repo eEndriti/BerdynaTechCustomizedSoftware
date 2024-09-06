@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Form, Table, Button } from "react-bootstrap";
+import ShtoNjeProdukt from "./ShtoNjeProdukt";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function KerkoProduktin({ show, onHide, onSelect }) {
   const [queryShifra, setQueryShifra] = useState("");
@@ -8,7 +11,7 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
   const [eliminoVleratZero, setEliminoVleratZero] = useState(true);
   const [results, setResults] = useState([]);
   const [produktet, setProduktet] = useState([]);
-
+  const [showShtoProduktinModal,setShowShtoProduktinModal] = useState(false)
   // Fetch data and filter results
   useEffect(() => {
     const fetchAndFilterData = async () => {
@@ -40,7 +43,7 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
     onSelect(item); // Ensure the selected item is passed back to the parent
     onHide(); // Close the modal after selection
   };
-
+  const handleCloseShtoProduktinModal = () =>  setShowShtoProduktinModal(false) 
   return (
     <Modal show={show} onHide={onHide} size="lg">
       <Modal.Header closeButton>
@@ -105,11 +108,16 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
           </tbody>
         </Table>
       </Modal.Body>
-      <Modal.Footer>
+      <Modal.Footer className="d-flex flex-row justify-content-between">
+        <Button variant="primary" onClick={() => setShowShtoProduktinModal(true)}>
+          Shto Nje Produkt
+        </Button>
         <Button variant="secondary" onClick={onHide}>
           Mbyll
-        </Button>
+        </Button> 
       </Modal.Footer>
+      <ShtoNjeProdukt show={showShtoProduktinModal} prejardhja={'paRefresh'} handleClose={handleCloseShtoProduktinModal} /> 
+      <ToastContainer/>
     </Modal>
   );
 }

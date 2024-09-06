@@ -152,7 +152,21 @@ async function fetchTableKategoria() {
   try {
     await sql.connect(config);
     const result = await sql.query`
-    select * from kategoria
+    
+SELECT 
+    k.kategoriaID,
+    k.emertimi,
+    k.tvsh,
+    k.komponenta,
+    COUNT(p.produktiID) AS total_produkte,
+    SUM(p.sasia) AS total_sasia
+FROM 
+    kategoria k
+LEFT JOIN 
+    produkti p ON k.kategoriaID = p.kategoriaID
+GROUP BY 
+    k.kategoriaID, k.emertimi, k.tvsh, k.komponenta;
+
     `;
     return result.recordset;
   } catch (err) {
@@ -361,6 +375,84 @@ ipcMain.handle('insertShpenzimi', async (event, data) => {
       .input('perdoruesiID', sql.Int, data.perdoruesiID)
       .input('transaksioniID', sql.Int, transaksioniID)
       .query(insertShpenzimi);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+ipcMain.handle('insertProduktin', async (event, data) => {
+  let connection;
+  let dataDheOra
+  try {
+    dataDheOra = await getDateTime(); // Await the result of getDateTime
+    // Connect to the database
+    connection = await sql.connect(config);
+
+    // Generate the next unique 'shifra' for transaksioni
+    const shifra = await generateNextShifra('produkti', 'P');
+    // Insert into the 'transaksioni' table and get the inserted ID
+
+   
+    const insertProdukti = `
+      INSERT INTO produkti (
+        shifra, emertimi, pershkrimi, sasia, cmimiBlerjes, cmimiShitjes, kategoriaID,dataKrijimit,komenti,cpu,ram,gpu,disku
+      )  VALUES (
+       @shifra, @emertimi, @pershkrimi, @sasia, @cmimiBlerjes, @cmimiShitjes, @kategoriaID,@dataKrijimit,@komenti,@cpu,@ram,@gpu,@disku
+      )
+    `;
+
+    const produktiResult = await connection.request()
+      .input('shifra', sql.VarChar, shifra)
+      .input('emertimi', sql.VarChar, data.emertimi)
+      .input('pershkrimi', sql.VarChar, data.pershkrimi)
+      .input('sasia', sql.Int, data.sasia)
+      .input('cmimiBlerjes', sql.Decimal(18,2), data.cmimiBlerjes)
+      .input('cmimiShitjes', sql.Decimal(18,2), data.cmimiShitjes)
+      .input('kategoriaID', sql.Int, data.kategoriaID)
+      .input('dataKrijimit', sql.Date, dataDheOra)
+      .input('komenti', sql.VarChar, data.komenti)
+      .input('cpu', sql.VarChar, data.cpu)
+      .input('ram', sql.VarChar, data.ram)
+      .input('gpu', sql.VarChar, data.gpu)
+      .input('disku', sql.VarChar, data.disku)
+      .query(insertProdukti);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+ipcMain.handle('insertKategorine', async (event, data) => {
+  let connection;
+  try {
+    // Connect to the database
+    connection = await sql.connect(config);
+
+    const insertKategorineQuery = `
+      INSERT INTO kategoria (
+        emertimi, tvsh, komponenta
+      ) VALUES (
+        @emertimi, @tvsh, @komponenta
+      )
+    `;
+    const kategoriaResult = await connection.request()
+      .input('emertimi', sql.VarChar, data.emertimi)
+      .input('tvsh', sql.Int, data.tvsh)
+      .input('komponenta',sql.VarChar,data.komponenta)
+      .query(insertKategorineQuery);
 
     return { success: true };
   } catch (error) {
@@ -702,9 +794,89 @@ ipcMain.handle('anuloTransaksionin', async (event, data) => {
   }
 });
 
+ipcMain.handle('fshijeProduktin', async (event, idPerAnulim) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const deleteProduktinQuery = `
+        DELETE FROM produkti 
+        WHERE produktiID = @produktiID
+      `;
+
+      await connection.request().input('produktiID', sql.Int, idPerAnulim).query(deleteProduktinQuery);
+      
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+ipcMain.handle('deleteKategoria', async (event, idPerAnulim) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const deleteKategoriaQuery = `
+        DELETE FROM kategoria 
+        WHERE kategoriaID = @kategoriaID
+      `;
+
+      await connection.request().input('kategoriaID', sql.Int, idPerAnulim).query(deleteKategoriaQuery);
+      
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
 
 
+ipcMain.handle('ndryshoKategorine', async (event, data) => {
+  let connection;
 
+  try {
+    connection = await sql.connect(config);
+
+      const updateKategoriaQuery = `
+        Update Kategoria 
+        SET emertimi = @emertimi,
+            tvsh = @tvsh,
+            komponenta = @komponenta
+        where kategoriaID = @kategoriaID
+      `;
+
+      await connection.request()
+      .input('emertimi', sql.VarChar, data.emertimi)
+      .input('tvsh', sql.Int, data.tvsh)
+      .input('komponenta', sql.VarChar, data.komponenta)
+      .input('kategoriaID', sql.Int, data.kategoriaID)
+      .query(updateKategoriaQuery);   
+
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
 const createWindow = () => {
   const win = new BrowserWindow({
     webPreferences: {
@@ -715,7 +887,6 @@ const createWindow = () => {
   });
   win.maximize()
   win.loadURL('http://localhost:5173'); // Assuming your React app is running on localhost:3000
-  localStorage.clear()
 };
 
 app.whenReady().then(createWindow);

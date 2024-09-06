@@ -17,9 +17,13 @@ contextBridge.exposeInMainWorld('api', {
     insertLlojiShpenzimit: (data) => ipcRenderer.invoke('insertLlojiShpenzimit', data) ,
     insertLogs: (data) => ipcRenderer.invoke('insertLogs', data) ,
     insertBlerje: (data) => ipcRenderer.invoke('insertBlerje', data) ,
+    insertProduktin: (data) => ipcRenderer.invoke('insertProduktin', data) ,
+    insertKategorine: (data) => ipcRenderer.invoke('insertKategorine', data) ,
 
+    anuloTransaksionin: (data) => ipcRenderer.invoke('anuloTransaksionin', data) ,
+    fshijeProduktin: (idPerAnulim) => ipcRenderer.invoke('fshijeProduktin', idPerAnulim) ,
+    deleteKategoria: (idPerAnulim) => ipcRenderer.invoke('deleteKategoria', idPerAnulim) ,
 
-    anuloTransaksionin: (data) => ipcRenderer.invoke('anuloTransaksionin', data) 
-
+    ndryshoKategorine: (data) => ipcRenderer.invoke('ndryshoKategorine', data) 
 
 });

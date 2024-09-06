@@ -8,6 +8,8 @@ import Shitje from './components/Shitje';
 import Shpenzim from './components/Shpenzim'
 import Blerje from './components/Blerje';
 import Produktet from './components/Produktet';
+import Kategorite from './components/Kategorite'
+
 let aKaUser = localStorage.getItem('aKaUser')
 
 const router = createBrowserRouter([
@@ -43,6 +45,9 @@ const router = createBrowserRouter([
       {
         path: '/stoku',
         element:<Produktet />
+      },{
+        path: '/kategorite',
+        element:<Kategorite />
       },
       {
         path: '/',

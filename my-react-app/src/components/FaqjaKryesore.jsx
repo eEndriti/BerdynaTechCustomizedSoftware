@@ -17,6 +17,7 @@ function FaqjaKryesoreAdmin() {
   const [burimiThirrjes,setBurimiThirrjes] = useState('')
   const [llojiPerAnulim,setLlojiPerAnulim] = useState('')
   const [idPerAnulim,setIdPerAnulim] = useState('')
+  
   useEffect(() => {
     window.api.fetchTableTransaksionet().then(receivedData => {
       setTransaksionet(receivedData);

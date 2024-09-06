@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Container, Row, Col, Table, Form } from "react-bootstrap";
+import { Button, Container, Row, Col, Table, Form,Spinner } from "react-bootstrap";
 import KerkoSubjektin from "./KerkoSubjektin";
 import KerkoProduktin from "./KerkoProduktin";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; // Import the specific icon
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ShtoNjeProdukt from "./ShtoNjeProdukt";
 
 export default function Shitje() {
   const navigate = useNavigate();  
@@ -21,6 +22,8 @@ export default function Shitje() {
   const [komentiShitjes,setKomentiShitjes] = useState('')
   const [nrPorosise,setNrPorosise] = useState(0)
   const [menyratPageses,setMenyratPageses] = useState([])
+  const [showShtoProduktinModal,setShowShtoProduktinModal] = useState(false)
+  const [loading,setLoading] = useState(false)
 
   useEffect(() => {
     window.api.fetchTableMenyratPageses().then(receivedData => {
@@ -91,9 +94,9 @@ export default function Shitje() {
   }
 
   const handleRegjistro = async () => {
+    setLoading(true)
     const perdoruesiID = localStorage.getItem('perdoruesiID');
   
-    // Prepare the data to be sent to the 'insert-transaksioni-and-shitje' function
     if(perdoruesiID && menyraPagesesID){
       const data = {
         lloji: llojiShitjes,
@@ -109,17 +112,22 @@ export default function Shitje() {
         produktet:products
       };
     
-      // Call the Electron API to insert both transaksioni and shitje
       const result = await window.api.insertTransaksioniAndShitje(data);
     
-      if (result.success) {
-        toast.success('Shitja u Regjistrua me Sukses !', {
-          position: "top-center",  // Use string directly instead of toast.POSITION.TOP_CENTER
-          autoClose: 1500, // Optional: Delay before auto-close
-          onClose: () =>         navigate('/faqjaKryesore')
-        });            ;
-      } else {
-        toast.error('Gabim gjate regjistrimit: ' + result.error);
+      try{
+        if (result.success) {
+          toast.success('Shitja u Regjistrua me Sukses !', {
+            position: "top-center",  
+            autoClose: 1500,
+            onClose: () =>         navigate('/faqjaKryesore') 
+          });            ;
+        } else {
+          toast.error('Gabim gjate regjistrimit: ' + result.error);
+        }
+      }catch(error){
+        toast.error('Gabim gjate komunikimit me server ',+error)
+      }finally{
+        setLoading(false)
       }
       }else{
         toast.warn('Ju Lutem Plotesoni te Gjitha Fushat!',{
@@ -142,6 +150,8 @@ export default function Shitje() {
   const handleNrPorosiseChange = (event) =>{
     setNrPorosise(event.target.value)
   }
+
+  const handleCloseShtoProduktinModal = () => setShowShtoProduktinModal(false);
 
   return (
     <Container fluid className="mt-2 d-flex flex-column" style={{ minHeight: "95vh" }}>
@@ -293,7 +303,20 @@ export default function Shitje() {
       <Row className="section3 my-5 d-flex justify-content-end">
         <Col xs={12} md={6} className="d-flex justify-content-center align-items-end">
           <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleAnulo}>Anulo</Button>
-          <Button variant="success" size="lg" className="mx-2 fs-1" disabled={!(selectedSubjekti.subjektiID) || !(products.length>1)} onClick={handleRegjistro} >Regjistro</Button>
+          <Button variant="success" size="lg" className="mx-2 fs-1" disabled={!(selectedSubjekti.subjektiID) || !(products.length>1)} onClick={handleRegjistro} >{loading ? (
+            <>
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />{' '}
+              Duke ruajtur...
+            </>
+          ) : (
+            'Regjistro...'
+          )}</Button>
         </Col>
 
         <Col xs={12} md={6} className="d-flex flex-column align-items-end">
@@ -363,6 +386,9 @@ export default function Shitje() {
           </div>
         </Col>
       </Row>
+
+      <ShtoNjeProdukt show={showShtoProduktinModal} handleClose={handleCloseShtoProduktinModal} />
+
       <ToastContainer/>
     </Container>
   );

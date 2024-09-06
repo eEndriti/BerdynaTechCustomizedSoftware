@@ -18,6 +18,10 @@ span{
     max-height: calc(7 * 2.5rem); /* Approximate height of 7 rows */
     overflow-y: auto;
 }
+.tableHeight50{
+  max-height: calc(15 * 2.5rem);
+  overflow-y: auto;
+}
 
   .border-right{
     border-right: 2px solid black;
