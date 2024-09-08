@@ -54,6 +54,7 @@ function FaqjaKryesoreAdmin() {
   const ndryshoTransaksionin = (lloji, transaksioniID) => {
     alert(`Ndryshimi Transaksionit ${transaksioniID} ne Proces e mesiperm!!`)
   }
+
   const anuloTransaksionin =async () => {
     const data = {
       lloji:llojiPerAnulim,
@@ -73,6 +74,7 @@ function FaqjaKryesoreAdmin() {
       toast.error('Gabim gjate Anulimit: ' + result.error);
     }
   }
+
   const thirreModal = (lloji,transaksioniID,burimiThirrjes) =>{
     setShowModal(true)
     setBurimiThirrjes(burimiThirrjes)
@@ -117,10 +119,8 @@ function FaqjaKryesoreAdmin() {
                     <td>{item.shifra}</td>
                     <td>{item.lloji}</td>
                     <td>{item.totaliperPagese.toFixed(2)} €</td>
-                    <td className={item.mbetjaPerPagese > 0 ? 'text-danger' : 'text-success'}>
-                      {item.totaliIPageses.toFixed(2)} €
-                    </td>
-                    <td>{item.mbetjaPerPagese.toFixed(2)} €</td>
+                    <td>{item.totaliIPageses.toFixed(2)} €</td>
+                    <td className={item.mbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{item.mbetjaPerPagese.toFixed(2)} €</td>
                     <td>{item.komenti}</td>
                     <td>{item.dataTransaksionit.toLocaleTimeString()}</td>
                     <td>

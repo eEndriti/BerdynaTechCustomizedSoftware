@@ -194,10 +194,11 @@ export default function Shpenzim() {
 
     if(burimiThirrjes == 'Shpenzimi'){
       const data ={
-        transaksioniIDPerDelete,
-        idPerAnulim
+        lloji:'Shpenzim',
+        transaksioniID:transaksioniIDPerDelete
       }
-      result = await window.api.deleteShpenzimi(data)
+      console.log(data)
+      result = await window.api.anuloTransaksionin(data)
     }else{
       result =await window.api.deleteLlojiShpenzimit(idPerAnulim)
     }

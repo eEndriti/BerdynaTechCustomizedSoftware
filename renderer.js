@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('api', {
     fetchTableShpenzimet: () => ipcRenderer.invoke('fetchTableShpenzimet'),
     fetchTableKategoria: () => ipcRenderer.invoke('fetchTableKategoria'),
     fetchTableBlerje: () => ipcRenderer.invoke('fetchTableBlerje'),
+    fetchTablePagesa: () => ipcRenderer.invoke('fetchTablePagesa'),
 
     insertTransaksioniAndShitje: (data) => ipcRenderer.invoke('insert-transaksioni-and-shitje', data),
     insertShpenzimi: (data) => ipcRenderer.invoke('insertShpenzimi', data),
@@ -20,15 +21,18 @@ contextBridge.exposeInMainWorld('api', {
     insertBlerje: (data) => ipcRenderer.invoke('insertBlerje', data) ,
     insertProduktin: (data) => ipcRenderer.invoke('insertProduktin', data) ,
     insertKategorine: (data) => ipcRenderer.invoke('insertKategorine', data) ,
+    insertSubjekti: (data) => ipcRenderer.invoke('insertSubjekti', data) ,
 
     anuloTransaksionin: (data) => ipcRenderer.invoke('anuloTransaksionin', data) ,
     fshijeProduktin: (idPerAnulim) => ipcRenderer.invoke('fshijeProduktin', idPerAnulim) ,
     deleteKategoria: (idPerAnulim) => ipcRenderer.invoke('deleteKategoria', idPerAnulim) ,
-    deleteShpenzimi: (data) => ipcRenderer.invoke('deleteShpenzimi', data) ,
     deleteLlojiShpenzimit: (idPerAnulim) => ipcRenderer.invoke('deleteLlojiShpenzimit', idPerAnulim) ,
+    deleteSubjekti: (idPerAnulim) => ipcRenderer.invoke('deleteSubjekti', idPerAnulim) ,
 
     ndryshoShpenzimin: (data) => ipcRenderer.invoke('ndryshoShpenzimin', data), 
     ndryshoLlojinShpenzimit: (data) => ipcRenderer.invoke('ndryshoLlojinShpenzimit', data),
-    ndryshoKategorine: (data) => ipcRenderer.invoke('ndryshoKategorine', data)
+    ndryshoKategorine: (data) => ipcRenderer.invoke('ndryshoKategorine', data),
+    ndryshoSubjektin: (data) => ipcRenderer.invoke('ndryshoSubjektin', data)
+
 
 });

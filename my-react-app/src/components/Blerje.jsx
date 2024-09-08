@@ -165,7 +165,7 @@ export default function Blerje() {
           <Form.Group as={Row} controlId="subjekti" className="mb-2">
             <Form.Label column xs={6} className="text-start w-auto">Furnitori:</Form.Label>
             <Col xs={6}>
-              <KerkoSubjektin value={selectedSubjekti.emertimi} onSelect={handleSelectSubjekti} />
+              <KerkoSubjektin filter='furnitor' value={selectedSubjekti.emertimi} onSelect={handleSelectSubjekti} />
             </Col>
           </Form.Group>
           <Form.Group as={Row} controlId="kontakti" className="mb-2">

@@ -164,7 +164,7 @@ export default function Shitje() {
               <Form.Group as={Row} controlId="subjekti" className="mb-2">
                 <Form.Label column xs={6} className="text-start w-auto">Subjekti:</Form.Label>
                 <Col xs={6}>
-                  <KerkoSubjektin value={selectedSubjekti.emertimi} onSelect={handleSelectSubjekti} />
+                  <KerkoSubjektin filter='klient' value={selectedSubjekti.emertimi} onSelect={handleSelectSubjekti} />
                 </Col>
               </Form.Group>
               <Form.Group as={Row} controlId="kontakti" className="mb-2">
@@ -308,7 +308,7 @@ export default function Shitje() {
         <Col xs={12} md={6} className="d-flex justify-content-center align-items-end">
           <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleAnulo}>Anulo</Button>
           <Button variant="success" size="lg" className="mx-2 fs-1" 
-          disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || !(menyraPagesesID)} 
+          disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || !(menyraPagesesID) || loading} 
           onClick={handleRegjistro} >{loading ? (
             <>
               <Spinner
@@ -324,7 +324,7 @@ export default function Shitje() {
             'Regjistro...'
           )}</Button>
         </Col>
-
+          Duhet me kontrollu kur tbohet shitje online mos me hi si transaksion
         <Col xs={12} md={6} className="d-flex flex-column align-items-end">
           <div className="d-flex flex-column w-100 justify-content-end">
             <div className="d-flex flex-column w-100">

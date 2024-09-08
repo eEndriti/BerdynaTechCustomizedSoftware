@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Modal, Form, Table, Button } from "react-bootstrap";
+import  { useState, useEffect } from "react";
+import { Modal, Form, Table, Button,Spinner } from "react-bootstrap";
 import ShtoNjeProdukt from "./ShtoNjeProdukt";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -12,12 +12,13 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
   const [results, setResults] = useState([]);
   const [produktet, setProduktet] = useState([]);
   const [showShtoProduktinModal,setShowShtoProduktinModal] = useState(false)
+  const [loading,setLoading] = useState(true)
   // Fetch data and filter results
   useEffect(() => {
     const fetchAndFilterData = async () => {
       const receivedData = await window.api.fetchTableProdukti();
       setProduktet(receivedData);
-
+      setLoading(false)
       // Perform filtering
       const filteredResults = receivedData.filter((item) => {
         const matchesShifra = item.shifra.toLowerCase().includes(queryShifra.toLowerCase());
@@ -87,7 +88,15 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
             />
           </Form.Group>
         </div>
-        <Table striped bordered hover size="sm">
+        {loading ? <>
+          <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />
+        </> : <Table striped bordered hover size="sm">
           <thead>
             <tr>
               <th>Shifra</th>
@@ -106,7 +115,7 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
               </tr>
             ))}
           </tbody>
-        </Table>
+        </Table>}
       </Modal.Body>
       <Modal.Footer className="d-flex flex-row justify-content-between">
         <Button variant="primary" onClick={() => setShowShtoProduktinModal(true)}>

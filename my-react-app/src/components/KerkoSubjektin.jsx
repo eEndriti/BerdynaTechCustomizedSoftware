@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Form, Button, InputGroup, ListGroup } from "react-bootstrap";
 import { IoSearchSharp } from "react-icons/io5";
 
-export default function SearchInput({ value, onSelect }) {
+export default function SearchInput({ filter,value, onSelect }) {
   const [query, setQuery] = useState("");
   const [subjekti, setSubjekti] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
@@ -10,8 +10,9 @@ export default function SearchInput({ value, onSelect }) {
 
   useEffect(() => {
     window.api.fetchTableSubjekti().then(receivedData => {
-      setSubjekti(receivedData);
-      setFilteredResults(receivedData);
+      const  filteredData = receivedData.filter(item => item.lloji == filter);
+      setSubjekti(filteredData);
+      setFilteredResults(filteredData);
     });
   }, []);
 

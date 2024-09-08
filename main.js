@@ -71,8 +71,13 @@ async function fetchTableShitje() {
   try {
     await sql.connect(config);
     const result = await sql.query`
-select sh.shitjeID,sh.shifra,sh.lloji,sh.komenti,sh.totaliPerPagese,sh.totaliPageses,sh.mbetjaPerPagese,sh.dataShitjes,sh.nrPorosise,sh.menyraPagesesID,sh.perdoruesiID,sh.transaksioniID,s.emertimi as 'subjekti' from shitje sh
+select sh.shitjeID,sh.shifra,sh.lloji,sh.komenti,sh.totaliPerPagese,sh.totaliPageses,
+sh.mbetjaPerPagese,sh.dataShitjes,sh.nrPorosise,sh.menyraPagesesID,sh.perdoruesiID,
+sh.transaksioniID,s.emertimi as 'subjekti',sh.subjektiID,m.emertimi as 'menyraPageses',p.emri as 'perdoruesi',n.numriPercjelles,n.dataNderrimit from shitje sh
 join subjekti s on s.subjektiID = sh.subjektiID
+join menyraPageses m on m.menyraPagesesID = sh.menyraPagesesID
+join Perdoruesi p on p.perdoruesiID = sh.perdoruesiID
+join nderrimi n on n.nderrimiID = sh.nderrimiID
 `;
     return result.recordset;
   } catch (err) {
@@ -112,11 +117,36 @@ ipcMain.handle('fetchTableBlerje', async () => {
   return data;
 });
 
+async function fetchTablePagesa() {
+  try {
+    await sql.connect(config);
+    const result = await sql.query`
+      select * from pagesa
+`;
+    return result.recordset;
+  } catch (err) {
+    console.error('Error retrieving data:', err);
+    return [];
+  } finally {
+    await sql.close();
+  }
+}
+ipcMain.handle('fetchTablePagesa', async () => {
+  const data = await fetchTablePagesa();
+  return data;
+});
+
 async function fetchTableSubjekti() {
   try {
     await sql.connect(config);
     const result = await sql.query`
-select * from subjekti
+SELECT s.subjektiID,s.lloji, s.emertimi, s.kontakti, -- adjust the column names as needed
+       COALESCE(SUM(sh.totaliPerPagese), 0) AS totalTotaliPerPagese,
+       COALESCE(SUM(sh.totaliPageses), 0) AS totalTotaliPageses,
+       COALESCE(SUM(sh.mbetjaPerPagese), 0) AS totalMbetjaPerPagese
+FROM subjekti s
+LEFT JOIN shitje sh ON s.subjektiID = sh.subjektiID
+GROUP BY s.subjektiID, s.emertimi, s.kontakti,s.lloji;
 `;
     return result.recordset;
   } catch (err) {
@@ -499,6 +529,90 @@ ipcMain.handle('insertKategorine', async (event, data) => {
   }
 });
 
+ipcMain.handle('insertSubjekti', async (event, data) => {
+  let connection;
+  try {
+    // Connect to the database
+    connection = await sql.connect(config);
+
+    const insertSubjektiQuery = `
+      INSERT INTO subjekti (
+        emertimi, kontakti, lloji
+      ) VALUES (
+        @emertimi, @kontakti, @lloji
+      )
+    `;
+    const subjektiResult = await connection.request()
+      .input('emertimi', sql.VarChar, data.emertimi)
+      .input('kontakti', sql.Int, data.kontakti)
+      .input('lloji',sql.VarChar,data.lloji)
+      .query(insertSubjektiQuery);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+ipcMain.handle('deleteSubjekti', async (event, idPerAnulim) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const deleteSubjektiQuery = `
+        DELETE FROM subjekti 
+        WHERE subjektiID = @subjektiID
+      `;
+
+      await connection.request().input('subjektiID', sql.Int, idPerAnulim).query(deleteSubjektiQuery);
+      
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+ipcMain.handle('ndryshoSubjektin', async (event, data) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const updateSubjektiQuery = `
+        Update subjekti 
+        SET emertimi = @emertimi,
+            kontakti = @kontakti
+        where subjektiID = @subjektiID
+      `;
+
+      await connection.request()
+      .input('emertimi', sql.VarChar, data.emertimi)
+      .input('kontakti', sql.Int, data.kontakti)
+      .input('subjektiID', sql.Int, data.subjektiID)
+      .query(updateSubjektiQuery);   
+
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
 ipcMain.handle('insertLlojiShpenzimit', async (event, data) => {
   let connection;
   try {
@@ -627,6 +741,21 @@ ipcMain.handle('insertBlerje', async (event, data) => {
     
     }
     }
+    const insertPagesatQuery = `
+      insert into pagesa (
+        shumaPageses,dataPageses,shifra,transaksioniID,subjektiID,menyraPagesesID
+      ) values (
+        @shumaPageses,@dataPageses,@shifra,@transaksioniID,@subjektiID,@menyraPagesesID
+      )
+    `
+    await connection.request()
+      .input('shumaPageses',sql.Decimal(10,2),data.totaliPageses)
+      .input('dataPageses',sql.Date, dataDheOra)
+      .input('shifra',sql.VarChar , shifra)
+      .input('transaksioniID',sql.Int , transaksioniID)
+      .input('subjektiID',sql.Int, data.subjektiID)
+      .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+      .query(insertPagesatQuery)
 
     return { success: true };
   } catch (error) {
@@ -678,9 +807,9 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
 
     const insertShitjeQuery = `
       INSERT INTO shitje (
-        shifra, lloji, komenti, totaliPerPagese, totaliPageses, mbetjaPerPagese, dataShitjes, nrPorosise, menyraPagesesID, perdoruesiID, transaksioniID, subjektiID
+        shifra, lloji, komenti, totaliPerPagese, totaliPageses, mbetjaPerPagese, dataShitjes, nrPorosise, menyraPagesesID, perdoruesiID, transaksioniID, subjektiID,nderrimiID
       ) OUTPUT INSERTED.shitjeID VALUES (
-        @shifra, @lloji, @komenti, @totaliPerPagese, @totaliPageses, @mbetjaPerPagese, @dataShitjes, @nrPorosise, @menyraPagesesID, @perdoruesiID, @transaksioniID, @subjektiID
+        @shifra, @lloji, @komenti, @totaliPerPagese, @totaliPageses, @mbetjaPerPagese, @dataShitjes, @nrPorosise, @menyraPagesesID, @perdoruesiID, @transaksioniID, @subjektiID,@nderrimiID
       )
     `;
 
@@ -697,6 +826,7 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
       .input('perdoruesiID', sql.Int, data.perdoruesiID)
       .input('transaksioniID', sql.Int, transaksioniID)
       .input('subjektiID', sql.Int, data.subjektiID)
+      .input('nderrimiID', sql.Int, data.nderrimiID)
       .query(insertShitjeQuery);
 
     const shitjeID = shitjeResult.recordset[0].shitjeID;
@@ -735,6 +865,21 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
         .query(updateProduktiQuery);
     }
     }
+    const insertPagesatQuery = `
+      insert into pagesa (
+        shumaPageses,dataPageses,shifra,transaksioniID,subjektiID,menyraPagesesID
+      ) values (
+        @shumaPageses,@dataPageses,@shifra,@transaksioniID,@subjektiID,@menyraPagesesID
+      )
+    `
+    await connection.request()
+      .input('shumaPageses',sql.Decimal(10,2),data.totaliPageses)
+      .input('dataPageses',sql.Date, dataDheOra)
+      .input('shifra',sql.VarChar , shifra)
+      .input('transaksioniID',sql.Int , transaksioniID)
+      .input('subjektiID',sql.Int, data.subjektiID)
+      .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+      .query(insertPagesatQuery)
 
     return { success: true };
   } catch (error) {
@@ -804,20 +949,95 @@ ipcMain.handle('anuloTransaksionin', async (event, data) => {
         DELETE FROM transaksioni 
         WHERE transaksioniID = @transaksioniID
       `;
-
+      const deletePagesaQuery = `
+        delete from pagesa 
+        where transaksioniID = @transaksioniID
+      `
+      await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deletePagesaQuery);
       await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShitjeProduktiQuery);
       await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShitjeQuery);
       await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteTransaksioniQuery);
 
       return { success: true };
     } 
-    // Additional conditions for 'Blerje' or 'Shpenzim' can be added here.
     else if(data.lloji == 'Blerje') {
-      console.log('u thirr anulimi blerjes')
-      return { success: false, error: "Lloji i transaksionit nuk mbulohet nga ky funksion blerje." };
+          // Step 1: Retrieve sold products from shitjeProdukti for the specified transaksioniID
+          const getBlerjeProduktiQuery = `
+          SELECT produktiID, sasia 
+          FROM blerjeProdukt 
+          WHERE blerjeID IN (
+            SELECT blerjeID 
+            FROM blerje 
+            WHERE transaksioniID = @transaksioniID
+          )
+        `;
+
+        const blerjeProduktiResult = await connection.request()
+          .input('transaksioniID', sql.Int, data.transaksioniID)
+          .query(getBlerjeProduktiQuery);
+
+        const produktetEBlera = blerjeProduktiResult.recordset;
+
+        // Step 2: Update product quantities in produkti table
+        const updateProduktiQuery = `
+          UPDATE produkti
+          SET sasia = sasia - @sasia
+          WHERE produktiID = @produktiID
+        `;
+
+        for (const produkt of produktetEBlera) {
+          await connection.request()
+            .input('produktiID', sql.Int, produkt.produktiID)
+            .input('sasia', sql.Int, produkt.sasia)
+            .query(updateProduktiQuery);
+        }
+
+        // Step 3: Delete records from shitjeProdukti, shitje, and transaksioni tables
+        const deleteBlerjeProduktiQuery = `
+          DELETE FROM blerjeProdukt 
+          WHERE blerjeID IN (
+            SELECT blerjeID 
+            FROM blerje 
+            WHERE transaksioniID = @transaksioniID
+          )
+        `;
+
+        const deleteBlerjeQuery = `
+          DELETE FROM blerje 
+          WHERE transaksioniID = @transaksioniID
+        `;
+
+        const deleteTransaksioniQuery = `
+          DELETE FROM transaksioni 
+          WHERE transaksioniID = @transaksioniID
+        `;
+        const deletePagesaQuery = `
+        delete from pagesa 
+        where transaksioniID = @transaksioniID
+      `
+        await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deletePagesaQuery);
+        await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteBlerjeProduktiQuery);
+        await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteBlerjeQuery);
+        await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteTransaksioniQuery);
+
+        return { success: true };
+
     }else if(data.lloji == 'Shpenzim') {
-      console.log('u thirr anulimi shpenzimit')
-      return { success: false, error: "Lloji i transaksionit nuk mbulohet nga ky funksion shpenzim." };
+        connection = await sql.connect(config);
+          const deleteShpenzimiFromTransaksioni = `
+             DELETE FROM transaksioni 
+             WHERE transaksioniID = @transaksioniID
+          `
+    
+          const deleteShpenzimiQuery = `
+            DELETE FROM shpenzimi 
+            WHERE transaksioniID = @transaksioniID
+          `;
+    
+          await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShpenzimiQuery);
+          await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShpenzimiFromTransaksioni);
+
+          return { success: true };
     }
 
   } catch (error) {
@@ -879,35 +1099,7 @@ ipcMain.handle('deleteKategoria', async (event, idPerAnulim) => {
     }
   }
 });
-ipcMain.handle('deleteShpenzimi', async (event, data) => {
-  let connection;
 
-  try {
-    connection = await sql.connect(config);
-      const deleteShpenzimiFromTransaksioni = `
-         DELETE FROM transaksioni 
-         WHERE transaksioniID = @transaksioniID
-      `
-      await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShpenzimiFromTransaksioni);
-
-      const deleteShpenzimiQuery = `
-        DELETE FROM shpenzimi 
-        WHERE shpenzimiID = @shpenzimiID
-      `;
-
-      await connection.request().input('shpenzimiID', sql.Int, data.idPerAnulim).query(deleteShpenzimiQuery);
-      
-      return { success: true };
-
-  } catch (error) {
-    console.error('Database error:', error);
-    return { success: false, error: error.message };
-  } finally {
-    if (connection) {
-      await sql.close();
-    }
-  }
-});
 ipcMain.handle('deleteLlojiShpenzimit', async (event, idPerAnulim) => {
   let connection;
 
