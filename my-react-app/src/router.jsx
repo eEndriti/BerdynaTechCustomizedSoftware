@@ -13,7 +13,7 @@ import Furnitor from './components/Furnitor';
 import Klient from './components/Klient';
 import Blerjet from './components/Blerjet';
 import Shitjet from './components/Shitjet';
-import DetajePerKlient from './DetajePerKlient';
+import DetajePerKlient from './components/DetajePerKlient';
 
 let aKaUser = localStorage.getItem('aKaUser')
 
@@ -71,7 +71,7 @@ const router = createBrowserRouter([
         element:<Shitjet />
       },
       {
-        path: '/detajePerKlient/:subjektiID',
+        path: '/detajePerSubjekt/:lloji/:subjektiID',
         element:<DetajePerKlient />
       },
       {

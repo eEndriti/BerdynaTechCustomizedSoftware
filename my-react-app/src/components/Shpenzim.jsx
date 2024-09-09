@@ -26,6 +26,7 @@ export default function Shpenzim() {
   const [ShowModalPerPyetje,setShowModalPerPyetje] = useState(false)
   const [burimiThirrjes,setBurimiThirrjes] = useState()
   const [transaksioniIDPerDelete,setTransaksioniIDPerDelete] = useState()
+  
   useEffect(() => {2
     // Fetch all shpenzimet data
     window.api.fetchTableShpenzimet().then(receivedData => {

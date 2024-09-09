@@ -156,7 +156,7 @@ export default function Klient() {
         }
       };
       const handleDetaje = (subjektiID) =>{
-        navigate(`/detajePerKlient/${subjektiID}`)
+        navigate(`/detajePerSubjekt/${'klient'}/${subjektiID}`)
       }
   return (
     <Container>

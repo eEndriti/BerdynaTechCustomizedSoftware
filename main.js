@@ -121,7 +121,9 @@ async function fetchTablePagesa() {
   try {
     await sql.connect(config);
     const result = await sql.query`
-      select * from pagesa
+      select p.pagesaID,p.shumaPageses,p.dataPageses,p.shifra,p.transaksioniID,p.subjektiID,p.menyraPagesesID,s.emertimi as 'subjekti',m.emertimi as 'menyraPageses' from pagesa p
+	join subjekti s on s.subjektiID = p.subjektiID
+	join menyraPageses m on m.menyraPagesesID  = p.menyraPagesesID
 `;
     return result.recordset;
   } catch (err) {
