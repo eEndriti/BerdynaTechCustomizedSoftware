@@ -168,8 +168,10 @@ async function fetchTableServisi() {
     await sql.connect(config);
     const result = await sql.query`
     select s.servisimiID,s.shifra,s.kontakti,s.komenti,s.pajisjetPercjellese,s.dataPranimit,s.statusi,s.shifraGarancionit,
-    s.totaliPerPagese,s.totaliPageses,s.mbetjaPageses,s.dataPerfundimit,s.perdoruesiID,s.nderrimiID,s.transaksioniID,sb.emertimi as 'subjekti' from servisimi s
+    s.totaliPerPagese,s.totaliPageses,s.mbetjaPageses,s.dataPerfundimit,s.perdoruesiID,s.nderrimiID,s.transaksioniID,s.subjektiID,
+	p.emri as 'perdoruesi',sb.emertimi as 'subjekti' from servisimi s
     join subjekti sb on s.subjektiID = sb.subjektiID
+	join Perdoruesi p on p.perdoruesiID = s.perdoruesiID
     `;
     return result.recordset;
   } catch (err) {
@@ -561,6 +563,51 @@ ipcMain.handle('insertSubjekti', async (event, data) => {
   }
 });
 
+ipcMain.handle('insertServisi', async (event, data) => {
+  let connection;
+  let dataDheOra
+  try {
+    dataDheOra = await getDateTime(); // Await the result of getDateTime
+    // Connect to the database
+    connection = await sql.connect(config);
+
+    // Generate the next unique 'shifra' for transaksioni
+    const shifra = await generateNextShifra('servisimi', 'S');
+    // Insert into the 'transaksioni' table and get the inserted ID
+
+   
+    const insertServisimi = `
+      INSERT INTO servisimi (
+        shifra, kontakti, komenti, pajisjetPercjellese, dataPranimit, statusi, shifraGarancionit,perdoruesiID,nderrimiID,subjektiID
+      )  VALUES (
+        @shifra, @kontakti, @komenti, @pajisjetPercjellese, @dataPranimit, @statusi, @shifraGarancionit,@perdoruesiID,@nderrimiID,@subjektiID
+      )
+    `;
+    console.log('data dhe oraaaaaaaaaaaaaaaaa',dataDheOra)
+    const servisiResult = await connection.request()
+      .input('shifra', sql.VarChar, shifra)
+      .input('kontakti', sql.VarChar, data.kontakti)
+      .input('komenti', sql.VarChar, data.komenti)
+      .input('pajisjetPercjellese', sql.VarChar, data.pajisjetPercjellese)
+      .input('dataPranimit', sql.DateTime, dataDheOra)
+      .input('statusi', sql.VarChar, data.statusi)
+      .input('shifraGarancionit', sql.VarChar, data.shifraGarancionit)
+      .input('perdoruesiID', sql.Int, data.perdoruesiID)
+      .input('nderrimiID', sql.Int, data.nderrimiID)
+      .input('subjektiID', sql.Int, data.subjektiID)
+      .query(insertServisimi);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
 ipcMain.handle('deleteSubjekti', async (event, idPerAnulim) => {
   let connection;
 
@@ -585,6 +632,32 @@ ipcMain.handle('deleteSubjekti', async (event, idPerAnulim) => {
     }
   }
 });
+
+ipcMain.handle('deleteServisi', async (event, idPerAnulim) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const deleteQuery = `
+        DELETE FROM servisimi 
+        WHERE servisimiID = @servisimiID
+      `;
+
+      await connection.request().input('servisimiID', sql.Int, idPerAnulim).query(deleteQuery);
+      
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
 ipcMain.handle('ndryshoSubjektin', async (event, data) => {
   let connection;
 

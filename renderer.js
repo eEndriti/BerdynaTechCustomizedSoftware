@@ -22,12 +22,14 @@ contextBridge.exposeInMainWorld('api', {
     insertProduktin: (data) => ipcRenderer.invoke('insertProduktin', data) ,
     insertKategorine: (data) => ipcRenderer.invoke('insertKategorine', data) ,
     insertSubjekti: (data) => ipcRenderer.invoke('insertSubjekti', data) ,
+    insertServisi: (data) => ipcRenderer.invoke('insertServisi', data) ,
 
     anuloTransaksionin: (data) => ipcRenderer.invoke('anuloTransaksionin', data) ,
     fshijeProduktin: (idPerAnulim) => ipcRenderer.invoke('fshijeProduktin', idPerAnulim) ,
     deleteKategoria: (idPerAnulim) => ipcRenderer.invoke('deleteKategoria', idPerAnulim) ,
     deleteLlojiShpenzimit: (idPerAnulim) => ipcRenderer.invoke('deleteLlojiShpenzimit', idPerAnulim) ,
     deleteSubjekti: (idPerAnulim) => ipcRenderer.invoke('deleteSubjekti', idPerAnulim) ,
+    deleteServisi: (idPerAnulim) => ipcRenderer.invoke('deleteServisi', idPerAnulim) ,
 
     ndryshoShpenzimin: (data) => ipcRenderer.invoke('ndryshoShpenzimin', data), 
     ndryshoLlojinShpenzimit: (data) => ipcRenderer.invoke('ndryshoLlojinShpenzimit', data),

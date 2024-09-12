@@ -136,7 +136,7 @@ export default function DetajePerKlient() {
                 <Col>
                     {filteredTransaksionet.length < 1 ? (
                         <h5 className="text-center text-danger mt-5">
-                            {lloji} nuk ka ndonjë transaksion të regjistruar!
+                            {lloji == 'klient' ? 'Klienti nuk ka ndonjë transaksion të regjistruar!' : 'Furnitori nuk ka ndonjë transaksion të regjistruar!'} 
                         </h5>
                     ) : (
                         <div className="container my-3">

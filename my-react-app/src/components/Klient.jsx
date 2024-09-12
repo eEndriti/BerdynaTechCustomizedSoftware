@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Container, Row, Col, Button, Form, Spinner,Modal } from 'react-bootstrap';
+import { Container, Row, Col, Button, Form, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan, faPen } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
 import { useNavigate } from 'react-router-dom';
+import ShtoNdryshoSubjektin from './ShtoNdryshoSubjektin';
 
 export default function Klient() {
     const navigate = useNavigate()
@@ -15,10 +16,7 @@ export default function Klient() {
     const [showModalPerPyetje, setShowModalPerPyetje] = useState(false);
     const [idPerAnulim, setIdPerAnulim] = useState();
     const [modalShow,setModalShow] = useState(false)
-    const [inputEmertimi,setInputEmertimi] = useState('')
-    const [inputKontakti,setInputKontakti] = useState('')
-    const [idPerNdryshim,setIdPerNdryshim] = useState()
-    const [ndrysho,setNdrysho] = useState(false)
+    const [data,setData] = useState({inputEmertimi:'',inputKontakti:'',ndrysho:false,idPerNdryshim:null,lloji:'klient'})
 
     useEffect(() => {
         window.api.fetchTableSubjekti().then((receivedData) => {
@@ -70,91 +68,27 @@ export default function Klient() {
         setShowModalPerPyetje(false)
     }
     const handleClose = () => setModalShow(false);
+
     const handleShow = () => {
-        setInputEmertimi('')
-        setInputKontakti('')
-        setNdrysho(false)
+        setData({
+            lloji:'klient',
+            ndrysho:false
+        })
         setModalShow(true)
     };
-
-    const handleShowNdrysho = (subjektiID,emertimi,kontakti) => {
-        setInputEmertimi(emertimi)
-        setInputKontakti(kontakti)
-        setIdPerNdryshim(subjektiID)
-        setNdrysho(true)
+    
+    const handleShowNdrysho = (item) => {
+        setData({
+            inputEmertimi:item.emertimi,
+            inputKontakti:item.kontakti,
+            idPerNdryshim:item.subjektiID,
+            lloji:'klient',
+            ndrysho:true
+        })
         setModalShow(true)
     }
-    const handleSubmit = () =>{
-        if(ndrysho){
-            handleNdryshoKlientin()
-        }else 
-            handleShtoKlientin()
-    }
-    const handleNdryshoKlientin = async () => {
-        setLoading(true)
-        if(inputEmertimi.length > 1 && inputKontakti > 1){
-            const data={
-                emertimi:inputEmertimi,
-                kontakti:inputKontakti,
-                subjektiID:idPerNdryshim
-            }
-            try {
-                const result = await window.api.ndryshoSubjektin(data);
-                if (result.success) {
-                  toast.success('Klienti u Ndryshua me Sukses!', {
-                    position: "top-center",  
-                    autoClose: 1500,
-                    onClose:() => window.location.reload()
-                  }); 
-                } else {
-                  toast.error('Gabim gjate Ndryshimit: ' + result.error);
-                }
-              } catch (error) {
-                toast.error('Gabim gjate komunikimit me server: ' + error.message);
-              } finally {
-                setLoading(false);
-              }
-        }else{
-            toast.warning('Plotesoni fushat me më shume karaktere!', {
-                position:'top-center',
-                autoClose:1500
-            })
-            setLoading(false)
-        }
-      };
-
-    const handleShtoKlientin = async () => {
-        setLoading(true)
-        if(inputEmertimi.length > 1 && inputKontakti > 1){
-            const data={
-                emertimi:inputEmertimi,
-                kontakti:inputKontakti,
-                lloji:'klient'
-            }
-            try {
-                const result = await window.api.insertSubjekti(data);
-                if (result.success) {
-                  toast.success('Klienti u Regjistrua me Sukses!', {
-                    position: "top-center",  
-                    autoClose: 1500
-                  }); 
-                } else {
-                  toast.error('Gabim gjate regjistrimit: ' + result.error);
-                }
-              } catch (error) {
-                toast.error('Gabim gjate komunikimit me server: ' + error.message);
-              } finally {
-                setLoading(false);
-                window.location.reload()
-              }
-        }else{
-            toast.warning('Plotesoni fushat me më shume karaktere!', {
-                position:'top-center',
-                autoClose:1500
-            })
-            setLoading(false)
-        }
-      };
+    
+   
       const handleDetaje = (subjektiID) =>{
         navigate(`/detajePerSubjekt/${'klient'}/${subjektiID}`)
       }
@@ -222,7 +156,7 @@ export default function Klient() {
                                                 <Button variant="info" className="m-1 fw-bold" onClick={() => handleDetaje(item.subjektiID)}>
                                                     Detaje...
                                                 </Button>
-                                                <Button variant="primary" className="m-1" onClick={() => handleShowNdrysho(item.subjektiID,item.emertimi,item.kontakti)}>
+                                                <Button variant="primary" className="m-1" onClick={() => handleShowNdrysho(item)}>
                                                     <FontAwesomeIcon className="mt-1" icon={faPen} />
                                                 </Button>
                                                 {item.totalTotaliPerPagese > 0 ? null : <Button variant="danger" className="m-1" onClick={() => thirreModalPerPyetje(item.subjektiID)}>
@@ -242,45 +176,7 @@ export default function Klient() {
     )}
     <ToastContainer />
     <ModalPerPyetje show={showModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />
-    <Modal show={modalShow} onHide={handleClose}>
-        <Modal.Header closeButton>
-            <Modal.Title>{ndrysho ? 'Ndrysho': 'Shto'} nje Klient</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-            <Form>
-                <Form.Group className='mb-3'>
-                    <Form.Label className='fw-bold'>Emertimi:</Form.Label>
-                    <Form.Control type='text' value={inputEmertimi} onChange={(e) => setInputEmertimi(e.target.value)} placeholder='Emertimi i Klientit...' /> 
-                </Form.Group>
-                <Form.Group className='mb-3 fw-bold'>
-                    <Form.Label>Kontakti:</Form.Label>
-                    <Form.Control type='number' value={inputKontakti} onChange={(e) => setInputKontakti(e.target.value)} placeholder='Kontakti i Klientit...' /> 
-                </Form.Group>
-            </Form>
-        </Modal.Body>
-        <Modal.Footer>
-            <Button variant='secondary' onClick={handleClose}>
-                Anulo
-            </Button>
-            <Button variant='primary' onClick={handleSubmit} disabled={loading}>
-            {loading ? (
-                <>
-                <Spinner
-                    as="span"
-                    animation="border"
-                    size="sm"
-                    role="status"
-                    aria-hidden="true"
-                />{' '}
-                Duke ruajtur...
-                </>
-            ) : <>
-                {ndrysho ? 'Ruaj Ndryshimet...' : 'Regjistro Klientin e Ri'}
-                </>}
-                
-            </Button>
-        </Modal.Footer>
-    </Modal>
+    <ShtoNdryshoSubjektin show={modalShow} handleClose={handleClose} data={data} />
 </Container>
   )
 }

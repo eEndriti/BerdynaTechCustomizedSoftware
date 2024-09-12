@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button, InputGroup, ListGroup } from "react-bootstrap";
-import { IoSearchSharp } from "react-icons/io5";
+import { IoSearchSharp,IoAddSharp } from "react-icons/io5";
+import ShtoNdryshoSubjektin from "./ShtoNdryshoSubjektin";
 
-export default function SearchInput({ filter,value, onSelect }) {
+export default function SearchInput({ filter,value, onSelect,lloji }) {
   const [query, setQuery] = useState("");
   const [subjekti, setSubjekti] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showModal,setShowModal] = useState(false)
+  const [data,setData] = useState({ndrysho:false,refresh:false,lloji:filter})
 
   useEffect(() => {
     window.api.fetchTableSubjekti().then(receivedData => {
@@ -37,7 +40,8 @@ export default function SearchInput({ filter,value, onSelect }) {
     setQuery(result.emertimi); // Update the input field
     setShowDropdown(false); // Hide the dropdown
   };
-
+  const handleAddSubject = () => setShowModal(true)
+  const handleCloseModal = () => setShowModal(false)
   return (
     <div className="position-relative">
       <InputGroup>
@@ -48,7 +52,10 @@ export default function SearchInput({ filter,value, onSelect }) {
           placeholder="Subjekti..."
         />
         <Button variant="outline-secondary border" disabled>
-        <IoSearchSharp />
+          <IoSearchSharp />
+        </Button>
+        <Button variant="success border" onClick={handleAddSubject}>
+          <IoAddSharp />
         </Button>
       </InputGroup>
 
@@ -66,6 +73,7 @@ export default function SearchInput({ filter,value, onSelect }) {
           ))}
         </ListGroup>
       )}
+      <ShtoNdryshoSubjektin show={showModal} handleClose={handleCloseModal} data={data} />
     </div>
   );
 }

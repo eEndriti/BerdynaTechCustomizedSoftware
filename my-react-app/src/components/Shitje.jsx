@@ -294,10 +294,9 @@ export default function Shitje() {
 
       <Row className="mt-auto section2 d-flex justify-content-around bg-light">
         <Col xs={12} md={6} className="d-flex flex-column align-items-center">
-          <h5 className="p-3">
+          <h5 className="p-3 text-center">
             Shtype Garancionin <Form.Check inline />
           </h5>
-          <Button variant="primary" size="lg">Apliko Kestet</Button>
         </Col>
         <Col xs={12} md={6} className="d-flex justify-content-center">
           <Form.Control as="textarea" onChange={handleKomentiShitjesChange} rows={3} className="p-3" placeholder="Shkruaj komentin..." />
