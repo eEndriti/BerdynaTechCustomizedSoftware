@@ -1,16 +1,18 @@
 import { useState,useEffect } from 'react'
-import { Container,Row,Col,Button,Table,Form,Spinner, Modal } from 'react-bootstrap'
+import { Container,Row,Col,Button,Table,Form,Spinner } from 'react-bootstrap'
 import KerkoSubjektin from './KerkoSubjektin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faPen, faTrashCan } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from './ModalPerPyetje'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import UpdateServise from './UpdateServise'
 
 export default function Serviset() {
     const [loading,setLoading] = useState(true)
     const [selectedSubjekti, setSelectedSubjekti] = useState({ emertimi: "", kontakti: "", subjektiID: null });
     const [serviset,setServiset] = useState([])
+    const [filteredServiset,setFilteredServiset] = useState([])
     const [kontakti,setKontakti] = useState(selectedSubjekti.kontakti)
     const [komenti,setKomenti] = useState()
     const [aKaData,setAKaData] = useState(false)
@@ -20,12 +22,58 @@ export default function Serviset() {
     const [shifraGarancionit,setShifraGarancionit] = useState('')
     const [idPerAnulim,setIdPerAnulim] = useState()
     const [modalPerPyetje,setModalPerPyetje] = useState(false)
+    const [filterDataPranimit, setFilterDataPranimit] = useState('');
+    const [filterShifra, setFilterShifra] = useState('');
+    const [filterSubjekti, setFilterSubjekti] = useState('');
+    const [filterKontakti, setFilterKontakti] = useState('');
+    const [filterStatusi, setFilterStatusi] = useState('Aktiv');
+    const [modalPerUpdate,setModalPerUpdate] = useState(false)
+    const [data,setData] = useState({})
+    const [updateType,setUpdateType] = useState()
+
     useEffect(() => {
         window.api.fetchTableServisi().then(receivedData => {
           setServiset(receivedData);
-          setLoading(false)
+          setFilteredServiset(receivedData.filter(item => item.statusi === 'Aktiv')); // Default filtering to 'Aktiv'
+          setLoading(false);
         });
-      }, []);
+    }, []);
+
+    useEffect(() => {
+        // Filtering logic that applies on change
+        let filteredData = serviset;
+
+        if (filterDataPranimit) {
+            filteredData = filteredData.filter(item =>
+                new Date(item.dataPranimit).toISOString().split('T')[0] === filterDataPranimit
+            );
+        }
+
+        if (filterShifra) {
+            filteredData = filteredData.filter(item =>
+                item.shifra.includes(filterShifra)
+            );
+        }
+
+        if (filterSubjekti) {
+            filteredData = filteredData.filter(item =>
+                item.subjekti.toLowerCase().includes(filterSubjekti.toLowerCase())
+            );
+        }
+
+        if (filterKontakti) {
+            filteredData = filteredData.filter(item =>
+                item.kontakti.toLowerCase().includes(filterKontakti.toLowerCase())
+            );
+        }
+
+        filteredData = filteredData.filter(item =>
+            item.statusi === filterStatusi
+        );
+
+        setFilteredServiset(filteredData);
+    }, [filterDataPranimit, filterShifra, filterSubjekti, filterKontakti, filterStatusi, serviset]);
+
     
     const handleSelectSubjekti = (result) => {
         setSelectedSubjekti({
@@ -33,6 +81,7 @@ export default function Serviset() {
           kontakti: result.kontakti,
           subjektiID: result.subjektiID,
         });
+        setKontakti(result.kontakti)
       };
     
     const checkData = () => {
@@ -42,7 +91,10 @@ export default function Serviset() {
                     toast.warning('Duhet te shenoni shifren e garancionit!')
                 }else{
                     handleShtoServisin()
+                    console.log('asd')
                 }
+            }else{
+                handleShtoServisin()
             }
         }else{
             toast.warning('Selektoni subjektin per te vazhduar!')
@@ -107,13 +159,23 @@ export default function Serviset() {
             toast.error('Gabim gjate Anulimit: ' + result.error);
         }
     }
+    
+    const handleShowUpdateModal = (data,type) => {
+        setData(data)
+        setUpdateType(type)
+        setModalPerUpdate(true)
+    }
+    const closeModalPerUpdate = () => {
+        setModalPerUpdate(false)
+    }
   return (
     <Container>
-        <Row>
+        <Row className='bg-light'>
             <Form className=" rounded-3 ">
-                <h4 className="text-center mb-2 fw-bold">Prano Servisin:</h4>
-                <Col className="d-flex flex-row justify-content-between mb-2">
-                    <Form.Group className="me-3" style={{ flex: 1 }}>
+                <h4 className="text-center mb-3 fw-bold border-bottom">Prano Servisin:</h4>
+            
+                <Col className="d-flex flex-row justify-content-start mb-2">
+                    <Form.Group className="me-3" >
                         <Form.Label className="fw-bold">Klienti</Form.Label>
                         <KerkoSubjektin
                             filter="klient"
@@ -123,28 +185,14 @@ export default function Serviset() {
                         />
                     </Form.Group>
 
-                    <Form.Group style={{ flex: 1 }}>
+                    <Form.Group>
                         <Form.Label className="fw-bold">Kontakti</Form.Label>
                         <Form.Control
                             type="number"
-                            defaultValue={selectedSubjekti.kontakti} onChange={(e) => setKontakti(e.target.value)}
+                            value={kontakti} onChange={(e) => setKontakti(e.target.value)}
                             className="form-control form-control-lg"
                         />
                     </Form.Group>
-                </Col>
-
-                <Col className="d-flex flex-row justify-content-between mb-4">
-                    <Form.Group style={{ flex: 1 }}>
-                        <Form.Label className="fw-bold">Komente</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            rows={3}
-                            className="form-control-lg"
-                            placeholder="Shto komente për servisin..."
-                            onChange={(e) => setKomenti(e.target.value)}
-                        />
-                    </Form.Group>
-
                     <Form.Group className="ms-3" style={{ flex: 0.5 }}>
                         <Form.Label className="fw-bold">Data</Form.Label>
                         <Form.Check className="fs-4 text-info" checked={aKaData} onClick={() => setAKaData(!aKaData)}/>
@@ -168,7 +216,18 @@ export default function Serviset() {
                     </Form.Group>
                 </Col>
 
-                <Button variant="success" size="lg" className="w-100" onClick={() => checkData()} disabled={loading}>
+                <Col className="d-flex flex-row justify-content-between">
+                    <Form.Group >
+                        <Form.Label className="fw-bold ">Komenti:</Form.Label>
+                        <Form.Control
+                            as="textarea"
+                            rows={3}
+                            className="form-control-lg"
+                            placeholder="Shto komente për servisin..."
+                            onChange={(e) => setKomenti(e.target.value)}
+                        />
+                    </Form.Group>
+                    <Button variant="success" className='fs-5 h-25 m-5 p-3' onClick={() => checkData()} disabled={loading}>
                     {loading ? (
                         <>
                         <Spinner
@@ -184,10 +243,73 @@ export default function Serviset() {
                         'Shto Servisin...'
                     )}
                 </Button>
+                    
+                </Col>
+
+                
             </Form>
         </Row>
         <hr/>
-
+        <Row className="mt-4">
+                <Form className="p-3 bg-light rounded">
+                    <Row>
+                        <Col>
+                            <Form.Group>
+                                <Form.Label>Data Pranimit</Form.Label>
+                                <Form.Control
+                                    type="date"
+                                    value={filterDataPranimit}
+                                    onChange={(e) => setFilterDataPranimit(e.target.value)}
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col>
+                            <Form.Group>
+                                <Form.Label>Shifra</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={filterShifra}
+                                    placeholder="Shifra..."
+                                    onChange={(e) => setFilterShifra(e.target.value)}
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col>
+                            <Form.Group>
+                                <Form.Label>Subjekti</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={filterSubjekti}
+                                    placeholder="Subjekti..."
+                                    onChange={(e) => setFilterSubjekti(e.target.value)}
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col>
+                            <Form.Group>
+                                <Form.Label>Kontakti</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={filterKontakti}
+                                    placeholder="Kontakti..."
+                                    onChange={(e) => setFilterKontakti(e.target.value)}
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col>
+                            <Form.Group>
+                                <Form.Label>Statusi</Form.Label>
+                                <Form.Check
+                                    type="switch"
+                                    label={filterStatusi === 'Aktiv' ? 'Aktiv' : 'Perfunduar'}
+                                    checked={filterStatusi === 'Aktiv'}
+                                    onChange={() => setFilterStatusi(filterStatusi === 'Aktiv' ? 'Perfunduar' : 'Aktiv')}
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                </Form>
+            </Row>
         <Row className='mt-5'>
             <div className="table-responsive tabeleMeMaxHeight">
             <Table className="table table-sm table-striped border table-hover">
@@ -199,10 +321,10 @@ export default function Serviset() {
                     <th scope="col">Kontakti</th>
                     <th scope="col">Komenti</th>
                     <th scope="col">Pajisjet Percjellese</th>
-                    <th scope="col">Totali per Pagese</th>
-                    <th scope="col">Mbetja per Pagese</th>
+                    {filterStatusi != 'Aktiv' ? <><th scope="col">Totali per Pagese</th>
+                        <th scope="col">Mbetja per Pagese</th></>:null}
                     <th scope="col">Data dhe Ora e Pranimit</th>
-                    <th scope="col">Data e Perfundimit</th>
+                    {filterStatusi == 'Aktiv' ? null : <th scope="col">Data e Perfundimit</th>}
                     <th scope="col">Perdoruesi</th>
                     <th scope="col">Statusi</th>
                     <th scope="col">Garancioni</th>
@@ -210,7 +332,7 @@ export default function Serviset() {
                 </tr>
                 </thead>
                 <tbody>
-                {serviset.slice().reverse().map((item, index) => (
+                {filteredServiset.slice().reverse().map((item, index) => (
                 <tr key={index}>
                     {item.transaksioniID != 0 ? (
                     <>
@@ -220,23 +342,28 @@ export default function Serviset() {
                         <td>{item.kontakti}</td>
                         <td>{item.komenti}</td>
                         <td>{item.pajisjetPercjellese}</td>
-                        <td>{item.totaliPerPagese != null ? item.totaliPerPagese.toFixed(2) : ''}</td>
-                        <td className={item.mbetjaPageses > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>
-                            {item.mbetjaPageses != null ? item.mbetjaPageses.toFixed(2) : ''} </td>
+                        {filterStatusi != 'Aktiv' ? 
+                        <>
+                        <td>{item.totaliPerPagese == null ? null : item.totaliPerPagese.toFixed(2)}€</td>
+                        <td>{item.mbetjaPageses == null ? null : item.mbetjaPageses.toFixed(2)}€</td>
+                        </>:null}
                         <td>{item.dataPranimit.toLocaleDateString()}<br/>{item.dataPranimit.toLocaleTimeString()}</td>
-                        {item.dataPerfundimit != null ? <td>{item.dataPerfundimit.toLocaleDateString()}<br/>{item.dataPerfundimit.toLocaleTimeString()}</td> : <td></td>}
+                        {filterStatusi != 'Aktiv' ? 
+                        <>
+                        {item.dataPerfundimit != null ? <td>{item.dataPerfundimit.toLocaleDateString()}<br/>{item.dataPerfundimit.toLocaleTimeString()}</td> : null}
+                        </>:null}
                         <td>{item.perdoruesi}</td>
                         <td className={item.statusi == 'Perfunduar' ? 'text-success fw-bold' : 'fw-bold text-danger'}>{item.statusi}</td>
                         <td>{item.shifraGarancionit}</td>
                         <td>
-                        <Button className='btn btn-primary' >
+                        <Button className='btn btn-primary' onClick={() => handleShowUpdateModal(item,item.statusi)}>
                             <FontAwesomeIcon icon={faPen} />
                         </Button>
                         <Button className='btn bg-danger m-1 border-danger' onClick={() => thirreModal(item.servisimiID)}>
                             <FontAwesomeIcon  icon={faTrashCan} />
                         </Button>
                         {item.statusi == 'Aktiv' ? <Button className='btn btn-success '>
-                            <FontAwesomeIcon  icon={faCheck} />
+                            <FontAwesomeIcon  icon={faCheck} onClick={() => handleShowUpdateModal(item,'perfundo')}/>
                         </Button>: null}
                         </td>
                     </>
@@ -250,6 +377,7 @@ export default function Serviset() {
         </Row>
         <ToastContainer />
         <ModalPerPyetje show={modalPerPyetje} handleClose={closeModalPerPyetje} handleConfirm={confirmModal} />
+        <UpdateServise show={modalPerUpdate} handleClose={closeModalPerUpdate} updateType={updateType} data = {data} />
     </Container>
   )
 }

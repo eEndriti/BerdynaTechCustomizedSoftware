@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld('api', {
     ndryshoShpenzimin: (data) => ipcRenderer.invoke('ndryshoShpenzimin', data), 
     ndryshoLlojinShpenzimit: (data) => ipcRenderer.invoke('ndryshoLlojinShpenzimit', data),
     ndryshoKategorine: (data) => ipcRenderer.invoke('ndryshoKategorine', data),
+    ndryshoServisin: (data) => ipcRenderer.invoke('ndryshoServisin', data),
     ndryshoSubjektin: (data) => ipcRenderer.invoke('ndryshoSubjektin', data)
 
 

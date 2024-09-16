@@ -688,6 +688,90 @@ ipcMain.handle('ndryshoSubjektin', async (event, data) => {
     }
   }
 });
+
+ipcMain.handle('ndryshoServisin', async (event, data) => {
+  let connection;
+  let dataDheOra
+  try {
+    dataDheOra = await getDateTime();
+    connection = await sql.connect(config);
+
+    if(data.updateType == 'perfundo'){
+      console.log('eata::',data)
+      const insertTransaksioniQuery = `
+      INSERT INTO transaksioni (
+        shifra, lloji, totaliPerPagese, totaliIPageses, mbetjaPerPagese, dataTransaksionit, perdoruesiID, nderrimiID, komenti
+      ) OUTPUT INSERTED.transaksioniID VALUES (
+        @shifra, @lloji, @totaliPerPagese, @totaliIPageses, @mbetjaPerPagese, @dataTransaksionit, @perdoruesiID, @nderrimiID, @komenti
+      )
+    `;
+    const transaksioniResult = await connection.request()
+      .input('shifra', sql.VarChar, data.shifra)
+      .input('lloji', sql.VarChar, 'Servisim')
+      .input('totaliPerPagese', sql.Decimal(18, 2), data.totaliPerPagese)
+      .input('totaliIPageses', sql.Decimal(18, 2), data.totaliIPageses)
+      .input('mbetjaPerPagese', sql.Decimal(18, 2), data.mbetjaPerPagese)
+      .input('dataTransaksionit', sql.Date, dataDheOra)
+      .input('perdoruesiID', sql.Int, data.perdoruesiID)
+      .input('nderrimiID', sql.Int, data.nderrimiID)
+      .input('komenti', sql.VarChar, data.komenti)
+      .query(insertTransaksioniQuery);
+
+      const transaksioniID = transaksioniResult.recordset[0].transaksioniID;
+
+      const updateServisinQuery = `
+        Update servisimi 
+        SET totaliPerPagese = @totaliPerPagese,
+            totaliPageses = @totaliPageses,
+            mbetjaPageses = @mbetjaPerPagese,
+            statusi = @statusi,
+            dataPerfundimit = @dataPerfundimit,
+            transaksioniID = @transaksioniID
+        where shifra = @shifra
+      `;
+
+      await connection.request()
+      .input('totaliPerPagese', sql.Decimal(10,2), data.totaliPerPagese)
+      .input('totaliPageses', sql.Decimal(10,2), data.totaliIPageses)
+      .input('mbetjaPerPagese', sql.Decimal(10,2), data.mbetjaPerPagese)
+      .input('statusi', sql.VarChar, 'Perfunduar')
+      .input('dataPerfundimit', sql.DateTime, dataDheOra)
+      .input('transaksioniID', sql.Int, transaksioniID)
+      .input('shifra', sql.VarChar, data.shifra)
+      .query(updateServisinQuery);  
+      return { success: true };
+
+    }else{
+        const updateServisinQuery = `
+        Update servisimi 
+        SET komenti = @komenti,
+            pajisjetPercjellese = @pajisjetPercjellese,
+            shifraGarancionit = @shifraGarancionit
+        where shifra = @shifra
+      `;
+
+      await connection.request()
+      .input('komenti', sql.VarChar, data.komenti)
+      .input('pajisjetPercjellese', sql.VarChar, data.pajisjetPercjellese)
+      .input('shifraGarancionit', sql.VarChar, data.shifraGarancionit)
+      .input('shifra', sql.VarChar, data.shifra)
+      .query(updateServisinQuery);
+      return { success: true };
+    }
+      
+
+      
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
 ipcMain.handle('insertLlojiShpenzimit', async (event, data) => {
   let connection;
   try {
