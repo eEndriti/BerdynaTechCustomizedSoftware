@@ -12,8 +12,8 @@ export default function Blerjet() {
     const [searchTerm, setSearchTerm] = useState('');
     const [clientFilter, setClientFilter] = useState('');
     const [userFilter, setUserFilter] = useState('');
-    const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10)); // Default to current date
-    const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10)); // Default to current date
+    const [startDate, setStartDate] = useState(`${new Date().getFullYear()}-01-01`);
+    const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10)); 
     const [showModalPerPyetje, setShowModalPerPyetje] = useState(false);
     const [idPerAnulim, setIdPerAnulim] = useState();
 

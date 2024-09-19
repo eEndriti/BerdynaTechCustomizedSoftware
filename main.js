@@ -52,7 +52,9 @@ ipcMain.handle('fetchTablePerdoruesi', async () => {
 async function fetchTableTransaksionet() {
   try {
     await sql.connect(config);
-    const result = await sql.query`SELECT * FROM transaksioni`;
+    const result = await sql.query`
+select t.* ,p.emri as 'perdoruesi' from transaksioni t
+join Perdoruesi p on p.perdoruesiID = t.perdoruesiID`;
     return result.recordset;
   } catch (err) {
     console.error('Error retrieving data:', err);
@@ -66,6 +68,23 @@ ipcMain.handle('fetchTableTransaksionet', async () => {
   return data;
 });
 
+async function fetchTableQuery(query) {
+  try {
+    await sql.connect(config);
+    const result = await sql.query(query);
+    return result.recordset;
+  } catch (err) {
+    console.error('Error retrieving data:', err);
+    return [];
+  } finally {
+    await sql.close();
+  }
+}
+
+ipcMain.handle('fetchTableQuery', async (event, query) => {
+  const data = await fetchTableQuery(query);
+  return data;
+});
 
 async function fetchTableShitje() {
   try {

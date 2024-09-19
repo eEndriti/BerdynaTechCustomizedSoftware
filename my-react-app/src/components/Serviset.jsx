@@ -356,15 +356,17 @@ export default function Serviset() {
                         <td className={item.statusi == 'Perfunduar' ? 'text-success fw-bold' : 'fw-bold text-danger'}>{item.statusi}</td>
                         <td>{item.shifraGarancionit}</td>
                         <td>
+                        {item.statusi == 'Aktiv' ?
+                       <>
                         <Button className='btn btn-primary' onClick={() => handleShowUpdateModal(item,item.statusi)}>
                             <FontAwesomeIcon icon={faPen} />
                         </Button>
                         <Button className='btn bg-danger m-1 border-danger' onClick={() => thirreModal(item.servisimiID)}>
                             <FontAwesomeIcon  icon={faTrashCan} />
                         </Button>
-                        {item.statusi == 'Aktiv' ? <Button className='btn btn-success '>
+                         <Button className='btn btn-success '>
                             <FontAwesomeIcon  icon={faCheck} onClick={() => handleShowUpdateModal(item,'perfundo')}/>
-                        </Button>: null}
+                        </Button></>: null}
                         </td>
                     </>
                     ) : null}

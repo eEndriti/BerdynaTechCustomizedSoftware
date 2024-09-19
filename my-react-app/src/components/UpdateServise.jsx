@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Modal, Button, Form, Spinner, Toast } from 'react-bootstrap';
+import { Modal, Button, Form,Spinner, Toast } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -172,6 +172,7 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
                     {loading ? (
                         <>
                             <Spinner
+                                variant="success"
                                 as="span"
                                 animation="border"
                                 size="sm"
