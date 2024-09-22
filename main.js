@@ -950,7 +950,7 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
   let connection;
   let dataDheOra
 
-  let transaksioniID = 0
+  let transaksioniID = null
 
   try {
     dataDheOra = await getDateTime(); 
@@ -1019,7 +1019,10 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
     `;
 
     for (const produkt of data.produktet) {
-    if (produkt.produktiID && produkt.sasiaShitjes && produkt.cmimiPerCope && produkt.profiti !== null) {
+      console.log('as',produkt)
+    if (produkt.profiti > 0) {
+      console.log(produkt)
+
       await connection.request()
         .input('shitjeID', sql.Int, shitjeID)
         .input('produktiID', sql.Int, produkt.produktiID)
@@ -1033,13 +1036,13 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
       // Update the 'sasia' in 'produkti' table
       const updateProduktiQuery = `
         UPDATE produkti
-        SET sasia = sasia - @sasiaShitjes
+        SET sasia = sasia - @sasia
         WHERE produktiID = @produktiID
       `;
 
       await connection.request()
         .input('produktiID', sql.Int, produkt.produktiID)
-        .input('sasiaShitjes', sql.Int, produkt.sasiaShitjes)
+        .input('sasia', sql.Int, produkt.sasiaShitjes)
         .query(updateProduktiQuery);
     }
     }

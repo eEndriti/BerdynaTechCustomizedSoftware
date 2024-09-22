@@ -3,6 +3,7 @@ import { Modal, Form, Table, Button,Spinner } from "react-bootstrap";
 import ShtoNjeProdukt from "./ShtoNjeProdukt";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import AnimatedSpinner from "./AnimatedSpinner";
 
 export default function KerkoProduktin({ show, onHide, onSelect }) {
   const [queryShifra, setQueryShifra] = useState("");
@@ -13,13 +14,11 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
   const [produktet, setProduktet] = useState([]);
   const [showShtoProduktinModal,setShowShtoProduktinModal] = useState(false)
   const [loading,setLoading] = useState(true)
-  // Fetch data and filter results
+
   useEffect(() => {
     const fetchAndFilterData = async () => {
       const receivedData = await window.api.fetchTableProdukti();
       setProduktet(receivedData);
-      setLoading(false)
-      // Perform filtering
       const filteredResults = receivedData.filter((item) => {
         const matchesShifra = item.shifra.toLowerCase().includes(queryShifra.toLowerCase());
         const matchesEmertimi = item.emertimi.toLowerCase().includes(queryEmertimi.toLowerCase());
@@ -28,10 +27,12 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
         return matchesShifra && matchesEmertimi && matchesPershkrimi && matchesSasia;
       });
       setResults(filteredResults);
+      setLoading(false)
+
     };
 
     fetchAndFilterData();
-  }, [queryShifra, queryEmertimi, queryPershkrimi, eliminoVleratZero]); // Re-fetch data and filter results when filters change
+  }, [queryShifra, queryEmertimi, queryPershkrimi, eliminoVleratZero]); 
 
   const handleSelect = (item) => {
     item.cmimiPerCope = item.cmimiShitjes;
@@ -46,7 +47,8 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
   };
   const handleCloseShtoProduktinModal = () =>  setShowShtoProduktinModal(false) 
   return (
-    <Modal show={show} onHide={onHide} size="lg">
+    <>
+    {loading ? <AnimatedSpinner /> : <Modal show={show} onHide={onHide} size="lg">
       <Modal.Header closeButton>
         <Modal.Title>Kërko Produktin</Modal.Title>
       </Modal.Header>
@@ -127,6 +129,7 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
       </Modal.Footer>
       <ShtoNjeProdukt show={showShtoProduktinModal} prejardhja={'paRefresh'} handleClose={handleCloseShtoProduktinModal} /> 
       <ToastContainer/>
-    </Modal>
+    </Modal>}
+    </>
   );
 }

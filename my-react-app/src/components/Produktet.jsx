@@ -16,7 +16,7 @@ export default function Produktet() {
   const [showModalPerPyetje, setShowModalPerPyetje] = useState(false);
   const [idPerAnulim, setIdPerAnulim] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const [eliminoVleratZero, setEliminoVleratZero] = useState(false);
   const [filterShifra, setFilterShifra] = useState('');
   const [filterEmertimi, setFilterEmertimi] = useState('');
   const [filterSasia, setFilterSasia] = useState('');
@@ -73,13 +73,16 @@ export default function Produktet() {
     if (filterKategoria) {
       filtered = filtered.filter(item => item.emertimiKategorise.toLowerCase().includes(filterKategoria.toLowerCase()));
     }
+    if(eliminoVleratZero){
+      filtered = filtered.filter(item => item.sasia > 0  );
+    }
 
     setFilteredProduktet(filtered);
   };
 
   useEffect(() => {
     handleFilterChange();
-  }, [filterShifra, filterEmertimi, filterSasia, filterKategoria]);
+  }, [filterShifra, filterEmertimi, filterSasia, filterKategoria,eliminoVleratZero]);
 
   return (
     <Container>
@@ -125,6 +128,15 @@ export default function Produktet() {
                   value={filterKategoria}
                   onChange={(e) => setFilterKategoria(e.target.value)}
                 />
+              </Col>
+              <Col>
+              <Form.Group className='d-flex mt-2'>
+              <Form.Label className='mx-3'>Elimino Vlerat Zero</Form.Label>
+                <Form.Check
+                  checked = {eliminoVleratZero}
+                  onChange={() => setEliminoVleratZero(!eliminoVleratZero)}
+                />
+              </Form.Group>
               </Col>
             </Row>
           </Form>

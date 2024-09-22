@@ -3,6 +3,9 @@ import { Container, Row, Col, Table, Form,Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan,faPen } from '@fortawesome/free-solid-svg-icons'; 
 import Spinner from './AnimatedSpinner';
+import ModalPerPyetje from './ModalPerPyetje'
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Transaksionet() {
   const [transaksionet, setTransaksionet] = useState([]);
@@ -10,11 +13,16 @@ export default function Transaksionet() {
   const [filterShifra, setFilterShifra] = useState('');
   const [filterLloji, setFilterLloji] = useState('');
   const [filterPerdoruesi,setFilterPerdoruesi] = useState('')
-  const [filterDataTransaksionitStart, setFilterDataTransaksionitStart] = useState(`${new Date().getFullYear()}-01-01`);
+  const [showModal,setShowModal] = useState(false)
+  const [burimiThirrjes,setBurimiThirrjes] = useState('')
+  const [llojiPerAnulim,setLlojiPerAnulim] = useState('')
+  const [idPerAnulim,setIdPerAnulim] = useState('')
+
+  let muaji = new Date().getMonth()+1
+  {muaji < 10 ? muaji = `0${muaji}` : null}
+  const [filterDataTransaksionitStart, setFilterDataTransaksionitStart] = useState(`${new Date().getFullYear()}-${muaji}-01`);
   const [filterDataTransaksionitEnd, setFilterDataTransaksionitEnd] = useState(new Date().toISOString().split('T')[0]);
-  const [totaliPerPagese,setTotaliPerPagese] = useState()
-  const [totaliIPaguar,setTotaliIPaguar] = useState()
-  const [mbetjaPerPagese,setMbetjaPerPagese] = useState()
+
   
   useEffect(() => {
     window.api.fetchTableTransaksionet().then(receivedData => {
@@ -33,6 +41,55 @@ export default function Transaksionet() {
       itemDate <= filterDataTransaksionitEnd
     );
   });
+
+
+  const ndryshoTransaksionin = (lloji, transaksioniID) => {
+    alert(`Ndryshimi Transaksionit ${transaksioniID} ne Proces e mesiperm!!`)
+  }
+
+  const anuloTransaksionin =async () => {
+    const data = {
+      lloji:llojiPerAnulim,
+      transaksioniID:idPerAnulim
+    }
+
+    const result = await window.api.anuloTransaksionin(data)
+
+    if (result.success) {
+      toast.success(`Transaksioni i llojit ${llojiPerAnulim} u Anulua me Sukses !`, {
+        position: "top-center",  
+        autoClose: 1500,
+        onClose: () =>       window.location.reload()
+      });            ;
+      
+    } else {
+      toast.error('Gabim gjate Anulimit: ' + result.error);
+    }
+  }
+
+  const thirreModal = (lloji,transaksioniID,burimiThirrjes) =>{
+    setShowModal(true)
+    setBurimiThirrjes(burimiThirrjes)
+    setLlojiPerAnulim(lloji)
+    setIdPerAnulim(transaksioniID)
+  }
+  const handleConfirmModal = () => {
+    console.log('Confirmed!');
+    if(burimiThirrjes == 'anuloTransaksionin'){
+      anuloTransaksionin()
+    }
+  };
+
+  const handleCloseModal = () => setShowModal(false);
+
+
+  const calculateTotal = (transaksionet, field) => 
+    transaksionet.reduce((acc, transaksion) => acc + transaksion[field], 0).toFixed(2);
+  
+  const totalPerPagese = calculateTotal(filteredTransaksionet, 'totaliperPagese');
+  const totaliIPaguar = calculateTotal(filteredTransaksionet, 'totaliIPageses');
+  const mbetjaPerPagese = calculateTotal(filteredTransaksionet, 'mbetjaPerPagese');
+  
 
   return (
     <Container>
@@ -105,13 +162,14 @@ export default function Transaksionet() {
                 <th>Totali i Pageses</th>
                 <th>Mbetja per Pagese</th>
                 <th>Komenti</th>
-                <th>Nderrimi / Data Transaksionit</th>
+                <th>Nderrimi / Data dhe Ora Transaksionit</th>
                 <th>Perdoruesi</th>
                 <th>Opsionet</th>
               </tr>
             </thead>
             <tbody>
               {filteredTransaksionet.map((transaksion) => (
+                
                 <tr key={transaksion.transaksioniID}>
                   <td>{transaksion.shifra}</td>
                   <td>{transaksion.lloji}</td>
@@ -122,10 +180,10 @@ export default function Transaksionet() {
                   <td>{new Date(transaksion.dataTransaksionit).toLocaleDateString()}</td>
                   <td>{transaksion.perdoruesi}</td>
                   <td>
-                      <Button className='btn btn-primary' onClick={() => ndryshoTransaksionin(item.lloji, item.transaksioniID)}>
+                      <Button className='btn btn-primary' onClick={() => ndryshoTransaksionin(transaksion.lloji, transaksion.transaksioniID)}>
                       <FontAwesomeIcon className=" mt-1" icon={faPen} />
                       </Button>
-                      <Button className='btn btn-danger mx-2' onClick={() => thirreModal(item.lloji, item.transaksioniID, 'anuloTransaksionin')}>
+                      <Button className='btn btn-danger mx-2' onClick={() => thirreModal(transaksion.lloji, transaksion.transaksioniID, 'anuloTransaksionin')}>
                         <FontAwesomeIcon className=" mt-1" icon={faTrashCan} />
                       </Button>
                     </td>
@@ -136,12 +194,18 @@ export default function Transaksionet() {
         </Row>
       )}
       <Row>
-        <Col className='text-center d-flex flex-wrap justify-content-start align-items-center p-2 m-2'>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Totali per Pagese : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[0]?.vleraEBlerjeve.toFixed(2) || 'N/A'} €</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Paguar : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[0]?.VleraShitjeve.toFixed(2) || 'N/A'} €</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Mbetja per Pagese : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[0]?.nrProdukteve || 'N/A'}</span></h5>
+        <Col className='text-center d-flex flex-wrap justify-content-center align-items-end mt-5 p-2 m-2'>
+          <h5 className='mx-5 mt-2 border rounded p-3'>Totali per Pagese : <span className='fs-4 fw-bold mainTextColor p-2 d-inline'>{totalPerPagese} €</span></h5>
+          <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Paguar : <span className='fs-4 fw-bold mainTextColor p-2 d-inline'>{totaliIPaguar} €</span></h5>
+          <h5 className='mx-5 mt-2 border rounded p-3'>Mbetja per Pagese : <span className='fs-4 fw-bold mainTextColor p-2 d-inline'>{mbetjaPerPagese} €</span></h5>
         </Col>
       </Row>
+      <ModalPerPyetje
+        show={showModal}
+        handleClose={handleCloseModal}
+        handleConfirm={handleConfirmModal}
+      />
+      <ToastContainer/>
     </Container>
   );
 }

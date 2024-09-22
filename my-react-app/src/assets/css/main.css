@@ -1,3 +1,8 @@
+:root {
+  --primary-color: #2A3D4E; /* Dark Blue */
+  --secondary-color: #24AD5D; /* Green */
+  --light-color: #F8F9FA; /* Light White */
+}
 body {
     margin: 0;
     padding: 0;
@@ -9,6 +14,9 @@ body {
     font-size: 14px;
     font-family: "Montserrat", sans-serif;
     font-optical-sizing: auto;
+}
+.mainTextColor{
+  color: var(--primary-color);
 }
 
 span{

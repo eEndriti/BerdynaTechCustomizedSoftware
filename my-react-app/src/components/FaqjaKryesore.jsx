@@ -1,5 +1,5 @@
 import { useState,useEffect } from 'react'
-import { Button } from 'react-bootstrap'
+import { Button,Row,Col } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from './ModalPerPyetje'
@@ -90,7 +90,13 @@ function FaqjaKryesoreAdmin() {
 
   const handleCloseModal = () => setShowModal(false);
 
-
+  const calculateTotal = (transaksionet, field) => 
+    transaksionet.reduce((acc, transaksion) => acc + transaksion[field], 0).toFixed(2);
+  
+  const totalPerPagese = calculateTotal(transaksionet, 'totaliperPagese');
+  const totaliIPaguar = calculateTotal(transaksionet, 'totaliIPageses');
+  const mbetjaPerPagese = calculateTotal(transaksionet, 'mbetjaPerPagese');
+  
   return (
     <div>
       <div className="container my-3 tabelaTransaksioneve ">
@@ -141,7 +147,13 @@ function FaqjaKryesoreAdmin() {
         </div>
       </div>
       <hr/>
-
+      <Row>
+        <Col className='text-center d-flex flex-wrap justify-content-center align-items-end mt-2 p-2 m-2'>
+          <h5 className='mx-5 mt-2 border rounded p-3'>Totali per Pagese : <span className='fs-4 fw-bold mainTextColor p-2 d-inline'>{totalPerPagese} €</span></h5>
+          <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Paguar : <span className='fs-4 fw-bold mainTextColor p-2 d-inline'>{totaliIPaguar} €</span></h5>
+          <h5 className='mx-5 mt-2 border rounded p-3'>Mbetja per Pagese : <span className='fs-4 fw-bold mainTextColor p-2 d-inline'>{mbetjaPerPagese} €</span></h5>
+        </Col>
+      </Row>
       <div className="container mt-5 d-flex flex-row align-items-top">
 
         <div className='tabelaPorosive col-xs-12 col-sm-12 col-md-6 col-lg-6'>

@@ -8,6 +8,7 @@ import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ShtoNjeProdukt from "./ShtoNjeProdukt";
+import AnimatedSpinner from "./AnimatedSpinner";
 
 export default function Shitje() {
   const navigate = useNavigate();  
@@ -23,18 +24,16 @@ export default function Shitje() {
   const [nrPorosise, setNrPorosise] = useState(0);
   const [menyratPageses, setMenyratPageses] = useState([]);
   const [showShtoProduktinModal, setShowShtoProduktinModal] = useState(false);
-  const [loading, setLoading] = useState(true); // Set default to true to show loading initially.
+  const [loading, setLoading] = useState(true); 
 
   useEffect(() => {
-    // Fetching 'menyratPageses' data and simulating a database request
     window.api.fetchTableMenyratPageses().then(receivedData => {
       setMenyratPageses(receivedData);
-      setLoading(false); // Stop loading once data is retrieved.
+      setLoading(false);
     });
   }, []);
 
   useEffect(() => {
-    // Update the total per pagese whenever products change
     const total = products.reduce((acc, product) => {
       const cmimiPerCope = parseFloat(product.cmimiPerCope) || 0;
       const sasiaShitjes = parseFloat(product.sasiaShitjes) || 0;
@@ -43,7 +42,6 @@ export default function Shitje() {
       const totali = cmimiPerCope * sasiaShitjes;
       const profit = totali - (cmimiBlerjes * sasiaShitjes);
 
-      // Store the profit in the product object (but don't display it)
       product.profiti = profit;
 
       return acc + totali;
@@ -97,7 +95,7 @@ export default function Shitje() {
 
   const handleRegjistro = async () => {
     const perdoruesiID = localStorage.getItem('perdoruesiID');
-
+    console.log(products)
     if (!perdoruesiID || !menyraPagesesID || !selectedSubjekti?.subjektiID || !products?.length) {
       toast.error('Të gjitha fushat e nevojshme duhet të plotësohen!');
       return;
@@ -116,9 +114,10 @@ export default function Shitje() {
       subjektiID: selectedSubjekti.subjektiID,
       nderrimiID: 1,
       produktet: products.map(product => ({
-        produktID: product.produktID,
-        sasia: product.sasia,
-        cmimi: product.cmimi
+        produktiID: product.produktiID,
+        sasiaShitjes: product.sasiaShitjes,
+        cmimiPerCope: product.cmimiShitjes,
+        profiti:product.profiti
       }))
     };
   
@@ -158,6 +157,9 @@ export default function Shitje() {
 
   // Render the page
   return (
+    <>
+    {menyratPageses.length < 1 ? <AnimatedSpinner /> : 
+
     <Container fluid className="mt-2 d-flex flex-column" style={{ minHeight: "95vh" }}>
       <Row className="d-flex flex-row justify-content-between">
             <Col>
@@ -292,108 +294,114 @@ export default function Shitje() {
         </Col>
       </Row>
 
+
       <Row className="mt-auto section2 d-flex justify-content-around bg-light">
-        <Col xs={12} md={6} className="d-flex flex-column align-items-center">
-          <h5 className="p-3 text-center">
-            Shtype Garancionin <Form.Check inline />
-          </h5>
-        </Col>
-        <Col xs={12} md={6} className="d-flex justify-content-center">
-          <Form.Control as="textarea" onChange={handleKomentiShitjesChange} rows={3} className="p-3" placeholder="Shkruaj komentin..." />
-        </Col>
-      </Row>
+      <Col xs={12} md={6} className="d-flex flex-column align-items-center">
+        <h5 className="p-3 text-center">
+          Shtype Garancionin <Form.Check inline />
+        </h5>
+      </Col>
+      <Col xs={12} md={6} className="d-flex justify-content-center">
+        <Form.Control as="textarea" onChange={handleKomentiShitjesChange} rows={3} className="p-3" placeholder="Shkruaj komentin..." />
+      </Col>
+    </Row>
 
       <Row className="section3 my-5 d-flex justify-content-end">
-        <Col xs={12} md={6} className="d-flex justify-content-center align-items-end">
-          <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleAnulo}>Anulo</Button>
-          <Button variant="success" size="lg" className="mx-2 fs-1" 
-          disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || !(menyraPagesesID) || loading} 
-          onClick={handleRegjistro} >{loading ? (
-            <>
-              <Spinner
-                as="span"
-                animation="border"
-                size="sm"
-                role="status"
-                aria-hidden="true"
-              />{' '}
-              Duke ruajtur...
-            </>
-          ) : (
-            'Regjistro...'
-          )}</Button>
-        </Col>
-          Duhet me kontrollu kur tbohet shitje online mos me hi si transaksion
-        <Col xs={12} md={6} className="d-flex flex-column align-items-end">
-          <div className="d-flex flex-column w-100 justify-content-end">
-            <div className="d-flex flex-column w-100">
-              <Form.Group as={Row} controlId="totaliPerPageseShuma" className="mb-2">
-                <Form.Label column xs={6} className="text-end">Totali Per Pagese:</Form.Label>
-                <Col xs={6}>
-                  <Form.Control
-                    type="number"
-                    value={totaliPerPagese.toFixed(2)}
-                    readOnly
-                  />
-                </Col>
-              </Form.Group>
-              {llojiShitjes == 'dyqan'? <>
-                <Form.Group as={Row} controlId="totaliPageses" className="mb-2">
-                <Form.Label column xs={6} className="text-end">Totali Pageses:</Form.Label>
-                <Col xs={6}>
-                  <Form.Control
-                    type="number"
-                    defaultValuevalue={totaliPageses}
-                    onChange={handleTotaliPagesesChange}
-                    min={0}
-                  />
-                </Col>
-              </Form.Group>
-              <Form.Group as={Row} controlId="mbetjaPerPagese" className="mb-2">
-                <Form.Label column xs={6} className="text-end">Mbetja Per Pagese:</Form.Label>
-                <Col xs={6}>
-                  <Form.Control
-                    type="number"
-                    value={mbetjaPerPagese}
-                    readOnly
-                  />
-                </Col>
-              </Form.Group>
-              </>:
-              <Form.Group as={Row} controlId="nrPorosiseShuma" className="mb-2">
-              <Form.Label column xs={6} className="text-end">Nr. Porosise:</Form.Label>
+      <Col xs={12} md={6} className="d-flex justify-content-center align-items-end">
+        <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleAnulo}>Anulo</Button>
+        <Button variant="success" size="lg" className="mx-2 fs-1" 
+        disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || !(menyraPagesesID) || loading} 
+        onClick={handleRegjistro} >{loading ? (
+          <>
+            <Spinner
+              as="span"
+              animation="border"
+              size="sm"
+              role="status"
+              aria-hidden="true"
+            />{' '}
+            Duke ruajtur...
+          </>
+        ) : (
+          'Regjistro...'
+        )}</Button>
+      </Col>
+        Duhet me kontrollu kur tbohet shitje online mos me hi si transaksion
+      <Col xs={12} md={6} className="d-flex flex-column align-items-end">
+        <div className="d-flex flex-column w-100 justify-content-end">
+          <div className="d-flex flex-column w-100">
+            <Form.Group as={Row} controlId="totaliPerPageseShuma" className="mb-2">
+              <Form.Label column xs={6} className="text-end">Totali Per Pagese:</Form.Label>
               <Col xs={6}>
-              <Form.Control
-                type="text"  // Use "text" instead of "number"
-                maxLength={8}  // Set maxLength to 8
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (/^\d*$/.test(value) && value.length <= 8) {
-                    handleNrPorosiseChange(e);
-                  }
-                }}
-              />
+                <Form.Control
+                  type="number"
+                  value={totaliPerPagese.toFixed(2)}
+                  readOnly
+                />
               </Col>
             </Form.Group>
-            }
-            </div>
-            <div className="d-flex flex-row justify-content-end">
-              {menyratPageses.map((menyraPageses) => (
-                <Button
-                  key={menyraPageses.menyraPagesesID}
-                  onClick={() => handleMenyraPagesesID(menyraPageses.menyraPagesesID)}
-                  className={menyraPagesesID === menyraPageses.menyraPagesesID ? 'bg-primary mx-2' : 'mx-2 bg-transparent text-primary'}
-                >
-                  {menyraPageses.emertimi}
-                </Button>
-              ))}
-            </div>
+            {llojiShitjes == 'dyqan'? <>
+              <Form.Group as={Row} controlId="totaliPageses" className="mb-2">
+              <Form.Label column xs={6} className="text-end">Totali Pageses:</Form.Label>
+              <Col xs={6}>
+                <Form.Control
+                  type="number"
+                  defaultValuevalue={totaliPageses}
+                  onChange={handleTotaliPagesesChange}
+                  min={0}
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} controlId="mbetjaPerPagese" className="mb-2">
+              <Form.Label column xs={6} className="text-end">Mbetja Per Pagese:</Form.Label>
+              <Col xs={6}>
+                <Form.Control
+                  type="number"
+                  value={mbetjaPerPagese}
+                  readOnly
+                />
+              </Col>
+            </Form.Group>
+            </>:
+            <Form.Group as={Row} controlId="nrPorosiseShuma" className="mb-2">
+            <Form.Label column xs={6} className="text-end">Nr. Porosise:</Form.Label>
+            <Col xs={6}>
+            <Form.Control
+              type="text"  // Use "text" instead of "number"
+              maxLength={8}  // Set maxLength to 8
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^\d*$/.test(value) && value.length <= 8) {
+                  handleNrPorosiseChange(e);
+                }
+              }}
+            />
+            </Col>
+          </Form.Group>
+          }
           </div>
-        </Col>
-      </Row>
+          <div className="d-flex flex-row justify-content-end">
+              {menyratPageses.map((menyraPageses) => (
+              
+              <Button
+                key={menyraPageses.menyraPagesesID}
+                onClick={() => handleMenyraPagesesID(menyraPageses.menyraPagesesID)}
+                className={menyraPagesesID === menyraPageses.menyraPagesesID ? 'bg-primary mx-2' : 'mx-2 bg-transparent text-primary'}
+              >
+                {menyraPageses.emertimi}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </Col>
+    </Row>
+    
+
+      
 
       <ShtoNjeProdukt show={showShtoProduktinModal} handleClose={handleCloseShtoProduktinModal} />
       <ToastContainer/>
-    </Container>
+    </Container> }
+    </>
   );
 }
