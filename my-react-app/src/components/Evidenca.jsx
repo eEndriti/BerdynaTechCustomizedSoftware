@@ -62,7 +62,7 @@ export default function Evidenca() {
     return <div>{error}</div>;
   }
 
-  const bgColors = ['bg-success', 'bg-info', 'bg-warning', 'bg-warning', 'bg-secondary'];
+  const bgColors = ['bg-success', 'bg-info', 'bg-warning', 'bg-primary', 'bg-secondary','bg-danger'];
 
   return (
     <Container>

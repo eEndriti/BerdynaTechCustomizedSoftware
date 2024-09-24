@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan, faPen } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan, faPen,faChevronDown,faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
+import AnimatedSpinner from './AnimatedSpinner'
 
 export default function Shitjet() {
     const [shitjet, setShitjet] = useState([]);
@@ -15,10 +16,20 @@ export default function Shitjet() {
     const [startDate, setStartDate] = useState(`${new Date().getFullYear()}-01-01`);
     const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10)); // Default to current date
     const [showModalPerPyetje, setShowModalPerPyetje] = useState(false);
-    const [idPerAnulim, setIdPerAnulim] = useState();
+    const [shitjeIDPerAnulim, setShitjeIDPerAnulim] = useState();
+    const [transaksioniIDPerAnulim, setTransaksioniIDPerAnulim] = useState();
+    const [shitjeIDPerDetaje,setShitjeIDPerDetaje] = useState()
+    const [llojiShitjes,setLlojiShitjes] = useState()
+    const [loadingProduktet,setLoadingProduktet] = useState(false)
 
     useEffect(() => {
         window.api.fetchTableShitje().then((receivedData) => {
+            setShitjet(receivedData);
+            setLoading(false);
+        });
+    }, []);
+    useEffect(() => {
+        window.api.fetchTableQuery().then((receivedData) => {
             setShitjet(receivedData);
             setLoading(false);
         });
@@ -32,7 +43,6 @@ export default function Shitjet() {
 
     const filteredShitjet = shitjet.filter(item => {
         const itemDate = new Date(item.dataShitjes).toISOString().slice(0, 10);
-        console.log('item',item)
         return (
             item.shifra.toLowerCase().includes(searchTerm.toLowerCase()) &&
             item.subjekti.toLowerCase().includes(clientFilter.toLowerCase()) &&
@@ -42,9 +52,11 @@ export default function Shitjet() {
         );
     });
 
-    const thirreModalPerPyetje = (idPerAnulim) => {
+    const thirreModalPerPyetje = (shitjeIDPerAnulim,transaksioniIDPerAnulim,llojiShitjes) => {
         setShowModalPerPyetje(true);
-        setIdPerAnulim(idPerAnulim);
+        setLlojiShitjes(llojiShitjes)
+        setShitjeIDPerAnulim(shitjeIDPerAnulim);
+        setTransaksioniIDPerAnulim(transaksioniIDPerAnulim)
     };
     
     const handleConfirmModal = () => {
@@ -58,11 +70,15 @@ export default function Shitjet() {
     const handleDeleteShitje = async () => {
         const data = {
             lloji: 'Shitje',
-            transaksioniID: idPerAnulim,
+            transaksioniID: transaksioniIDPerAnulim,
         };
-
-        const result = await window.api.anuloTransaksionin(data);
-
+        let result
+        if(llojiShitjes == 'dyqan'){
+            console.log('innnn',data)
+             result = await window.api.anuloTransaksionin(data);
+        }else if (llojiShitjes == 'online'){
+            result = await window.api.anuloPorosineOnline(shitjeIDPerAnulim)
+        }
         if (result.success) {
             toast.success(`Shitja u Anulua me Sukses !`, {
                 position: 'top-center',
@@ -73,7 +89,16 @@ export default function Shitjet() {
             toast.error('Gabim gjate Anulimit: ' + result.error);
         }
     };
-
+    const shfaqProduktetEShitjes = (shitjeID) => {
+       if(shitjeIDPerDetaje == shitjeID){
+        setShitjeIDPerDetaje(null)
+       }else{
+        setLoadingProduktet(true)
+        setShitjeIDPerDetaje(shitjeID)
+        shfaqDetajet()
+       }
+    }
+    
     return (
         <Container>
             <h4 className="text-center fw-bold">Të Gjitha Shitjet:</h4>
@@ -171,8 +196,15 @@ export default function Shitjet() {
                                                         <Button variant="primary" className="m-2">
                                                             <FontAwesomeIcon className="mt-1" icon={faPen} />
                                                         </Button>
-                                                        <Button variant="danger" onClick={() => thirreModalPerPyetje(item.transaksioniID)}>
+                                                        <Button variant="danger" onClick={() => thirreModalPerPyetje(item.shitjeID,item.transaksioniID,item.lloji)}>
                                                             <FontAwesomeIcon className="mt-1" icon={faTrashCan} />
+                                                        </Button>
+                                                        <Button variant='transparent' className='btn-outline-light mx-2'  onClick={() => shfaqProduktetEShitjes(item.shitjeID)} 
+                                                                 >
+                                                        <FontAwesomeIcon 
+                                                                className={` ${shitjeIDPerDetaje === item.shitjeID ? 'text-primary fw-bold' : 'text-secondary fw-bold'}`}
+                                                                icon={shitjeIDPerDetaje === item.shitjeID ? faChevronDown : faChevronRight}
+                                                            />
                                                         </Button>
                                                     </td>
                                                 </tr>
@@ -185,6 +217,12 @@ export default function Shitjet() {
                     </Col>
                 </Row>
             )}
+
+            {shitjeIDPerDetaje ? <>
+                {loadingProduktet ? <>
+                    <AnimatedSpinner className="w-10 fs-5" />
+                </>:<>aaa</>}
+                </>:null}
             <ToastContainer />
             <ModalPerPyetje show={showModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />
         </Container>

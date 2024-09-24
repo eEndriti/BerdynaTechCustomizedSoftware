@@ -24,8 +24,9 @@ contextBridge.exposeInMainWorld('api', {
     insertKategorine: (data) => ipcRenderer.invoke('insertKategorine', data) ,
     insertSubjekti: (data) => ipcRenderer.invoke('insertSubjekti', data) ,
     insertServisi: (data) => ipcRenderer.invoke('insertServisi', data) ,
-
+    
     anuloTransaksionin: (data) => ipcRenderer.invoke('anuloTransaksionin', data) ,
+    anuloPorosineOnline: (idPerAnulim) => ipcRenderer.invoke('anuloPorosineOnline', idPerAnulim) ,
     fshijeProduktin: (idPerAnulim) => ipcRenderer.invoke('fshijeProduktin', idPerAnulim) ,
     deleteKategoria: (idPerAnulim) => ipcRenderer.invoke('deleteKategoria', idPerAnulim) ,
     deleteLlojiShpenzimit: (idPerAnulim) => ipcRenderer.invoke('deleteLlojiShpenzimit', idPerAnulim) ,

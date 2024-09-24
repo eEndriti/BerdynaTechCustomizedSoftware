@@ -1,10 +1,11 @@
 import { useState,useEffect } from 'react'
 import { Button,Row,Col } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; 
+import { faPen, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from './ModalPerPyetje'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import UpdateServise from './UpdateServise';
 
 function FaqjaKryesoreAdmin() {
   const [transaksionet,setTransaksionet] = useState([])
@@ -17,39 +18,37 @@ function FaqjaKryesoreAdmin() {
   const [burimiThirrjes,setBurimiThirrjes] = useState('')
   const [llojiPerAnulim,setLlojiPerAnulim] = useState('')
   const [idPerAnulim,setIdPerAnulim] = useState('')
+  const [modalPerServisUpdate,setModalPerServisUpdate] = useState()
+  const [data,setData] = useState('')
+  const [updateServisType,setUpdateServisType] = useState()
+  useEffect(() => {
+    const fetchData = async () => {
+      const [transaksionetData, shitjetData, servisetData] = await Promise.all([
+        window.api.fetchTableTransaksionet(),
+        window.api.fetchTableShitje(),
+        window.api.fetchTableServisi(),
+      ]);
   
-  useEffect(() => {
-    window.api.fetchTableTransaksionet().then(receivedData => {
-      setTransaksionet(receivedData);
-    });
+      setTransaksionet(transaksionetData);
+      setShitjet(shitjetData);
+      setServiset(servisetData);
+  
+      // Filter transaksionet
+      const filteredTransaksionet = transaksionetData.filter(item => item.nderrimiID === 1);
+      setTransaksionetENderrimit(filteredTransaksionet);
+  
+      // Filter shitjet
+      const shitjetEFiltruara = shitjetData.filter(item => item.lloji === 'online');
+      setPorositeNePritje(shitjetEFiltruara);
+  
+      // Filter serviset
+      const servisetAktive = servisetData.filter(item => item.statusi === 'Aktiv');
+      setServisetAktive(servisetAktive);
+    };
+  
+    fetchData();
   }, []);
-
-  useEffect(() => {
-    window.api.fetchTableShitje().then(receivedData => {
-      setShitjet(receivedData);
-    });
-  }, []);
-
-  useEffect(() => {
-    window.api.fetchTableServisi().then(receivedData => {
-      setServiset(receivedData);
-    });
-  }, []);
-
-  useEffect(() => {
-    const filteredTransaksionet = transaksionet.filter(item => item.nderrimiID === 1);
-    setTransaksionetENderrimit(filteredTransaksionet);
-  }, [transaksionet]);
-
-  useEffect(() => {
-    const shitjetEFiltruara = shitjet.filter(item => item.lloji == 'online');
-    setPorositeNePritje(shitjetEFiltruara);
-  }, [shitjet]);
-
-  useEffect(() => {
-    const servisetAktive = serviset.filter(item => item.statusi == 'Aktiv');
-    setServisetAktive(servisetAktive);
-  }, [shitjet]);
+  
   
   const ndryshoTransaksionin = (lloji, transaksioniID) => {
     alert(`Ndryshimi Transaksionit ${transaksioniID} ne Proces e mesiperm!!`)
@@ -82,12 +81,30 @@ function FaqjaKryesoreAdmin() {
     setIdPerAnulim(transaksioniID)
   }
   const handleConfirmModal = () => {
-    console.log('Confirmed!');
+
     if(burimiThirrjes == 'anuloTransaksionin'){
       anuloTransaksionin()
+    }else if(burimiThirrjes == 'anuloServisin'){
+      deleteServisin()
+    }else if(burimiThirrjes == 'anuloPorosineOnline'){
+      anuloPorosineOnline()
     }
   };
+  const anuloPorosineOnline = async () => {
+    
+    const result = await window.api.anuloPorosineOnline(idPerAnulim)
 
+    if (result.success) {
+      toast.success(`Shitja Online u Anulua me Sukses !`, {
+        position: "top-center",  
+        autoClose: 1500,
+        onClose: () =>       window.location.reload()
+      });            ;
+      
+    } else {
+      toast.error('Gabim gjate Anulimit: ' + result.error);
+    }
+  }
   const handleCloseModal = () => setShowModal(false);
 
   const calculateTotal = (transaksionet, field) => 
@@ -97,6 +114,29 @@ function FaqjaKryesoreAdmin() {
   const totaliIPaguar = calculateTotal(transaksionet, 'totaliIPageses');
   const mbetjaPerPagese = calculateTotal(transaksionet, 'mbetjaPerPagese');
   
+  const closeModalPerServisUpdate = () => setModalPerServisUpdate(false)
+
+  const ndryshoServisin = (data,type) =>{
+
+    setData(data)
+    setUpdateServisType(type)
+    setModalPerServisUpdate(true)
+  }
+
+  const deleteServisin = async () => {
+    console.log(idPerAnulim)
+    const result = await window.api.deleteServisi(idPerAnulim);
+
+    if (result.success) {
+        toast.success(`Servisi u Anulua me Sukses !`, {
+            position: 'top-center',
+            autoClose: 1500,
+            onClose: () => window.location.reload(),
+        });
+    } else {
+        toast.error('Gabim gjate Anulimit: ' + result.error);
+    }
+}
   return (
     <div>
       <div className="container my-3 tabelaTransaksioneve ">
@@ -130,8 +170,8 @@ function FaqjaKryesoreAdmin() {
                     <td>{item.komenti}</td>
                     <td>{item.dataTransaksionit.toLocaleTimeString()}</td>
                     <td>
-                      <Button className='btn btn-primary' onClick={() => ndryshoTransaksionin(item.lloji, item.transaksioniID)}>
-                        Ndrysho
+                      <Button className='btn btn-primary' disabled onClick={() => ndryshoTransaksionin(item.lloji, item.transaksioniID)}>
+                        <FontAwesomeIcon icon={faPen}/>
                       </Button>
                       <Button className='btn bg-transparent border-0 text-danger' onClick={() => thirreModal(item.lloji, item.transaksioniID, 'anuloTransaksionin')}>
                         <FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} />
@@ -183,8 +223,8 @@ function FaqjaKryesoreAdmin() {
                   <td>{item.totaliPerPagese}</td>
                   <td>{item.komenti}</td>
                   <td>
-                    <Button className='btn btn-primary'>Ndrysho</Button>
-                    <Button className='btn bg-transparent border-0 text-danger'><FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} /></Button>
+                    <Button className='btn btn-primary' disabled><FontAwesomeIcon icon={faPen}/></Button>
+                    <Button className='btn bg-transparent border-0 text-danger' onClick={() => thirreModal('ShitjeOnline',item.shitjeID,'anuloPorosineOnline')}><FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} /></Button>
                   </td>
                 </tr>
               ))}
@@ -216,8 +256,15 @@ function FaqjaKryesoreAdmin() {
                   <td>{item.komenti}</td>
                   <td>{item.pajisjetPercjellese}</td>
                   <td>
-                    <Button className='btn btn-primary'>Ndrysho</Button>
-                    <Button className='btn bg-transparent border-0 text-danger'><FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} /></Button>
+                        <Button className='btn btn-primary' onClick={() => ndryshoServisin(item,'ndrysho')}>
+                            <FontAwesomeIcon icon={faPen} />
+                        </Button>
+                        <Button className='btn bg-danger m-1 border-danger' onClick={() => thirreModal('',item.servisimiID,'anuloServisin')}>
+                            <FontAwesomeIcon  icon={faTrashCan} />
+                        </Button>
+                         <Button className='btn btn-success ' onClick={() => ndryshoServisin(item,'perfundo')}>
+                            <FontAwesomeIcon  icon={faCheck} />
+                        </Button>
                   </td>
                 </tr>
               ))}
@@ -232,6 +279,7 @@ function FaqjaKryesoreAdmin() {
         handleClose={handleCloseModal}
         handleConfirm={handleConfirmModal}
       />
+      <UpdateServise show={modalPerServisUpdate} handleClose={closeModalPerServisUpdate} updateType={updateServisType} data = {data} />
       <ToastContainer/>
     </div>
   )

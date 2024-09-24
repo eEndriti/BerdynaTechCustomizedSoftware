@@ -364,8 +364,8 @@ export default function Serviset() {
                         <Button className='btn bg-danger m-1 border-danger' onClick={() => thirreModal(item.servisimiID)}>
                             <FontAwesomeIcon  icon={faTrashCan} />
                         </Button>
-                         <Button className='btn btn-success '>
-                            <FontAwesomeIcon  icon={faCheck} onClick={() => handleShowUpdateModal(item,'perfundo')}/>
+                         <Button className='btn btn-success ' onClick={() => handleShowUpdateModal(item,'perfundo')}>
+                            <FontAwesomeIcon  icon={faCheck} />
                         </Button></>: null}
                         </td>
                     </>
@@ -382,4 +382,5 @@ export default function Serviset() {
         <UpdateServise show={modalPerUpdate} handleClose={closeModalPerUpdate} updateType={updateType} data = {data} />
     </Container>
   )
+  
 }

@@ -125,7 +125,10 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
                     </Form>
                 ) : (
                     <Form>
-                        
+                        <Form.Group style={{ flex: 1 }} className='my-2'>
+                            <Form.Label className="fw-bold ">Klienti:</Form.Label>
+                            <Form.Control type="text" value={data?.subjekti || ''} disabled />
+                        </Form.Group>
                         <Form.Group style={{ flex: 1 }}>
                             <Form.Label className="fw-bold">Komenti:</Form.Label>
                             <Form.Control

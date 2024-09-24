@@ -1073,6 +1073,72 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
   }
 });
 
+ipcMain.handle('anuloPorosineOnline', async (event, idPerAnulim) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      // Step 1: Retrieve sold products from shitjeProdukti for the specified transaksioniID
+      const getShitjeProduktiQuery = `
+        SELECT produktiID, sasia 
+        FROM shitjeProdukti 
+        WHERE shitjeID IN (
+          SELECT shitjeID 
+          FROM shitje 
+          WHERE shitjeID = @shitjeID
+        )
+      `;
+
+      const shitjeProduktiResult = await connection.request()
+        .input('shitjeID', sql.Int, idPerAnulim)
+        .query(getShitjeProduktiQuery);
+
+      const soldProducts = shitjeProduktiResult.recordset;
+
+      // Step 2: Update product quantities in produkti table
+      const updateProduktiQuery = `
+        UPDATE produkti
+        SET sasia = sasia + @sasia
+        WHERE produktiID = @produktiID
+      `;
+
+      for (const produkt of soldProducts) {
+        await connection.request()
+          .input('produktiID', sql.Int, produkt.produktiID)
+          .input('sasia', sql.Int, produkt.sasia)
+          .query(updateProduktiQuery);
+      }
+
+      // Step 3: Delete records from shitjeProdukti, shitje, and transaksioni tables
+      const deleteShitjeProduktiQuery = `
+        DELETE FROM shitjeProdukti 
+        WHERE shitjeID IN (
+          SELECT shitjeID 
+          FROM shitje 
+          WHERE shitjeID = @shitjeID
+        )
+      `;
+
+      const deleteShitjeQuery = `
+        DELETE FROM shitje 
+        WHERE shitjeID = @shitjeID
+      `;
+
+      await connection.request().input('shitjeID', sql.Int, idPerAnulim).query(deleteShitjeProduktiQuery);
+      await connection.request().input('shitjeID', sql.Int, idPerAnulim).query(deleteShitjeQuery);
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
 ipcMain.handle('anuloTransaksionin', async (event, data) => {
   let connection;
 
@@ -1130,6 +1196,7 @@ ipcMain.handle('anuloTransaksionin', async (event, data) => {
         DELETE FROM transaksioni 
         WHERE transaksioniID = @transaksioniID
       `;
+
       const deletePagesaQuery = `
         delete from pagesa 
         where transaksioniID = @transaksioniID
