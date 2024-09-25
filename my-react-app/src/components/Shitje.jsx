@@ -326,7 +326,6 @@ export default function Shitje() {
           'Regjistro...'
         )}</Button>
       </Col>
-        Duhet me kontrollu kur tbohet shitje online mos me hi si transaksion
       <Col xs={12} md={6} className="d-flex flex-column align-items-end">
         <div className="d-flex flex-column w-100 justify-content-end">
           <div className="d-flex flex-column w-100">

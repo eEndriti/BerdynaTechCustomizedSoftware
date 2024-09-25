@@ -116,7 +116,7 @@ async function fetchTableBlerje() {
     await sql.connect(config);
     const result = await sql.query`
       select b.blerjeID,b.shifra,b.totaliPerPagese,b.totaliPageses,b.mbetjaPerPagese,b.dataBlerjes,
-      b.dataFatures,b.komenti,b.fatureERregullt,b.nrFatures,p.emri as 'perdoruesi',s.emertimi as 'klienti',m.emertimi as 'menyraPagesese',b.transaksioniID,n.numriPercjelles,n.dataNderrimit from Blerje b
+      b.dataFatures,b.komenti,b.fatureERregullt,b.nrFatures,p.emri as 'perdoruesi',s.subjektiID,s.emertimi as 'klienti',m.emertimi as 'menyraPagesese',b.transaksioniID,n.numriPercjelles,n.dataNderrimit from Blerje b
 
         join perdoruesi p on p.perdoruesiID = b.perdoruesiID
         join subjekti s on s.subjektiID = b.subjektiID
@@ -893,7 +893,7 @@ ipcMain.handle('insertBlerje', async (event, data) => {
     `;
 
     for (const produkt of data.produktet) {
-    if (produkt.produktiID && produkt.sasiaShitjes && produkt.cmimiPerCope) {
+    if (produkt.produktiID && produkt.sasiaBlerjes && produkt.cmimiPerCope) {
       const totali = produkt.cmimiBlerjes * produkt.sasiaBlerjes
       await connection.request()
         .input('cmimiPerCope', sql.Decimal(18, 2), produkt.cmimiBlerjes)
@@ -908,7 +908,7 @@ ipcMain.handle('insertBlerje', async (event, data) => {
         
       const updateProduktiQuery = `
         UPDATE produkti
-        SET sasia += @sasia
+        SET sasia = sasia + @sasia
         WHERE produktiID = @produktiID
       `;
       

@@ -25,10 +25,15 @@ export default function Blerje() {
   const [totaliTvsh,setTotaliTvsh] = useState(0)
   const [nrFatures,setNrFatures] = useState()
   const [loading,setLoading] = useState(false)
+  const [blerjet,setBlerjet] = useState([])
+  const [nukPranohetNrFatures,setNukPranohetNrFatures] = useState(false)
 
   useEffect(() => {
     window.api.fetchTableMenyratPageses().then(receivedData => {
       setMenyratPageses(receivedData);
+    });
+    window.api.fetchTableBlerje().then(receivedData => {
+      setBlerjet(receivedData);
     });
   }, []);
 
@@ -116,7 +121,7 @@ export default function Blerje() {
         autoClose: 1500,
       });
     }
-  
+  console.log('pr',products)
     const data = {
       totaliPerPagese,
       totaliPageses,
@@ -157,6 +162,16 @@ export default function Blerje() {
     }
   };
   
+  const kontrolloValidetin = (nrFatures) =>{
+    setNukPranohetNrFatures(false)
+    setNrFatures(nrFatures)
+    blerjet.map(item =>{
+      console.log(item.subjektiID,item.nrFatures,selectedSubjekti.subjektiID,nrFatures)
+      if(item.subjektiID == selectedSubjekti.subjektiID && item.nrFatures == nrFatures){
+        setNukPranohetNrFatures(true)
+      }
+    })
+  }
   
   return (
     <Container>
@@ -178,7 +193,7 @@ export default function Blerje() {
         <Col md={2}>
           <Form.Group>
             <Form.Label column xs={6} className="text-start w-auto">Nr i Fatures:</Form.Label>
-            <Form.Control type="text" value={nrFatures} onChange={ (e) => setNrFatures(e.target.value)}/>
+            <Form.Control type="text" value={nrFatures} onChange={ (e) => kontrolloValidetin(e.target.value)}/>
           </Form.Group>
         </Col>
         <Col md={2}>
@@ -190,7 +205,10 @@ export default function Blerje() {
         <Col className="d-flex justify-content-center align-items-center">
           <Button variant="info" className="p-2 fs-5" onClick={() => navigate('/blerjet')}>Te Gjitha Blerjet</Button>
         </Col>
+        
       </Row>
+      {nukPranohetNrFatures ? <p className="text-center text-danger">Numri i Fatures Egziston tek ky Subjekt, Nuk Lejohet!</p> : null}
+
       <hr/>
 
       <Row className="mt-5">
@@ -285,7 +303,8 @@ export default function Blerje() {
       <Row className="section3 my-5 d-flex justify-content-end">
         <Col xs={12} md={6} className="d-flex justify-content-center align-items-end">
           <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleAnulo}>Anulo</Button>
-          <Button variant="success" size="lg" className="mx-2 fs-1" disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || nrFatures == null || loading} onClick={handleRegjistro} >{loading ? (
+          <Button variant="success" size="lg" className="mx-2 fs-1" 
+          disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || nrFatures == null || nukPranohetNrFatures || loading || !menyraPagesesID} onClick={handleRegjistro} >{loading ? (
             <>
               <Spinner
                 as="span"

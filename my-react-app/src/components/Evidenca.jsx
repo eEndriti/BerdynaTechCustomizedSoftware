@@ -12,7 +12,6 @@ export default function Evidenca() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch all data concurrently
         const [menyratResponse, shitjeResponse, blerjeResponse, produktiResponse] = await Promise.all([
           window.api.fetchTableMenyratPageses(),
           window.api.fetchTableQuery('SELECT SUM(mbetjaPerPagese) as vleraShitjevePaPaguar FROM shitje'),

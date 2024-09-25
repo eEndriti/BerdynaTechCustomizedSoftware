@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan, faPen } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan, faPen,faChevronRight,faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
+import DetajePerShitjeBlerje from './DetajePerShitjeBlerje';
+import AnimatedSpinner from './AnimatedSpinner';
 
 export default function Blerjet() {
     const [blerjet, setBlerjet] = useState([]);
@@ -16,6 +18,8 @@ export default function Blerjet() {
     const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10)); 
     const [showModalPerPyetje, setShowModalPerPyetje] = useState(false);
     const [idPerAnulim, setIdPerAnulim] = useState();
+    const [IDPerDetaje,setIDPerDetaje] = useState()
+    const [shifraPerDetaje,setShifraPerDetaje] = useState()
 
     useEffect(() => {
         window.api.fetchTableBlerje().then((receivedData) => {
@@ -72,7 +76,14 @@ export default function Blerjet() {
             toast.error('Gabim gjate Anulimit: ' + result.error);
         }
     };
-
+    const shfaqProduktetEBlerjes = (ID,shifra) => {
+        setShifraPerDetaje(shifra)
+       if(IDPerDetaje == ID){
+            setIDPerDetaje(null)
+       }else{
+            setIDPerDetaje(ID)
+       }
+}   
     return (
         <Container>
             <h4 className="text-center fw-bold">Të Gjitha Blerjet:</h4>
@@ -121,7 +132,7 @@ export default function Blerjet() {
 
             {loading ? (
                 <div className="d-flex justify-content-center">
-                    <Spinner animation="border" />
+                    <AnimatedSpinner animation="border" />
                 </div>
             ) : (
                 <Row>
@@ -143,12 +154,11 @@ export default function Blerjet() {
                                                 <th scope="col">Totali Pageses</th>
                                                 <th scope="col">Mbetja Per Pagese</th>
                                                 <th scope="col">Perdoruesi</th>
-                                                <th scope="col">Data e Blerjes</th>
+                                                <th scope="col">Nderrimi dhe Data e Blerjes</th>
                                                 <th scope="col">Data e Fatures</th>
                                                 <th scope="col">Fature e Rregullt</th>
                                                 <th scope="col">Nr i Fatures</th>
                                                 <th scope="col">Menyra e Pageses</th>
-                                                <th scope="col">Nderrimi</th>
                                                 <th scope="col">Opsionet</th>
                                             </tr>
                                         </thead>
@@ -160,20 +170,26 @@ export default function Blerjet() {
                                                     <td>{item.klienti}</td>
                                                     <td>{item.totaliPerPagese} €</td>
                                                     <td>{item.totaliPageses} €</td>
-                                                    <td>{item.mbetjaPerPagese} €</td>
+                                                    <td className={item.mbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{item.mbetjaPerPagese.toFixed(2)} €</td>
                                                     <td>{item.perdoruesi}</td>
-                                                    <td>{new Date(item.dataBlerjes).toLocaleDateString()}</td>
+                                                    <td>{item.numriPercjelles + '-' + new Date(item.dataNderrimit).toLocaleDateString()}</td>
                                                     <td>{new Date(item.dataFatures).toLocaleDateString()}</td>
                                                     <td>{item.fatureERregullt === 'true' ? 'Po' : 'Jo'}</td>
                                                     <td>{item.nrFatures}</td>
                                                     <td>{item.menyraPagesese}</td>
-                                                    <td>{item.numriPercjelles + '-' + new Date(item.dataNderrimit).toLocaleDateString()}</td>
-                                                    <td className="text-center">
+                                                    <td >
                                                         <Button variant="primary" className="m-2">
                                                             <FontAwesomeIcon className="mt-1" icon={faPen} />
                                                         </Button>
                                                         <Button variant="danger" onClick={() => thirreModalPerPyetje(item.transaksioniID)}>
                                                             <FontAwesomeIcon className="mt-1" icon={faTrashCan} />
+                                                        </Button>
+                                                        <Button variant='transparent' className='btn-outline-light mx-2'  onClick={() => shfaqProduktetEBlerjes(item.blerjeID,item.shifra)} 
+                                                                 >
+                                                        <FontAwesomeIcon 
+                                                                className={` ${IDPerDetaje === item.blerjeID ? 'text-primary fw-bold' : 'text-secondary fw-bold'}`}
+                                                                icon={IDPerDetaje === item.blerjeID ? faChevronDown : faChevronRight}
+                                                            />
                                                         </Button>
                                                     </td>
                                                 </tr>
@@ -186,6 +202,10 @@ export default function Blerjet() {
                     </Col>
                 </Row>
             )}
+             {IDPerDetaje ? <>
+                <DetajePerShitjeBlerje shifraPerDetaje = {shifraPerDetaje}  IDPerDetaje = {IDPerDetaje} lloji = {'blerje'}/>
+                </>:null}
+
             <ToastContainer />
             <ModalPerPyetje show={showModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />
         </Container>

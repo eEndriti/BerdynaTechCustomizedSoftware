@@ -6,6 +6,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
 import AnimatedSpinner from './AnimatedSpinner'
+import DetajePerShitjeBlerje from './DetajePerShitjeBlerje';
 
 export default function Shitjet() {
     const [shitjet, setShitjet] = useState([]);
@@ -18,22 +19,17 @@ export default function Shitjet() {
     const [showModalPerPyetje, setShowModalPerPyetje] = useState(false);
     const [shitjeIDPerAnulim, setShitjeIDPerAnulim] = useState();
     const [transaksioniIDPerAnulim, setTransaksioniIDPerAnulim] = useState();
-    const [shitjeIDPerDetaje,setShitjeIDPerDetaje] = useState()
+    const [IDPerDetaje,setIDPerDetaje] = useState()
     const [llojiShitjes,setLlojiShitjes] = useState()
-    const [loadingProduktet,setLoadingProduktet] = useState(false)
-
+    const [shifraPerDetaje,setShifraPerDetaje] = useState()
+    
     useEffect(() => {
         window.api.fetchTableShitje().then((receivedData) => {
             setShitjet(receivedData);
             setLoading(false);
         });
-    }, []);
-    useEffect(() => {
-        window.api.fetchTableQuery().then((receivedData) => {
-            setShitjet(receivedData);
-            setLoading(false);
-        });
-    }, []);
+       
+    }, []);    
 
     const handleSearchChange = (e) => setSearchTerm(e.target.value);
     const handleClientChange = (e) => setClientFilter(e.target.value);
@@ -89,16 +85,17 @@ export default function Shitjet() {
             toast.error('Gabim gjate Anulimit: ' + result.error);
         }
     };
-    const shfaqProduktetEShitjes = (shitjeID) => {
-       if(shitjeIDPerDetaje == shitjeID){
-        setShitjeIDPerDetaje(null)
+
+    const shfaqProduktetEShitjes = (ID,shifra) => {
+        setShifraPerDetaje(shifra)
+       if(IDPerDetaje == ID){
+            setIDPerDetaje(null)
        }else{
-        setLoadingProduktet(true)
-        setShitjeIDPerDetaje(shitjeID)
-        shfaqDetajet()
+            setIDPerDetaje(ID)
+            
        }
-    }
-    
+}   
+
     return (
         <Container>
             <h4 className="text-center fw-bold">Të Gjitha Shitjet:</h4>
@@ -147,7 +144,7 @@ export default function Shitjet() {
 
             {loading ? (
                 <div className="d-flex justify-content-center">
-                    <Spinner animation="border" />
+                    <AnimatedSpinner animation="border" />
                 </div>
             ) : (
                 <Row>
@@ -169,11 +166,10 @@ export default function Shitjet() {
                                                 <th scope="col">Totali Pageses</th>
                                                 <th scope="col">Mbetja Per Pagese</th>
                                                 <th scope="col">Subjekti</th>
-                                                <th scope="col">Data e Shitjes</th>
+                                                <th scope="col">Nderrimi dhe Data e Shitjes</th>
                                                 <th scope="col">Menyra e Pageses</th>
                                                 <th scope="col">Perdoruesi</th>
                                                 <th scope="col">Nr Porosise</th>
-                                                <th scope="col">Nderrimi</th>
                                                 <th scope="col">Opsionet</th>
                                             </tr>
                                         </thead>
@@ -185,13 +181,12 @@ export default function Shitjet() {
                                                     <td>{item.lloji}</td>
                                                     <td>{item.totaliPerPagese} €</td>
                                                     <td>{item.totaliPageses} €</td>
-                                                    <td>{item.mbetjaPerPagese} €</td>
+                                                    <td className={item.mbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{item.mbetjaPerPagese.toFixed(2)} €</td>
                                                     <td>{item.subjekti}</td>
-                                                    <td>{new Date(item.dataShitjes).toLocaleDateString()}</td>
+                                                    <td>{item.numriPercjelles + '-' + new Date(item.dataNderrimit).toLocaleDateString()}</td>
                                                     <td>{item.menyraPageses}</td>
                                                     <td>{item.perdoruesi}</td>
                                                     <td>{item.nrPorosise}</td>
-                                                    <td>{item.numriPercjelles + '-' + new Date(item.dataNderrimit).toLocaleDateString()}</td>
                                                     <td className="text-center">
                                                         <Button variant="primary" className="m-2">
                                                             <FontAwesomeIcon className="mt-1" icon={faPen} />
@@ -199,11 +194,11 @@ export default function Shitjet() {
                                                         <Button variant="danger" onClick={() => thirreModalPerPyetje(item.shitjeID,item.transaksioniID,item.lloji)}>
                                                             <FontAwesomeIcon className="mt-1" icon={faTrashCan} />
                                                         </Button>
-                                                        <Button variant='transparent' className='btn-outline-light mx-2'  onClick={() => shfaqProduktetEShitjes(item.shitjeID)} 
+                                                        <Button variant='transparent' className='btn-outline-light mx-2'  onClick={() => shfaqProduktetEShitjes(item.shitjeID,item.shifra)} 
                                                                  >
                                                         <FontAwesomeIcon 
-                                                                className={` ${shitjeIDPerDetaje === item.shitjeID ? 'text-primary fw-bold' : 'text-secondary fw-bold'}`}
-                                                                icon={shitjeIDPerDetaje === item.shitjeID ? faChevronDown : faChevronRight}
+                                                                className={` ${IDPerDetaje === item.shitjeID ? 'text-primary fw-bold' : 'text-secondary fw-bold'}`}
+                                                                icon={IDPerDetaje === item.shitjeID ? faChevronDown : faChevronRight}
                                                             />
                                                         </Button>
                                                     </td>
@@ -218,11 +213,10 @@ export default function Shitjet() {
                 </Row>
             )}
 
-            {shitjeIDPerDetaje ? <>
-                {loadingProduktet ? <>
-                    <AnimatedSpinner className="w-10 fs-5" />
-                </>:<>aaa</>}
+            {IDPerDetaje ? <>
+                <DetajePerShitjeBlerje shifraPerDetaje = {shifraPerDetaje}  IDPerDetaje = {IDPerDetaje} lloji = {'shitje'} />
                 </>:null}
+
             <ToastContainer />
             <ModalPerPyetje show={showModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />
         </Container>
