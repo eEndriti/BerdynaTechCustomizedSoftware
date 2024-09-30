@@ -58,7 +58,6 @@ export default function Shitjet() {
     const handleConfirmModal = () => {
         handleDeleteShitje();
     };
-    
     const handleCloseModalPerPyetje = () => {
         setShowModalPerPyetje(false);
     };
@@ -95,6 +94,26 @@ export default function Shitjet() {
             
        }
 }   
+const kontrolloStatusinGarancionit = (koha, dataShitjes) => {
+    const dataAktuale = new Date(); // Data aktuale
+    const dataSkadimit = new Date(dataShitjes);
+
+    // Shto muajt e garancionit
+    dataSkadimit.setMonth(dataSkadimit.getMonth() + koha);
+    
+    // Kontrollo nëse garancioni ka skaduar
+    if (dataAktuale >= dataSkadimit) {
+        return "I Skaduar";
+    } else {
+        // Llogarit ditët e mbetura
+        const diferencaNeMs = dataSkadimit - dataAktuale;
+        const diteMbetura = Math.floor(diferencaNeMs / (1000 * 60 * 60 * 24));
+
+        return `${diteMbetura} Ditë te Mbetura`;
+    }
+};
+
+
 
     return (
         <Container>
@@ -170,12 +189,13 @@ export default function Shitjet() {
                                                 <th scope="col">Menyra e Pageses</th>
                                                 <th scope="col">Perdoruesi</th>
                                                 <th scope="col">Nr Porosise</th>
+                                                <th scope="col">Koha dhe Statusi Garancionit</th>
                                                 <th scope="col">Opsionet</th>
                                             </tr>
                                         </thead>
                                         <tbody className="border-dark">
                                             {filteredShitjet.slice().reverse().map((item, index) => (
-                                                <tr key={index}>
+                                                <tr key={index} >
                                                     <th scope="row">{filteredShitjet.length - index}</th>
                                                     <td>{item.shifra}</td>
                                                     <td>{item.lloji}</td>
@@ -187,17 +207,18 @@ export default function Shitjet() {
                                                     <td>{item.menyraPageses}</td>
                                                     <td>{item.perdoruesi}</td>
                                                     <td>{item.nrPorosise}</td>
-                                                    <td className="text-center">
-                                                        <Button variant="primary" className="m-2">
-                                                            <FontAwesomeIcon className="mt-1" icon={faPen} />
+                                                    <td>{item.kohaGarancionit > 1 ? <>{item.kohaGarancionit} Muaj / {kontrolloStatusinGarancionit(item.kohaGarancionit,item.dataShitjes)}</>:'Pa Garancion'}</td>
+                                                    <td className="text-center d-flex flex-row mb-0 p-2">
+                                                        <Button variant="primary" >
+                                                            <FontAwesomeIcon  icon={faPen} />
                                                         </Button>
-                                                        <Button variant="danger" onClick={() => thirreModalPerPyetje(item.shitjeID,item.transaksioniID,item.lloji)}>
-                                                            <FontAwesomeIcon className="mt-1" icon={faTrashCan} />
+                                                        <Button variant="danger" className='mx-2' onClick={() => thirreModalPerPyetje(item.shitjeID,item.transaksioniID,item.lloji)}>
+                                                            <FontAwesomeIcon  icon={faTrashCan} />
                                                         </Button>
                                                         <Button variant='transparent' className='btn-outline-light mx-2'  onClick={() => shfaqProduktetEShitjes(item.shitjeID,item.shifra)} 
                                                                  >
                                                         <FontAwesomeIcon 
-                                                                className={` ${IDPerDetaje === item.shitjeID ? 'text-primary fw-bold' : 'text-secondary fw-bold'}`}
+                                                                className={` ${IDPerDetaje === item.shitjeID ? 'text-primary fs-4 fw-bold' : 'text-secondary fw-bold'}`}
                                                                 icon={IDPerDetaje === item.shitjeID ? faChevronDown : faChevronRight}
                                                             />
                                                         </Button>

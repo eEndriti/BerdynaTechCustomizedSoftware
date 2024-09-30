@@ -6,9 +6,8 @@ function CustomModal({ show, handleClose, handleConfirm }) {
   return (
     <Modal show={show} onHide={handleClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Konfirmimi</Modal.Title>
+        <Modal.Title>A jeni i sigurt?</Modal.Title>
       </Modal.Header>
-      <Modal.Body>A jeni i sigurt?</Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={handleClose}>
           Anulo

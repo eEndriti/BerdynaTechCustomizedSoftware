@@ -21,6 +21,7 @@ function FaqjaKryesoreAdmin() {
   const [modalPerServisUpdate,setModalPerServisUpdate] = useState()
   const [data,setData] = useState('')
   const [updateServisType,setUpdateServisType] = useState()
+  
   useEffect(() => {
     const fetchData = async () => {
       const [transaksionetData, shitjetData, servisetData] = await Promise.all([
@@ -137,6 +138,7 @@ function FaqjaKryesoreAdmin() {
         toast.error('Gabim gjate Anulimit: ' + result.error);
     }
 }
+
   return (
     <div>
       <div className="container my-3 tabelaTransaksioneve ">

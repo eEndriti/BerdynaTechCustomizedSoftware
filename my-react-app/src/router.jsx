@@ -18,6 +18,7 @@ import Nderrimet from './components/Nderrimet';
 import Evidenca from './components/Evidenca';
 import Transaksionet from './components/Transaksionet';
 import Serviset from './components/Serviset';
+import DetajePerProdukt from './components/DetajePerProdukt';
 
 let aKaUser = localStorage.getItem('aKaUser')
 
@@ -58,7 +59,12 @@ const router = createBrowserRouter([
       {
         path: '/stoku',
         element:<Produktet />
-      },{
+      },
+      {
+        path: '/detajePerProdukt/:produktiID',
+        element:<DetajePerProdukt/>
+      },
+      {
         path: '/kategorite',
         element:<Kategorite />
       },

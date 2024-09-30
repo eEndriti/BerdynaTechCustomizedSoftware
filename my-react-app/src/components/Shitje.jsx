@@ -25,6 +25,8 @@ export default function Shitje() {
   const [menyratPageses, setMenyratPageses] = useState([]);
   const [showShtoProduktinModal, setShowShtoProduktinModal] = useState(false);
   const [loading, setLoading] = useState(true); 
+  const [aKaGarancion,setAKaGarancion] = useState(false)
+  const [kohaGarancionit,setKohaGarancionit] = useState('6')
 
   useEffect(() => {
     window.api.fetchTableMenyratPageses().then(receivedData => {
@@ -113,6 +115,7 @@ export default function Shitje() {
       perdoruesiID: perdoruesiID,
       subjektiID: selectedSubjekti.subjektiID,
       nderrimiID: 1,
+      kohaGarancionit:aKaGarancion ? kohaGarancionit:0,
       produktet: products.map(product => ({
         produktiID: product.produktiID,
         sasiaShitjes: product.sasiaShitjes,
@@ -154,8 +157,9 @@ export default function Shitje() {
   };
 
   const handleCloseShtoProduktinModal = () => setShowShtoProduktinModal(false);
+ 
 
-  // Render the page
+
   return (
     <>
     {menyratPageses.length < 1 ? <AnimatedSpinner /> : 
@@ -295,16 +299,48 @@ export default function Shitje() {
       </Row>
 
 
-      <Row className="mt-auto section2 d-flex justify-content-around bg-light">
-      <Col xs={12} md={6} className="d-flex flex-column align-items-center">
-        <h5 className="p-3 text-center">
-          Shtype Garancionin <Form.Check inline />
-        </h5>
-      </Col>
-      <Col xs={12} md={6} className="d-flex justify-content-center">
-        <Form.Control as="textarea" onChange={handleKomentiShitjesChange} rows={3} className="p-3" placeholder="Shkruaj komentin..." />
-      </Col>
-    </Row>
+      <Row className="mt-auto section2 d-flex justify-content-around bg-light py-4">
+        <Col xs={12} md={6} className="d-flex flex-column align-items-center mb-3 mb-md-0">
+          <h5 className="text-center mb-3">
+            Shtype Garancionin
+            <Form.Check 
+              className="px-3 ms-2" 
+              inline 
+              onClick={() => setAKaGarancion(!aKaGarancion)} 
+
+            />
+          </h5>
+          {aKaGarancion && (
+            <div className="d-flex align-items-center justify-content-center">
+              <Form.Control 
+                type="number" 
+                className="me-2 w-50 w-md-25" 
+                placeholder="Muaj" 
+                min={1}
+                value={kohaGarancionit}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  if (value >= 1) {
+                    setKohaGarancionit(value);
+                  }
+                }}
+              />
+
+              <p className="mb-0">Muaj</p>
+            </div>
+          )}
+        </Col>
+        
+        <Col xs={12} md={6} className="d-flex justify-content-center">
+          <Form.Control 
+            as="textarea" 
+            onChange={handleKomentiShitjesChange} 
+            rows={3} 
+            className="p-3 w-100 w-md-75" 
+            placeholder="Shkruaj komentin..." 
+          />
+        </Col>
+      </Row>
 
       <Row className="section3 my-5 d-flex justify-content-end">
       <Col xs={12} md={6} className="d-flex justify-content-center align-items-end">

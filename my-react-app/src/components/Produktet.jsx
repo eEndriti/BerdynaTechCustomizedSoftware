@@ -84,6 +84,10 @@ export default function Produktet() {
     handleFilterChange();
   }, [filterShifra, filterEmertimi, filterSasia, filterKategoria,eliminoVleratZero]);
 
+  const handleDetaje = (subjektiID) =>{
+    navigate(`/detajePerProdukt/${subjektiID}`)
+  }
+  
   return (
     <Container>
       <Row>
@@ -177,7 +181,7 @@ export default function Produktet() {
                   <td>{item.emertimiKategorise}</td>
                   <td>{item.tvsh} %</td>
                   <td>
-                    <Button className='btn btn-primary'>Detaje...</Button>
+                    <Button className='btn btn-primary' onClick={() => handleDetaje(item.produktiID)}>Detaje...</Button>
                     {item.sasia > 0 ? '' :
                       <Button className='btn bg-transparent border-0 text-danger' onClick={() => thirreModalPerPyetje(item.produktiID)}>
                         {loading && idPerAnulim === item.produktiID ? (

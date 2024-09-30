@@ -70,7 +70,7 @@ export default function Evidenca() {
           {menyratEPageses.map((menyra, index) => (
             <Col key={menyra.menyraPagesesID} className={`m-2 p-3 text-center rounded ${bgColors[index % bgColors.length]}`}>
               <h3>{menyra.emertimi}</h3>
-              <h1>125.00€</h1>
+              <h1>{menyra.shuma.toFixed(2)} €</h1>
             </Col>
           ))}
         </Col>

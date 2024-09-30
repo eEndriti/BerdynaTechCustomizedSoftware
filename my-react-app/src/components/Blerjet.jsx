@@ -177,17 +177,17 @@ export default function Blerjet() {
                                                     <td>{item.fatureERregullt === 'true' ? 'Po' : 'Jo'}</td>
                                                     <td>{item.nrFatures}</td>
                                                     <td>{item.menyraPagesese}</td>
-                                                    <td >
-                                                        <Button variant="primary" className="m-2">
-                                                            <FontAwesomeIcon className="mt-1" icon={faPen} />
+                                                    <td className='d-flex flex-row mb-0 p-2'>
+                                                        <Button variant="primary">
+                                                            <FontAwesomeIcon  icon={faPen} />
                                                         </Button>
-                                                        <Button variant="danger" onClick={() => thirreModalPerPyetje(item.transaksioniID)}>
-                                                            <FontAwesomeIcon className="mt-1" icon={faTrashCan} />
+                                                        <Button variant="danger" className='mx-2' onClick={() => thirreModalPerPyetje(item.transaksioniID)}>
+                                                            <FontAwesomeIcon  icon={faTrashCan} />
                                                         </Button>
                                                         <Button variant='transparent' className='btn-outline-light mx-2'  onClick={() => shfaqProduktetEBlerjes(item.blerjeID,item.shifra)} 
                                                                  >
                                                         <FontAwesomeIcon 
-                                                                className={` ${IDPerDetaje === item.blerjeID ? 'text-primary fw-bold' : 'text-secondary fw-bold'}`}
+                                                                className={` ${IDPerDetaje === item.blerjeID ? 'text-primary fs-4 fw-bold' : 'text-secondary fw-bold'}`}
                                                                 icon={IDPerDetaje === item.blerjeID ? faChevronDown : faChevronRight}
                                                             />
                                                         </Button>

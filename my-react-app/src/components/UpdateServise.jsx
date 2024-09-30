@@ -65,7 +65,6 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
             updateType,
             perdoruesiID:1,
             nderrimiID:1,
-
         }
         try {
             const result = await window.api.ndryshoServisin(dataPerNdryshim);
