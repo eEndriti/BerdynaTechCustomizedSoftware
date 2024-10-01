@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Container, Row, Col, Form } from 'react-bootstrap';
 import AnimatedSpinner from './AnimatedSpinner';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUserSecret } from '@fortawesome/free-solid-svg-icons';
 
 export default function DetajePerProdukt() {
   const { produktiID } = useParams();
@@ -13,7 +15,8 @@ export default function DetajePerProdukt() {
   const [filterLloji, setFilterLloji] = useState('');
   const [filterSubjekti, setFilterSubjekti] = useState('');
   const [sasiaShitur,setSasiaShitur] = useState(0)
-
+  const [showProfiti,setShowProfiti] = useState(false)
+  const [profiti,setProfiti] = useState()
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -22,7 +25,7 @@ export default function DetajePerProdukt() {
         setProdukti(produkti);
         console.log(produkti)
         const transaksioneData = await window.api.fetchTableQuery(`
-          SELECT 'blerje' AS lloji, b.shifra, s.emertimi AS subjekti, bp.sasia, bp.cmimiPerCope
+          SELECT 'blerje' AS lloji, b.shifra, s.emertimi AS subjekti, bp.sasia,'0' as profitiProduktit, bp.cmimiPerCope
           FROM blerje b
           JOIN blerjeProdukt bp ON b.blerjeID = bp.blerjeID
           JOIN subjekti s ON b.subjektiID = s.subjektiID
@@ -31,7 +34,7 @@ export default function DetajePerProdukt() {
 
           UNION ALL
 
-          SELECT 'shitje' AS lloji, sh.shifra, s.emertimi AS subjekti, sp.sasia, sp.cmimiShitjesPerCope
+          SELECT 'shitje' AS lloji, sh.shifra, s.emertimi AS subjekti, sp.sasia,sp.profitiProduktit as 'profitiProduktit',  sp.cmimiShitjesPerCope
           FROM shitje sh
           JOIN shitjeProdukti sp ON sh.shitjeID = sp.shitjeID
           JOIN subjekti s ON sh.subjektiID = s.subjektiID
@@ -40,7 +43,7 @@ export default function DetajePerProdukt() {
 
           UNION ALL
 
-          SELECT 'shpenzim' AS lloji, sh.shifra, 'sp' AS subjekti, shp.sasia, shp.cmimiFurnizimit
+          SELECT 'shpenzim' AS lloji, sh.shifra, 'sp' AS subjekti,'0' as profitiProduktit, shp.sasia, shp.cmimiFurnizimit
           FROM shpenzimi sh
           JOIN shpenzimProdukti shp ON sh.shpenzimiID = shp.shpenzimProduktiID
           JOIN transaksioni t ON t.transaksioniID = sh.transaksioniID AND t.lloji = 'shpenzim'
@@ -74,15 +77,31 @@ export default function DetajePerProdukt() {
     const totalSasiaShitur = filteredTransaksionet.reduce((total, item) => {
       return item.lloji == 'shitje' ? total + item.sasia : total;
     }, 0);
-    setSasiaShitur(totalSasiaShitur);
+    setSasiaShitur(totalSasiaShitur)
+    
   }, [filteredTransaksionet]);
 
+  useEffect(() => {
+    const totalProfitit = filteredTransaksionet.reduce((total, item) => {
+      return item.lloji == 'shitje' ? total + item.profitiProduktit : total;
+    }, 0);
+    setProfiti(totalProfitit)
+    
+  }, [filteredTransaksionet]);
+
+
+ 
   return (
     <>
       {loading ? (
         <AnimatedSpinner />
       ) : (
         <Container>
+          <Row>
+            <Col >
+                  <h5 className="w-25 float-end"><span className="w-25 float-end" onMouseEnter={()=> setShowProfiti(true)} onMouseLeave={() => setShowProfiti(false)}><FontAwesomeIcon icon={faUserSecret} className={showProfiti ? 'text-dark' : 'text-light'}/></span></h5>
+            </Col>
+          </Row>
             <Row>
               {produkti ? <Col className="border-top border-dark border px-2 py-3 d-flex flex-row flex-wrap justify-content-between">
                 <h5 className="m-2">Shifra: <span className="fs-5 fw-bold float-center">{produkti? produkti[0].shifra : ''}</span></h5>
@@ -91,6 +110,8 @@ export default function DetajePerProdukt() {
                 <h5 className="m-2">Cmimi i Shitjes: <span className="fs-5 fw-bold float-center">{produkti[0].cmimiShitjes.toFixed(2)}€</span></h5>
                 <h5 className="m-2">Sasia Aktuale: <span className="fs-5 fw-bold float-center">{produkti[0].sasia}</span></h5>
                 <h5 className="m-2">Sasia e Shitur: <span className="fs-5 fw-bold float-center">{sasiaShitur}</span></h5>
+                {showProfiti &&                 <h5 className="m-2">Profiti nga ky Produkt: <span className="fs-5 fw-bold float-center">{profiti.toFixed(2)} €</span></h5>
+                }
               </Col>:''}
             </Row>
         
@@ -170,6 +191,7 @@ export default function DetajePerProdukt() {
               </div>
             </div>
           </Row>
+          
         </Container>
       )}
     </>

@@ -5,6 +5,7 @@ import { Row, Col, Button, Form,Spinner,Modal} from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje'
+import KerkoProduktin from './KerkoProduktin';
 
 export default function Shpenzim() {
   const [shpenzimet, setShpenzimet] = useState([]);
@@ -12,7 +13,6 @@ export default function Shpenzim() {
   const [llojetShpenzimeve, setLlojetShpenzimeve] = useState([]);
   const [llojiShpenzimeveSelektuarID, setLlojiShpenzimeveSelektuarID] = useState();
   const [selectedShumaStandarde, setSelectedShumaStandarde] = useState();
-  const [selectedLlojShpenzimi, setSelectedLlojShpenzimi] = useState({});
   const [komenti, setKomenti] = useState('');
   const [shpenzimiRi, setShpenzimiRi] = useState('');
   const [shumaStandardeERe, setShumaStandardeERe] = useState('');
@@ -26,7 +26,13 @@ export default function Shpenzim() {
   const [ShowModalPerPyetje,setShowModalPerPyetje] = useState(false)
   const [burimiThirrjes,setBurimiThirrjes] = useState()
   const [transaksioniIDPerDelete,setTransaksioniIDPerDelete] = useState()
-  
+  const [produktiSelektuar,setProduktiSelektuar] = useState([])
+  const [showModalProduct,setShowModalProduct] = useState(false)
+  const [kaloNgaStoki,setKaloNgaStoki] = useState(false)
+  const [sasiaPerProdukt,setSasiaPerProdukt] = useState(1)
+  const [kostoTotale,setKostoTotale] = useState()
+
+    console.log(produktiSelektuar,'asd')
   useEffect(() => {2
     // Fetch all shpenzimet data
     window.api.fetchTableShpenzimet().then(receivedData => {
@@ -60,9 +66,6 @@ export default function Shpenzim() {
     }
   };
 
-  const handleShumaStandardeOnChange = (e) => {
-    setSelectedShumaStandarde(e.target.value);
-  };
 
   const handleKomentiChange = (e) => {
     setKomenti(e.target.value);
@@ -215,7 +218,17 @@ export default function Shpenzim() {
       toast.error('Gabim gjate fshirjes: ' + result.error);
     }
   }
-  
+  const handleProductSelect = (product) =>{
+    setProduktiSelektuar(product)
+    setKaloNgaStoki(true)
+  }
+  const showShpenzoStokin = () =>{
+    setShowModalProduct(true)
+  }
+  const kalkuloTotalin = (e) => {
+    setSasiaPerProdukt(e.target.value)
+    setKostoTotale(produktiSelektuar.cmimiBlerjes * e.target.value)
+  }
   return (
     <div>
       <Row>
@@ -223,7 +236,7 @@ export default function Shpenzim() {
           <Button variant={!shfaqLlojetEShpenzimeve ? 'info' : 'secondary'} className='fs-5 ' onClick={() => setShfaqLlojetEShpenzimeve(!shfaqLlojetEShpenzimeve)}>Llojet e Shpenzimeve</Button>
         </Col>
         <Col className=''>
-          <Button className='fs-5'>Kalo nga Stoki ne Shpenzim</Button>
+          <Button className='fs-5' onClick={() => showShpenzoStokin()}>Kalo nga Stoki ne Shpenzim</Button>
         </Col>
       </Row>
       {shfaqLlojetEShpenzimeve ? <>
@@ -375,8 +388,41 @@ export default function Shpenzim() {
         </Col>
       </Row>
       </>}
+      
+      {kaloNgaStoki && <Row>
+
+          <Form>
+            <Form.Group>
+              <Form.Label>Shifra:</Form.Label>
+              <Form.Control value={produktiSelektuar.shifra} disabled/>
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Emertimi:</Form.Label>
+              <Form.Control value={produktiSelektuar.emertimi} disabled/>
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Kosto per Cope:</Form.Label>
+              <Form.Control value={produktiSelektuar.cmimiBlerjes} disabled/>
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Sasia:</Form.Label>
+              <Form.Control value={sasiaPerProdukt} onChange={(e) => kalkuloTotalin(e)} />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Kosto Totale:</Form.Label>
+              <Form.Control value={kostoTotale} disabled/>
+            </Form.Group>
+          </Form>
+
+        </Row>}
       <ToastContainer/>
-      <ModalPerPyetje show={ShowModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />
+      {showModalProduct && (
+              <KerkoProduktin
+                show={showModalProduct}
+                onHide={() => setShowModalProduct(false)}
+                onSelect={handleProductSelect}
+              />
+            )}      <ModalPerPyetje show={ShowModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />
       <Modal show={showModal} onHide={() => setShowModal(false)}>
   <Modal.Header closeButton>
     <Modal.Title>{selectedRowData.lloji ? 'Ndrysho Shpenzimin' : 'Ndrysho Llojin e Shpenzimit'}</Modal.Title>
