@@ -16,7 +16,7 @@ export default function DetajePerKlient() {
     const [endDate, setEndDate] = useState(new Date().toISOString().substring(0, 10));
 
     useEffect(() => {
-        window.api.fetchTableSubjekti().then((receivedData) => {
+        window.api.fetchTableSubjekti(lloji).then((receivedData) => {
             const filteredData = receivedData.filter((item) => item.subjektiID == subjektiID);
             setSubjekti(filteredData);
             setLoading(false);
@@ -26,6 +26,7 @@ export default function DetajePerKlient() {
     useEffect(() => {
         window.api.fetchTableShitje().then((receivedData) => {
             const filteredData = receivedData.filter((item) => item.subjektiID == subjektiID);
+            console.log(receivedData,'rd')
             setShitjet(filteredData);
             setLoading(false);
         });
@@ -42,6 +43,7 @@ export default function DetajePerKlient() {
     let filteredTransaksionet
 
     if(lloji == 'klient'){
+        console.log(shitjet,'asd')
          filteredTransaksionet =  shitjet.filter(item => {
             const itemDate = new Date(item.dataShitjes);
             return itemDate >= new Date(startDate) && itemDate <= new Date(endDate);

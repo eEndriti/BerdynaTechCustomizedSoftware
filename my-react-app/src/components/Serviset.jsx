@@ -30,6 +30,7 @@ export default function Serviset() {
     const [modalPerUpdate,setModalPerUpdate] = useState(false)
     const [data,setData] = useState({})
     const [updateType,setUpdateType] = useState()
+    const [nderrimiID,setNderrimiID] = useState()
 
     useEffect(() => {
         window.api.fetchTableServisi().then(receivedData => {
@@ -37,6 +38,8 @@ export default function Serviset() {
           setFilteredServiset(receivedData.filter(item => item.statusi === 'Aktiv')); // Default filtering to 'Aktiv'
           setLoading(false);
         });
+    setNderrimiID(Number(localStorage.getItem('nderrimiID')) || 0); 
+
     }, []);
 
     useEffect(() => {
@@ -115,7 +118,7 @@ export default function Serviset() {
                     statusi:'Aktiv',
                     shifraGarancionit,
                     perdoruesiID:1,
-                    nderrimiID:1,
+                    nderrimiID,
                     subjektiID:selectedSubjekti.subjektiID
                 }
                 try {

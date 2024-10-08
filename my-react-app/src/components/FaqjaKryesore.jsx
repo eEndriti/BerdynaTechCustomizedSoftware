@@ -1,13 +1,15 @@
 import { useState,useEffect } from 'react'
-import { Button,Row,Col } from 'react-bootstrap'
+import { Container,Button,Row,Col } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPen, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from './ModalPerPyetje'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UpdateServise from './UpdateServise';
+import AnimatedSpinner from './AnimatedSpinner';
 
 function FaqjaKryesoreAdmin() {
+  const [loading,setLoading] = useState(true)
   const [transaksionet,setTransaksionet] = useState([])
   const [shitjet,setShitjet] = useState([])
   const [serviset,setServiset] = useState([])
@@ -21,8 +23,11 @@ function FaqjaKryesoreAdmin() {
   const [modalPerServisUpdate,setModalPerServisUpdate] = useState()
   const [data,setData] = useState('')
   const [updateServisType,setUpdateServisType] = useState()
+  const [nderrimiID,setNderrimiID] = useState()
   
   useEffect(() => {
+    setNderrimiID(Number(localStorage.getItem('nderrimiID')) || 0); 
+
     const fetchData = async () => {
       const [transaksionetData, shitjetData, servisetData] = await Promise.all([
         window.api.fetchTableTransaksionet(),
@@ -31,26 +36,30 @@ function FaqjaKryesoreAdmin() {
       ]);
   
       setTransaksionet(transaksionetData);
-      setShitjet(shitjetData);
-      setServiset(servisetData);
-  
-      // Filter transaksionet
-      const filteredTransaksionet = transaksionetData.filter(item => item.nderrimiID === 1);
-      setTransaksionetENderrimit(filteredTransaksionet);
-  
-      // Filter shitjet
+      setShitjet(shitjetData)
+      setServiset(servisetData)
+
       const shitjetEFiltruara = shitjetData.filter(item => item.lloji === 'online');
       setPorositeNePritje(shitjetEFiltruara);
   
       // Filter serviset
       const servisetAktive = servisetData.filter(item => item.statusi === 'Aktiv');
       setServisetAktive(servisetAktive);
+
+      setLoading(false)
     };
   
     fetchData();
+
   }, []);
   
-  
+  useEffect(() => {
+     // Filter transaksionet
+     const filteredTransaksionet = transaksionet.filter(item => item.nderrimiID === Number(nderrimiID));
+     setTransaksionetENderrimit(filteredTransaksionet);
+
+  },[transaksionetENderrimit])
+
   const ndryshoTransaksionin = (lloji, transaksioniID) => {
     alert(`Ndryshimi Transaksionit ${transaksioniID} ne Proces e mesiperm!!`)
   }
@@ -109,7 +118,20 @@ function FaqjaKryesoreAdmin() {
   const handleCloseModal = () => setShowModal(false);
 
   const calculateTotal = (transaksionet, field) => 
-    transaksionet.reduce((acc, transaksion) => acc + transaksion[field], 0).toFixed(2);
+    transaksionet.reduce((acc, transaksion) => {
+      if (transaksion.nderrimiID === nderrimiID) {
+        if (transaksion.lloji === 'Blerje') {
+          // Subtract the value from acc if 'Blerje'
+          return acc - transaksion[field];
+        } else {
+          // Add the value for other transaction types
+          return acc + transaksion[field];
+        }
+      }
+      // If nderrimiID does not match, return acc unchanged
+      return acc;
+    }, 0).toFixed(2);
+  
   
   const totalPerPagese = calculateTotal(transaksionet, 'totaliperPagese');
   const totaliIPaguar = calculateTotal(transaksionet, 'totaliIPageses');
@@ -140,7 +162,9 @@ function FaqjaKryesoreAdmin() {
 }
 
   return (
-    <div>
+    <Container>
+      {loading ? <AnimatedSpinner /> : 
+      <div>
       <div className="container my-3 tabelaTransaksioneve ">
         <h3>Transaksionet e Nderrimit:</h3>
         <div className="table-responsive tabeleMeMaxHeight">
@@ -189,6 +213,7 @@ function FaqjaKryesoreAdmin() {
         </div>
       </div>
       <hr/>
+
       <Row>
         <Col className='text-center d-flex flex-wrap justify-content-center align-items-end mt-2 p-2 m-2'>
           <h5 className='mx-5 mt-2 border rounded p-3'>Totali per Pagese : <span className='fs-4 fw-bold mainTextColor p-2 d-inline'>{totalPerPagese} €</span></h5>
@@ -196,6 +221,7 @@ function FaqjaKryesoreAdmin() {
           <h5 className='mx-5 mt-2 border rounded p-3'>Mbetja per Pagese : <span className='fs-4 fw-bold mainTextColor p-2 d-inline'>{mbetjaPerPagese} €</span></h5>
         </Col>
       </Row>
+      
       <div className="container mt-5 d-flex flex-row align-items-top">
 
         <div className='tabelaPorosive col-xs-12 col-sm-12 col-md-6 col-lg-6'>
@@ -284,6 +310,8 @@ function FaqjaKryesoreAdmin() {
       <UpdateServise show={modalPerServisUpdate} handleClose={closeModalPerServisUpdate} updateType={updateServisType} data = {data} />
       <ToastContainer/>
     </div>
+    }
+    </Container>
   )
 }
 

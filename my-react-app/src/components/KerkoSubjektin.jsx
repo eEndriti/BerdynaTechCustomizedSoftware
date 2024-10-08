@@ -12,7 +12,7 @@ export default function SearchInput({ filter,value, onSelect,lloji }) {
   const [data,setData] = useState({ndrysho:false,refresh:false,lloji:filter})
 
   useEffect(() => {
-    window.api.fetchTableSubjekti().then(receivedData => {
+    window.api.fetchTableSubjekti(filter).then(receivedData => {
       const  filteredData = receivedData.filter(item => item.lloji == filter);
       setSubjekti(filteredData);
       setFilteredResults(filteredData);

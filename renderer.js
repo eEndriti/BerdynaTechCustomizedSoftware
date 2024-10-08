@@ -1,12 +1,16 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
+
     fetchTablePerdoruesi: () => ipcRenderer.invoke('fetchTablePerdoruesi'),
+    kontrolloNderriminAktual: () => ipcRenderer.invoke('kontrolloNderriminAktual'),
+    filloNderriminERi: (perdoruesiID, avans) => ipcRenderer.invoke('filloNderriminERi', perdoruesiID, avans),
+    mbyllNderriminAktual: () => ipcRenderer.invoke('mbyllNderriminAktual'),
     fetchTableTransaksionet: () => ipcRenderer.invoke('fetchTableTransaksionet'),
     fetchTableShitje: () => ipcRenderer.invoke('fetchTableShitje'),
     fetchTableQuery: (query) => ipcRenderer.invoke('fetchTableQuery',query),
     fetchTableServisi: () => ipcRenderer.invoke('fetchTableServisi'),
-    fetchTableSubjekti: () => ipcRenderer.invoke('fetchTableSubjekti'),
+    fetchTableSubjekti: (lloji) => ipcRenderer.invoke('fetchTableSubjekti', lloji),
     fetchTableProdukti: () => ipcRenderer.invoke('fetchTableProdukti'),
     fetchTableMenyratPageses: () => ipcRenderer.invoke('fetchTableMenyratPageses'),
     fetchTableLlojetShpenzimeve: () => ipcRenderer.invoke('fetchTableLlojetShpenzimeve'),
@@ -14,9 +18,12 @@ contextBridge.exposeInMainWorld('api', {
     fetchTableKategoria: () => ipcRenderer.invoke('fetchTableKategoria'),
     fetchTableBlerje: () => ipcRenderer.invoke('fetchTableBlerje'),
     fetchTablePagesa: () => ipcRenderer.invoke('fetchTablePagesa'),
+    fetchTableProfiti: () => ipcRenderer.invoke('fetchTableProfiti'),
+    fetchTableProfitiDitor: () => ipcRenderer.invoke('fetchTableProfitiDitor'),
 
     insertTransaksioniAndShitje: (data) => ipcRenderer.invoke('insert-transaksioni-and-shitje', data),
     insertShpenzimi: (data) => ipcRenderer.invoke('insertShpenzimi', data),
+    kaloNgaStokuNeShpenzim: (data) => ipcRenderer.invoke('kaloNgaStokuNeShpenzim', data) ,
     insertLlojiShpenzimit: (data) => ipcRenderer.invoke('insertLlojiShpenzimit', data) ,
     insertLogs: (data) => ipcRenderer.invoke('insertLogs', data) ,
     insertBlerje: (data) => ipcRenderer.invoke('insertBlerje', data) ,

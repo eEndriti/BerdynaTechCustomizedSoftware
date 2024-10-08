@@ -1,11 +1,12 @@
 import  { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan,faPen } from '@fortawesome/free-solid-svg-icons'; 
-import { Row, Col, Button, Form,Spinner,Modal} from 'react-bootstrap';
+import { faTrashCan,faPen,faChevronDown, faChevronRight,faExchangeAlt } from '@fortawesome/free-solid-svg-icons'; 
+import { Row, Col, Button, Form,Spinner,Modal, Container} from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje'
 import KerkoProduktin from './KerkoProduktin';
+import AnimatedSpinner from './AnimatedSpinner';
 
 export default function Shpenzim() {
   const [shpenzimet, setShpenzimet] = useState([]);
@@ -29,8 +30,11 @@ export default function Shpenzim() {
   const [produktiSelektuar,setProduktiSelektuar] = useState([])
   const [showModalProduct,setShowModalProduct] = useState(false)
   const [kaloNgaStoki,setKaloNgaStoki] = useState(false)
-  const [sasiaPerProdukt,setSasiaPerProdukt] = useState(1)
+  const [sasiaPerProdukt,setSasiaPerProdukt] = useState(0)
   const [kostoTotale,setKostoTotale] = useState()
+  const [loadingPerStok,setLoadingPerStok] = useState(false)
+  const [kategoriaID,setKategoriaID] = useState() // kjo perdoret per me selektu kategorine me kalu stok ne shpenzim
+  const [nderrimiID,setNderrimiID] = useState()
 
     console.log(produktiSelektuar,'asd')
   useEffect(() => {2
@@ -39,6 +43,8 @@ export default function Shpenzim() {
       setShpenzimet(receivedData);
       setFilteredShpenzimet(receivedData); // Initialize filtered data
     });
+    setNderrimiID(Number(localStorage.getItem('nderrimiID')) || 0); 
+
   }, []);
 
   useEffect(() => {
@@ -80,22 +86,49 @@ export default function Shpenzim() {
   };
 
   const shtoShpenzimin = async () => {
-    setLoading(true)
+
     const perdoruesiID = localStorage.getItem('perdoruesiID');
     const data = {
       shumaShpenzimit: selectedShumaStandarde,
       komenti: komenti,
       llojetShpenzimeveID: llojiShpenzimeveSelektuarID,
       perdoruesiID: perdoruesiID,
-      nderrimiID: 1
+      nderrimiID
     };
     const result = await window.api.insertShpenzimi(data);
     if (result.success) {
       setLoading(false)
       toast.success('Shpenzimi u Regjistrua me Sukses!', {
-        position: "top-center",  // Use string directly instead of toast.POSITION.TOP_CENTER
-        autoClose: 1500, // Optional: Delay before auto-close
-        onClose: () => window.location.reload(), // Reload the page after the toast closes
+        position: "top-center",  
+        autoClose: 1500, 
+        onClose: () => window.location.reload(), 
+      });            
+    } else {
+      setLoading(false)
+      toast.error('Gabim gjate regjistrimit: ' + result.error);
+    }
+  };
+
+  const handleKaloNgaStoki = async () => {
+    setLoadingPerStok(true)
+
+    const perdoruesiID = localStorage.getItem('perdoruesiID');
+    const data = {
+      cmimiFurnizimit: produktiSelektuar.cmimiBlerjes,
+      llojetShpenzimeveID: kategoriaID,
+      perdoruesiID: perdoruesiID,
+      nderrimiID,
+      produktiID:produktiSelektuar.produktiID,
+      sasia:sasiaPerProdukt,
+    };
+    const result = await window.api.kaloNgaStokuNeShpenzim(data);
+
+    if (result.success) {
+      setLoadingPerStok(false)
+      toast.success('Produkti u Regjistrua me Sukses si Shpenzim!', {
+        position: "top-center",  
+        autoClose: 1500, 
+        onClose: () => window.location.reload(), 
       });            
     } else {
       setLoading(false)
@@ -220,81 +253,25 @@ export default function Shpenzim() {
   }
   const handleProductSelect = (product) =>{
     setProduktiSelektuar(product)
+    setKategoriaID(handleKategoriaSelectForStokiShpenzim())
     setKaloNgaStoki(true)
   }
+  const handleKategoriaSelectForStokiShpenzim = () => {
+    return llojetShpenzimeve.find((item) => item.emertimi === 'Produkt')?.llojetShpenzimeveID;
+  };
   const showShpenzoStokin = () =>{
-    setShowModalProduct(true)
+    {kaloNgaStoki ? setKaloNgaStoki(!kaloNgaStoki) :setShowModalProduct(true)}
   }
   const kalkuloTotalin = (e) => {
     setSasiaPerProdukt(e.target.value)
     setKostoTotale(produktiSelektuar.cmimiBlerjes * e.target.value)
   }
+  
+
   return (
-    <div>
-      <Row>
-        <Col>
-          <Button variant={!shfaqLlojetEShpenzimeve ? 'info' : 'secondary'} className='fs-5 ' onClick={() => setShfaqLlojetEShpenzimeve(!shfaqLlojetEShpenzimeve)}>Llojet e Shpenzimeve</Button>
-        </Col>
-        <Col className=''>
-          <Button className='fs-5' onClick={() => showShpenzoStokin()}>Kalo nga Stoki ne Shpenzim</Button>
-        </Col>
-      </Row>
-      {shfaqLlojetEShpenzimeve ? <>
-        <Row className='d-flex flex-row justify-content-start m-5 '>
-        <Col lg={5} className='d-flex flex-column justify-content-start bg-light border py-3'>
-          <h3>Shto nje Lloj Shpenzimi te Ri</h3>
-          <Form.Group>
-            <Form.Label>Emertimi:</Form.Label>
-            <Form.Control
-              type='text'
-              placeholder='Emertimi i Shpenzimit te Ri...'
-              onChange={handleShpenzimiRiChange}
-            />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Shuma Standarde:</Form.Label>
-            <Form.Control
-              type='number'
-              placeholder='Shuma Standarde...'
-              onChange={handleShumaStandardeEReChange}
-            />
-          </Form.Group>
-          <Button variant='success' className='my-4' onClick={shtoLlojinShpenzimit} disabled={loading}>{loading ? <>
-            <Spinner as="span" animation='border' size='sm' role='status' aria-hidden={true}/>{''}Duke Ruajtur...
-          </>:'Regjistro Llojin e Shpenzimit'}</Button>
-        </Col>
-        <Col className='tabelaLlojeveShpenzimeve col-xs-12 col-sm-12 col-md-6 col-lg-6 px-5'>
-          <h2>Llojet e Shpenzimeve:</h2>
-          <div className="table-responsive tabeleMeMaxHeight">
-            <table className="table table-sm table-striped text-center">
-              <thead className="table-light">
-                <tr className='fs-5'>
-                  <th scope="col">Nr</th>
-                  <th scope="col">Emertimi</th>
-                  <th scope="col">Shuma Standarde</th>
-                  <th scope="col">Opsionet</th>
-                </tr>
-              </thead>
-              <tbody>
-                {llojetShpenzimeve.map((item, index) => (
-                  <tr key={index}>
-                    <th scope="row">{index + 1}</th>
-                    <td>{item.emertimi}</td>
-                    <td>{item.shumaStandarde.toFixed(2)} €</td>
-                    <td>
-                     <Button onClick={() => handleEditLlojiShpenzimitClick(item)}><FontAwesomeIcon icon={faPen}/></Button>
-                     {item.total_shpenzime < 1 ? <>
-                      <Button variant='danger' className='m-1' onClick={() => thirreModalPerPyetje(item.llojetShpenzimeveID,'Lloji i Shpenzimit')}><FontAwesomeIcon icon={faTrashCan}/></Button></>:null}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Col>
-      </Row>
-      </> : <>
-      <Row className='d-flex flex-row justify-content-start m-5'>
+    <Container>
+
+       <Row className='d-flex flex-row justify-content-start m-5'>
         <Col lg={3} className='d-flex flex-column justify-content-start bg-light border py-3'>          
           <h3 className='text-center'>Shto nje Shpenzim</h3>
           <div className='d-flex flex-column align-items-center justify-content-center'>
@@ -322,7 +299,7 @@ export default function Shpenzim() {
             </Form.Group>
           </div>
           <div className=''>
-            <Button variant='success w-100 mt-3' onClick={shtoShpenzimin} disabled = {loading}>{loading ? <>
+            <Button variant='success w-100 mt-3' onClick={() => shtoShpenzimin()} disabled = {loading}>{loading ? <>
             <Spinner as="span" animation='border' size='sm' role='status' aria-hidden={true}/>{''}Duke Ruajtur...
           </>:'Regjistro'}</Button>
           </div>
@@ -387,11 +364,103 @@ export default function Shpenzim() {
           )}
         </Col>
       </Row>
-      </>}
-      
-      {kaloNgaStoki && <Row>
+      <hr/>
 
-          <Form>
+      <Row >
+       <Col className='d-flex flex-wrap flex-row justify-content-center'>
+          <Button 
+            variant={!shfaqLlojetEShpenzimeve ? 'info' : 'secondary'} 
+            className='fs-5' 
+            onClick={() => setShfaqLlojetEShpenzimeve(!shfaqLlojetEShpenzimeve)}
+          >
+            {!shfaqLlojetEShpenzimeve ? (
+              <>
+                <FontAwesomeIcon icon={faChevronRight} className='px-2'/>
+                Llojet e Shpenzimeve
+              </>
+            ) : (
+              <>
+                <FontAwesomeIcon icon={faChevronDown} className='px-2'/>
+                Llojet e Shpenzimeve
+              </>
+            )}
+          </Button>
+          
+          <Button className='fs-5 mx-5' onClick={() => showShpenzoStokin()}>
+              {kaloNgaStoki ? <>
+                <FontAwesomeIcon icon={faChevronDown}  className='px-2'/>
+                Kalo nga Stoki ne Shpenzim
+              </>:<>
+                <FontAwesomeIcon icon={faExchangeAlt}  className='px-2'/>
+                Kalo nga Stoki ne Shpenzim
+              </>}
+          </Button>
+        </Col>
+
+      </Row>
+
+      {shfaqLlojetEShpenzimeve ? <>
+        <Row className='d-flex flex-row justify-content-start m-5 '>
+        <Col lg={5} className='d-flex flex-column justify-content-start bg-light border py-3'>
+          <h3>Shto nje Lloj Shpenzimi te Ri</h3>
+          <Form.Group>
+            <Form.Label>Emertimi:</Form.Label>
+            <Form.Control
+              type='text'
+              placeholder='Emertimi i Shpenzimit te Ri...'
+              onChange={handleShpenzimiRiChange}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Shuma Standarde:</Form.Label>
+            <Form.Control
+              type='number'
+              placeholder='Shuma Standarde...'
+              onChange={handleShumaStandardeEReChange}
+            />
+          </Form.Group>
+          <Button variant='success' className='my-4' onClick={shtoLlojinShpenzimit} disabled={loading}>{loading ? <>
+            <Spinner as="span" animation='border' size='sm' role='status' aria-hidden={true}/>{''}Duke Ruajtur...
+          </>:'Regjistro Llojin e Shpenzimit'}</Button>
+        </Col>
+        <Col className='tabelaLlojeveShpenzimeve col-xs-12 col-sm-12 col-md-6 col-lg-6 px-5'>
+          <h2>Llojet e Shpenzimeve:</h2>
+          <div className="table-responsive tabeleMeMaxHeight">
+            <table className="table table-sm table-striped text-center">
+              <thead className="table-light">
+                <tr className='fs-5'>
+                  <th scope="col">Nr</th>
+                  <th scope="col">Emertimi</th>
+                  <th scope="col">Shuma Standarde</th>
+                  <th scope="col">Opsionet</th>
+                </tr>
+              </thead>
+              <tbody>
+                {llojetShpenzimeve.map((item, index) => (
+                  <tr key={index}>
+                    <th scope="row">{index + 1}</th>
+                    <td>{item.emertimi}</td>
+                    <td>{item.shumaStandarde.toFixed(2)} €</td>
+                    <td>
+                     <Button onClick={() => handleEditLlojiShpenzimitClick(item)}><FontAwesomeIcon icon={faPen}/></Button>
+                     {item.total_shpenzime < 1 ? <>
+                      <Button variant='danger' className='m-1' onClick={() => thirreModalPerPyetje(item.llojetShpenzimeveID,'Lloji i Shpenzimit')}><FontAwesomeIcon icon={faTrashCan}/></Button></>:null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Col>
+      </Row>
+      </> : <>
+     
+      </>}
+     
+      
+      {kaloNgaStoki && !shfaqLlojetEShpenzimeve && <Row className='d-flex justify-content-center pt-5'>
+
+          <Form className='d-flex flex-wrap flex-row w-50 justify-content-between bg-light p-4'>
             <Form.Group>
               <Form.Label>Shifra:</Form.Label>
               <Form.Control value={produktiSelektuar.shifra} disabled/>
@@ -406,12 +475,19 @@ export default function Shpenzim() {
             </Form.Group>
             <Form.Group>
               <Form.Label>Sasia:</Form.Label>
-              <Form.Control value={sasiaPerProdukt} onChange={(e) => kalkuloTotalin(e)} />
+              <Form.Control type='number' min={0} value={sasiaPerProdukt} onChange={(e) => kalkuloTotalin(e)} />
             </Form.Group>
             <Form.Group>
               <Form.Label>Kosto Totale:</Form.Label>
               <Form.Control value={kostoTotale} disabled/>
             </Form.Group>
+            <Form.Group>
+              <Form.Label>Kategoria</Form.Label>
+              <Form.Control type='text' disabled value={`Produkt ID:${kategoriaID}`}/>
+            </Form.Group>
+
+            <Button variant='success' className='mt-3 w-100' disabled={sasiaPerProdukt < 1} onClick={() => handleKaloNgaStoki()}>{loadingPerStok ? <><Spinner as="span" animation='border' size='sm' role='status' aria-hidden={true}/>{''}Duke Ruajtur...
+            </> :'Ruaj Ndryshimet'}</Button>
           </Form>
 
         </Row>}
@@ -489,6 +565,6 @@ export default function Shpenzim() {
   </Modal.Footer>
 </Modal>
 
-    </div>
+    </Container>
   );
 }

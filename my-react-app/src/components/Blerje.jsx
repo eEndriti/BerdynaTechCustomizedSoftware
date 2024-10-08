@@ -27,6 +27,8 @@ export default function Blerje() {
   const [loading,setLoading] = useState(false)
   const [blerjet,setBlerjet] = useState([])
   const [nukPranohetNrFatures,setNukPranohetNrFatures] = useState(false)
+  const [nderrimiID,setNderrimiID] = useState()
+  
 
   useEffect(() => {
     window.api.fetchTableMenyratPageses().then(receivedData => {
@@ -35,6 +37,8 @@ export default function Blerje() {
     window.api.fetchTableBlerje().then(receivedData => {
       setBlerjet(receivedData);
     });
+    setNderrimiID(Number(localStorage.getItem('nderrimiID')) || 0); 
+
   }, []);
 
   const handleSelectSubjekti = (result) => {
@@ -133,7 +137,7 @@ export default function Blerje() {
       perdoruesiID,
       subjektiID: selectedSubjekti.subjektiID,
       menyraPagesesID,
-      nderrimiID: 1,
+      nderrimiID,
       produktet: products,
     };
   

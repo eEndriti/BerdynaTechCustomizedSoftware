@@ -84,8 +84,12 @@ export default function Transaksionet() {
 
 
   const calculateTotal = (transaksionet, field) => 
-    transaksionet.reduce((acc, transaksion) => acc + transaksion[field], 0).toFixed(2);
-  
+    transaksionet
+      .reduce((acc, transaksion) => {
+        return transaksion.lloji !== 'Blerje' ? acc + transaksion[field] : acc;
+      }, 0)
+      .toFixed(2);
+
   const totalPerPagese = calculateTotal(filteredTransaksionet, 'totaliperPagese');
   const totaliIPaguar = calculateTotal(filteredTransaksionet, 'totaliIPageses');
   const mbetjaPerPagese = calculateTotal(filteredTransaksionet, 'mbetjaPerPagese');
@@ -173,9 +177,9 @@ export default function Transaksionet() {
                 <tr key={transaksion.transaksioniID}>
                   <td>{transaksion.shifra}</td>
                   <td>{transaksion.lloji}</td>
-                  <td>{transaksion.totaliperPagese}</td>
-                  <td>{transaksion.totaliIPageses}</td>
-                  <td>{transaksion.mbetjaPerPagese}</td>
+                  <td>{transaksion.totaliperPagese.toFixed(2)} €</td>
+                  <td>{transaksion.totaliIPageses.toFixed(2)} €</td>
+                  <td>{transaksion.mbetjaPerPagese.toFixed(2)} €</td>
                   <td>{transaksion.komenti}</td>
                   <td>{new Date(transaksion.dataTransaksionit).toLocaleDateString()}</td>
                   <td>{transaksion.perdoruesi}</td>

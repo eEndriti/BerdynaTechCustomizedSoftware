@@ -19,7 +19,7 @@ export default function Klient() {
     const [data,setData] = useState({inputEmertimi:'',inputKontakti:'',ndrysho:false,idPerNdryshim:null,lloji:'klient'})
 
     useEffect(() => {
-        window.api.fetchTableSubjekti().then((receivedData) => {
+        window.api.fetchTableSubjekti('klient').then((receivedData) => {
             const filteredData = receivedData.filter(item => item.lloji == 'klient');
             setKlientet(filteredData);
             setLoading(false);

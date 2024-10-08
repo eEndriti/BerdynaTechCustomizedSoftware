@@ -20,7 +20,7 @@ export default function Furnitor() {
 
 
     useEffect(() => {
-        window.api.fetchTableSubjekti().then((receivedData) => {
+        window.api.fetchTableSubjekti('furnitor').then((receivedData) => {
             const filteredData = receivedData.filter(item => item.lloji == 'furnitor');
             setFurnitoret(filteredData);
             setLoading(false);
@@ -69,6 +69,7 @@ export default function Furnitor() {
         setShowModalPerPyetje(false)
     }
     const handleClose = () => setModalShow(false);
+    
     const handleShow = () => {
         setData ({
             lloji:'furnitor',

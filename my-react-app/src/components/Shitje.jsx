@@ -27,12 +27,15 @@ export default function Shitje() {
   const [loading, setLoading] = useState(true); 
   const [aKaGarancion,setAKaGarancion] = useState(false)
   const [kohaGarancionit,setKohaGarancionit] = useState('6')
-
+  const [nderrimiID,setNderrimiID] = useState()
+  
   useEffect(() => {
     window.api.fetchTableMenyratPageses().then(receivedData => {
       setMenyratPageses(receivedData);
       setLoading(false);
     });
+    setNderrimiID(Number(localStorage.getItem('nderrimiID')) || 0); 
+
   }, []);
 
   useEffect(() => {
@@ -114,7 +117,7 @@ export default function Shitje() {
       menyraPagesesID: menyraPagesesID,
       perdoruesiID: perdoruesiID,
       subjektiID: selectedSubjekti.subjektiID,
-      nderrimiID: 1,
+      nderrimiID,
       kohaGarancionit:aKaGarancion ? kohaGarancionit:0,
       produktet: products.map(product => ({
         produktiID: product.produktiID,

@@ -14,7 +14,13 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
     const [totaliPerPagese, setTotaliPerPagese] = useState(0);
     const [totaliIPageses, setTotaliIPageses] = useState(0);
     const [mbetjaPerPagese, setMbetjaPerPagese] = useState(0);
+    const [nderrimiID,setNderrimiID] = useState()
 
+    useEffect(() => {
+        setNderrimiID(Number(localStorage.getItem('nderrimiID')) || 0); 
+
+    },[])
+    
     useEffect(() => {
 
         if (data?.pajisjetPercjellese) {
@@ -64,7 +70,7 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
             mbetjaPerPagese,
             updateType,
             perdoruesiID:1,
-            nderrimiID:1,
+            nderrimiID,
         }
         try {
             const result = await window.api.ndryshoServisin(dataPerNdryshim);
