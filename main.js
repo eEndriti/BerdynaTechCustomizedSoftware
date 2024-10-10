@@ -1331,7 +1331,7 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
       @shumaPageses,@dataPageses,@shifra,@transaksioniID,@subjektiID,@menyraPagesesID
     )
   `
-  
+
     await connection.request()
       .input('shumaPageses',sql.Decimal(10,2),data.totaliPageses)
       .input('dataPageses',sql.Date, dataDheOra)
@@ -1473,6 +1473,13 @@ ipcMain.handle('anuloTransaksionin', async (event, data) => {
       }
 
       // Step 3: Delete records from shitjeProdukti, shitje, and transaksioni tables
+
+
+      const deleteProfiti = `
+      DELETE FROM profiti 
+      WHERE  transaksioniID = @transaksioniID
+    `;
+
       const deleteShitjeProduktiQuery = `
         DELETE FROM shitjeProdukti 
         WHERE shitjeID IN (
@@ -1521,7 +1528,7 @@ ipcMain.handle('anuloTransaksionin', async (event, data) => {
         .query(updateBalanci);
       }
       
-  
+      await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteProfiti);
       await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deletePagesaQuery);
       await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShitjeProduktiQuery);
       await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShitjeQuery);

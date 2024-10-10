@@ -52,6 +52,7 @@ export default function Shitje() {
       return acc + totali;
     }, 0);
     setTotaliPerPagese(total);
+    setTotaliPageses(total)
   }, [products]);
 
   const handleProductSelect = (product) => {
@@ -89,8 +90,21 @@ export default function Shitje() {
   };
 
   const handleTotaliPagesesChange = (e) => {
-    setTotaliPageses(parseFloat(e.target.value) || 0);
+    const value = parseFloat(e.target.value) || 0;
+    if (value <= totaliPerPagese) {
+      setTotaliPageses(value);
+    } else {
+      toast.error('Shuma e paguar nuk mund të jetë më e madhe se totali!');
+    }
   };
+  
+  const formatCurrency = (value) => {
+    return value.toLocaleString('sq-AL', {
+      style: 'currency',
+      currency: 'ALL',
+    });
+  };
+  
 
   const mbetjaPerPagese = (totaliPerPagese - totaliPageses).toFixed(2);
 
@@ -384,7 +398,7 @@ export default function Shitje() {
               <Col xs={6}>
                 <Form.Control
                   type="number"
-                  defaultValuevalue={totaliPageses}
+                  value={totaliPageses}
                   onChange={handleTotaliPagesesChange}
                   min={0}
                 />
