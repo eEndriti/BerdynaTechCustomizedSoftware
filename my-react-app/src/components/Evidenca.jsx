@@ -64,7 +64,7 @@ export default function Evidenca() {
   const bgColors = ['bg-success', 'bg-info', 'bg-warning', 'bg-primary', 'bg-secondary','bg-danger'];
 
   return (
-    <Container>
+    <Container fluid className='mt-5'>
       <Row>
         <Col className='d-flex flex-row'>
           {menyratEPageses.map((menyra, index) => (

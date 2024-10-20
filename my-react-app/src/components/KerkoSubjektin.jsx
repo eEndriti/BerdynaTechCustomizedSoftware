@@ -44,7 +44,7 @@ export default function SearchInput({ filter,value, onSelect,lloji }) {
   const handleCloseModal = () => setShowModal(false)
   return (
     <div className="position-relative">
-      <InputGroup>
+      <InputGroup className="z-n1">
         <Form.Control
           type="text"
           value={query}

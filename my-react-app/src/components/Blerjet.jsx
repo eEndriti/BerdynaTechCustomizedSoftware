@@ -64,7 +64,7 @@ export default function Blerjet() {
             transaksioniID: idPerAnulim,
         };
 
-        const result = await window.api.anuloTransaksionin(data);
+        const result = await window.api.anuloBlerjen(data);
 
         if (result.success) {
             toast.success(`Blerja u Anulua me Sukses !`, {
@@ -85,7 +85,7 @@ export default function Blerjet() {
        }
 }   
     return (
-        <Container>
+        <Container fluid>
             <h4 className="text-center fw-bold">Të Gjitha Blerjet:</h4>
             <hr />
 
@@ -142,7 +142,7 @@ export default function Blerjet() {
                                 Nuk Ekzistojnë Blerje në këtë Interval Kohor!
                             </h5>
                         ) : (
-                            <div className="container my-3 tabelaTransaksioneve">
+                            <div className=" my-3 tabelaTransaksioneve">
                                 <div className="table-responsive tableHeight50">
                                     <table className="table table-sm table-striped border table-hover text-center">
                                         <thead className="table-secondary">

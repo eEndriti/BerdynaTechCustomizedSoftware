@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Modal, Button, Form,Spinner, Toast } from 'react-bootstrap';
+import { Modal, Button, Form,Spinner, Toast,InputGroup } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -105,27 +105,36 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
                     <Form>
                         <Form.Group>
                             <Form.Label>Totali per Pagese:</Form.Label>
-                            <Form.Control
-                                type="number"
-                                value={totaliPerPagese}
-                                onChange={handleCalcPagesen1}
-                                min="0"
-                                onKeyDown={(e) => e.key === '0' && e.target.value.length === 0 && e.preventDefault()}
-                            />
+                            <InputGroup>
+                                <Form.Control
+                                    type="number"
+                                    value={totaliPerPagese}
+                                    onChange={handleCalcPagesen1}
+                                    min="0"
+                                    onKeyDown={(e) => e.key === '0' && e.target.value.length === 0 && e.preventDefault()}
+                                />
+                                <InputGroup.Text>€</InputGroup.Text>
+                            </InputGroup>
                         </Form.Group>
                         <Form.Group>
                             <Form.Label>Totali i Pageses:</Form.Label>
-                            <Form.Control
-                                type="number"
-                                value={totaliIPageses}
-                                onChange={handleCalcPagesen2}
-                                min="0"
-                                onKeyDown={(e) => e.key === '0' && e.target.value.length === 0 && e.preventDefault()}
-                            />
+                             <InputGroup>
+                                <Form.Control
+                                    type="number"
+                                    value={totaliIPageses}
+                                    onChange={handleCalcPagesen2}
+                                    min="0"
+                                    onKeyDown={(e) => e.key === '0' && e.target.value.length === 0 && e.preventDefault()}
+                                />
+                                <InputGroup.Text>€</InputGroup.Text>
+                            </InputGroup>
                         </Form.Group>
                         <Form.Group>
                             <Form.Label>Mbetja Per Pagese:</Form.Label>
-                            <Form.Control type="number" value={mbetjaPerPagese} disabled />
+                            <InputGroup>
+                                <Form.Control type="number" value={mbetjaPerPagese} disabled />
+                                <InputGroup.Text>€</InputGroup.Text>
+                            </InputGroup>
                         </Form.Group>
                     </Form>
                 ) : (

@@ -7,6 +7,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ShtoNjeProdukt from './ShtoNjeProdukt';
 import { useNavigate } from 'react-router-dom';
+import AnimatedSpinner from './AnimatedSpinner';
 
 export default function Produktet() {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ export default function Produktet() {
   const [showModal, setShowModal] = useState(false);
   const [showModalPerPyetje, setShowModalPerPyetje] = useState(false);
   const [idPerAnulim, setIdPerAnulim] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [eliminoVleratZero, setEliminoVleratZero] = useState(false);
   const [filterShifra, setFilterShifra] = useState('');
   const [filterEmertimi, setFilterEmertimi] = useState('');
@@ -27,6 +28,7 @@ export default function Produktet() {
       setProduktet(receivedData);
       setFilteredProduktet(receivedData);
     });
+    setLoading(false)
   }, []);
 
   const thirreModalPerPyetje = (produktiID) => {
@@ -89,7 +91,7 @@ export default function Produktet() {
   }
   
   return (
-    <Container>
+    <Container fluid className='mt-5'>
       <Row>
         <Col className='d-flex justify-content-start'>
           <Button variant='success' className='text-light p-3 fs-5 mx-3' onClick={() => setShowModal(true)}>Krijo Nje Produkt</Button>
@@ -148,7 +150,8 @@ export default function Produktet() {
       </Row>
 
       <Row>
-        <div className="table-responsive tableHeight50 mt-4">
+        {loading ? <AnimatedSpinner /> : 
+          <div className="table-responsive tableHeight50 mt-4">
           <table className="table table-sm table-striped border table-hover">
             <thead className="table-secondary">
               <tr className='fs-5 '>
@@ -199,6 +202,7 @@ export default function Produktet() {
             </tbody>
           </table>
         </div>
+        }
       </Row>
 
       <ShtoNjeProdukt show={showModal} prejardhja={'meRefresh'} handleClose={handleCloseModal} />

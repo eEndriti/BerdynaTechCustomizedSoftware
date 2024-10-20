@@ -1,7 +1,7 @@
 import  { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan,faPen,faChevronDown, faChevronRight,faExchangeAlt } from '@fortawesome/free-solid-svg-icons'; 
-import { Row, Col, Button, Form,Spinner,Modal, Container} from 'react-bootstrap';
+import { Row, Col, Button, Form,Spinner,Modal, Container, InputGroup} from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje'
@@ -235,7 +235,7 @@ export default function Shpenzim() {
         transaksioniID:transaksioniIDPerDelete
       }
       console.log(data)
-      result = await window.api.anuloTransaksionin(data)
+      result = await window.api.anuloShpenzimin(data)
     }else{
       result =await window.api.deleteLlojiShpenzimit(idPerAnulim)
     }
@@ -286,13 +286,15 @@ export default function Shpenzim() {
               </Form.Select>
             </Form.Group>
             <Form.Group className='mx-2 mb-3'>
-            <Form.Control 
-                type='number' 
-                placeholder='Shuma per Shpenzim' 
-                value={selectedShumaStandarde} 
-                onChange={(e) => setSelectedShumaStandarde(e.target.value)}
-                />
-
+              <InputGroup>
+                <Form.Control 
+                    type='number' 
+                    placeholder='Shuma per Shpenzim' 
+                    value={selectedShumaStandarde} 
+                    onChange={(e) => setSelectedShumaStandarde(e.target.value)}
+                    />
+                <InputGroup.Text>€</InputGroup.Text>
+              </InputGroup>
             </Form.Group>
             <Form.Group>
               <Form.Control as='textarea' cols={25} rows={3} onChange={handleKomentiChange} placeholder='Sheno Komentin e Shpenzimit...'/>
@@ -413,11 +415,14 @@ export default function Shpenzim() {
           </Form.Group>
           <Form.Group>
             <Form.Label>Shuma Standarde:</Form.Label>
-            <Form.Control
-              type='number'
-              placeholder='Shuma Standarde...'
-              onChange={handleShumaStandardeEReChange}
-            />
+              <InputGroup>
+                <Form.Control
+                  type='number'
+                  placeholder='Shuma Standarde...'
+                  onChange={handleShumaStandardeEReChange}
+                />
+                <InputGroup.Text>€</InputGroup.Text>
+              </InputGroup>
           </Form.Group>
           <Button variant='success' className='my-4' onClick={shtoLlojinShpenzimit} disabled={loading}>{loading ? <>
             <Spinner as="span" animation='border' size='sm' role='status' aria-hidden={true}/>{''}Duke Ruajtur...
@@ -471,7 +476,10 @@ export default function Shpenzim() {
             </Form.Group>
             <Form.Group>
               <Form.Label>Kosto per Cope:</Form.Label>
-              <Form.Control value={produktiSelektuar.cmimiBlerjes} disabled/>
+              <InputGroup>
+                <Form.Control  value={produktiSelektuar.cmimiBlerjes} disabled/>
+                <InputGroup.Text>€</InputGroup.Text>
+              </InputGroup>
             </Form.Group>
             <Form.Group>
               <Form.Label>Sasia:</Form.Label>
@@ -479,7 +487,10 @@ export default function Shpenzim() {
             </Form.Group>
             <Form.Group>
               <Form.Label>Kosto Totale:</Form.Label>
-              <Form.Control value={kostoTotale} disabled/>
+              <InputGroup>
+                <Form.Control value={kostoTotale} disabled/>
+                <InputGroup.Text>€</InputGroup.Text>
+              </InputGroup>
             </Form.Group>
             <Form.Group>
               <Form.Label>Kategoria</Form.Label>

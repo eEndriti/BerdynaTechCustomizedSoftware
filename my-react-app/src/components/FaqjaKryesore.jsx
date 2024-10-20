@@ -54,11 +54,10 @@ function FaqjaKryesoreAdmin() {
   }, []);
   
   useEffect(() => {
-     // Filter transaksionet
-     const filteredTransaksionet = transaksionet.filter(item => item.nderrimiID === Number(nderrimiID));
-     setTransaksionetENderrimit(filteredTransaksionet);
-
-  },[transaksionetENderrimit])
+    const filteredTransaksionet = transaksionet.filter(item => item.nderrimiID === Number(nderrimiID));
+    setTransaksionetENderrimit(filteredTransaksionet);
+  }, [transaksionet, nderrimiID]);
+  
 
   const ndryshoTransaksionin = (lloji, transaksioniID) => {
     alert(`Ndryshimi Transaksionit ${transaksioniID} ne Proces e mesiperm!!`)
@@ -70,7 +69,14 @@ function FaqjaKryesoreAdmin() {
       transaksioniID:idPerAnulim
     }
 
-    const result = await window.api.anuloTransaksionin(data)
+    let result
+    if(llojiPerAnulim == 'Shitje'){
+      result = await window.api.anuloShitjen(data)
+    }else if (llojiPerAnulim == 'Shpenzim'){
+      result = await window.api.anuloShpenzimin(data)
+    }else if(llojiPerAnulim == 'Blerje'){
+      result = await window.api.anuloBlerjen(data)
+    }
 
     if (result.success) {
       toast.success(`Transaksioni i llojit ${llojiPerAnulim} u Anulua me Sukses !`, {
@@ -100,6 +106,7 @@ function FaqjaKryesoreAdmin() {
       anuloPorosineOnline()
     }
   };
+
   const anuloPorosineOnline = async () => {
     
     const result = await window.api.anuloPorosineOnline(idPerAnulim)
@@ -162,10 +169,10 @@ function FaqjaKryesoreAdmin() {
 }
 
   return (
-    <Container>
+    <Container fluid className='pt-3'>
       {loading ? <AnimatedSpinner /> : 
       <div>
-      <div className="container my-3 tabelaTransaksioneve ">
+      <div className="Container fluid my-3 tabelaTransaksioneve ">
         <h3>Transaksionet e Nderrimit:</h3>
         <div className="table-responsive tabeleMeMaxHeight">
           <table className="table table-sm table-striped border table-hover">
@@ -222,7 +229,7 @@ function FaqjaKryesoreAdmin() {
         </Col>
       </Row>
       
-      <div className="container mt-5 d-flex flex-row align-items-top">
+      <div className="Container fluid mt-5 d-flex flex-row align-items-top">
 
         <div className='tabelaPorosive col-xs-12 col-sm-12 col-md-6 col-lg-6'>
           <h3>Porosite ne Pritje:</h3>

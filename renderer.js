@@ -32,7 +32,9 @@ contextBridge.exposeInMainWorld('api', {
     insertSubjekti: (data) => ipcRenderer.invoke('insertSubjekti', data) ,
     insertServisi: (data) => ipcRenderer.invoke('insertServisi', data) ,
     
-    anuloTransaksionin: (data) => ipcRenderer.invoke('anuloTransaksionin', data) ,
+    anuloShitjen: (data) => ipcRenderer.invoke('anuloShitjen', data) ,
+    anuloBlerjen: (data) => ipcRenderer.invoke('anuloBlerjen', data) ,
+    anuloShpenzimin: (data) => ipcRenderer.invoke('anuloShpenzimin', data) ,
     anuloPorosineOnline: (idPerAnulim) => ipcRenderer.invoke('anuloPorosineOnline', idPerAnulim) ,
     fshijeProduktin: (idPerAnulim) => ipcRenderer.invoke('fshijeProduktin', idPerAnulim) ,
     deleteKategoria: (idPerAnulim) => ipcRenderer.invoke('deleteKategoria', idPerAnulim) ,

@@ -70,7 +70,7 @@ export default function Shitjet() {
         let result
         if(llojiShitjes == 'dyqan'){
             console.log('innnn',data)
-             result = await window.api.anuloTransaksionin(data);
+             result = await window.api.anuloShitjen(data);
         }else if (llojiShitjes == 'online'){
             result = await window.api.anuloPorosineOnline(shitjeIDPerAnulim)
         }
@@ -116,7 +116,7 @@ const kontrolloStatusinGarancionit = (koha, dataShitjes) => {
 
 
     return (
-        <Container>
+        <Container fluid className="pt-5">
             <h4 className="text-center fw-bold">Të Gjitha Shitjet:</h4>
             <hr />
 
@@ -173,7 +173,7 @@ const kontrolloStatusinGarancionit = (koha, dataShitjes) => {
                                 Nuk Ekzistojnë Shitje në këtë Interval Kohor!
                             </h5>
                         ) : (
-                            <div className="container my-3 tabelaTransaksioneve">
+                            <div className=" my-3 tabelaTransaksioneve">
                                 <div className="table-responsive tableHeight50">
                                     <table className="table table-sm table-striped border table-hover text-center">
                                         <thead className="table-secondary">
@@ -203,7 +203,7 @@ const kontrolloStatusinGarancionit = (koha, dataShitjes) => {
                                                     <td>{item.totaliPageses} €</td>
                                                     <td className={item.mbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{item.mbetjaPerPagese.toFixed(2)} €</td>
                                                     <td>{item.subjekti}</td>
-                                                    <td>{item.numriPercjelles + '-' + new Date(item.dataNderrimit).toLocaleDateString()}</td>
+                                                    <td>{item.numriPercjelles + '-' + new Date(item.dataFillimit).toLocaleDateString()}</td>
                                                     <td>{item.menyraPageses}</td>
                                                     <td>{item.perdoruesi}</td>
                                                     <td>{item.nrPorosise}</td>

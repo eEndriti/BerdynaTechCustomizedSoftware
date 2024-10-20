@@ -4,9 +4,9 @@ const sql = require('mssql');
 
 // MSSQL connection configuration
 const config = {
-  server: 'DESKTOP-OK6ASU1',
+  server: 'DESKTOP-RJASQGG',
   database: 'berdynaTechDBKryesore',
-  user: 'user2',
+  user: 'user1',
   password: '12345',
   options: {
     encrypt: true,
@@ -113,8 +113,8 @@ async function fetchTableTransaksionet() {
   try {
     await sql.connect(config);
     const result = await sql.query`
-select t.* ,p.emri as 'perdoruesi' from transaksioni t
-join Perdoruesi p on p.perdoruesiID = t.perdoruesiID`;
+      select t.* ,p.emri as 'perdoruesi' from transaksioni t
+      join Perdoruesi p on p.perdoruesiID = t.perdoruesiID`;
     return result.recordset;
   } catch (err) {
     console.error('Error retrieving data:', err);
@@ -150,14 +150,14 @@ async function fetchTableShitje() {
   try {
     await sql.connect(config);
     const result = await sql.query`
-select sh.shitjeID,sh.shifra,sh.lloji,sh.komenti,sh.totaliPerPagese,sh.totaliPageses,
-sh.mbetjaPerPagese,sh.dataShitjes,sh.nrPorosise,sh.menyraPagesesID,sh.perdoruesiID,
-sh.transaksioniID,sh.kohaGarancionit,s.emertimi as 'subjekti',sh.subjektiID,m.emertimi as 'menyraPageses',p.emri as 'perdoruesi',n.numriPercjelles,n.dataFillimit from shitje sh
-join subjekti s on s.subjektiID = sh.subjektiID
-join menyraPageses m on m.menyraPagesesID = sh.menyraPagesesID
-join Perdoruesi p on p.perdoruesiID = sh.perdoruesiID
-join nderrimi n on n.nderrimiID = sh.nderrimiID
-`;
+        select sh.shitjeID,sh.shifra,sh.lloji,sh.komenti,sh.totaliPerPagese,sh.totaliPageses,
+        sh.mbetjaPerPagese,sh.dataShitjes,sh.nrPorosise,sh.menyraPagesesID,sh.perdoruesiID,
+        sh.transaksioniID,sh.kohaGarancionit,s.emertimi as 'subjekti',sh.subjektiID,m.emertimi as 'menyraPageses',p.emri as 'perdoruesi',n.numriPercjelles,n.dataFillimit from shitje sh
+        join subjekti s on s.subjektiID = sh.subjektiID
+        join menyraPageses m on m.menyraPagesesID = sh.menyraPagesesID
+        join Perdoruesi p on p.perdoruesiID = sh.perdoruesiID
+        join nderrimi n on n.nderrimiID = sh.nderrimiID
+        `;
     return result.recordset;
   } catch (err) {
     console.error('Error retrieving data:', err);
@@ -302,19 +302,19 @@ async function fetchTableKategoria() {
     await sql.connect(config);
     const result = await sql.query`
     
-SELECT 
-    k.kategoriaID,
-    k.emertimi,
-    k.tvsh,
-    k.komponenta,
-    COUNT(p.produktiID) AS total_produkte,
-    SUM(p.sasia) AS total_sasia
-FROM 
-    kategoria k
-LEFT JOIN 
-    produkti p ON k.kategoriaID = p.kategoriaID
-GROUP BY 
-    k.kategoriaID, k.emertimi, k.tvsh, k.komponenta;
+      SELECT 
+          k.kategoriaID,
+          k.emertimi,
+          k.tvsh,
+          k.komponenta,
+          COUNT(p.produktiID) AS total_produkte,
+          SUM(p.sasia) AS total_sasia
+      FROM 
+          kategoria k
+      LEFT JOIN 
+          produkti p ON k.kategoriaID = p.kategoriaID
+      GROUP BY 
+          k.kategoriaID, k.emertimi, k.tvsh, k.komponenta;
 
     `;
     return result.recordset;
@@ -334,8 +334,8 @@ async function fetchTableMenyratPageses() {
   try {
     await sql.connect(config);
     const result = await sql.query`
-    select b.balanciID,b.shuma,b.menyraPagesesID,m.emertimi from balanci b
-join menyraPageses m on m.menyraPagesesID = b.menyraPagesesID
+        select b.balanciID,b.shuma,b.menyraPagesesID,m.emertimi from balanci b
+    join menyraPageses m on m.menyraPagesesID = b.menyraPagesesID
     `;
     return result.recordset;
   } catch (err) {
@@ -1432,14 +1432,13 @@ ipcMain.handle('anuloPorosineOnline', async (event, idPerAnulim) => {
   }
 });
 
-ipcMain.handle('anuloTransaksionin', async (event, data) => {
+ipcMain.handle('anuloShitjen', async (event, data) => {
   let connection;
 
   try {
     connection = await sql.connect(config);
 
-    if (data.lloji === 'Shitje') {
-      // Step 1: Retrieve sold products from shitjeProdukti for the specified transaksioniID
+      // Hapi 1: i marrim produktet e shitura nga tabela shitjeProdukti ne baze te transaksioniID 
       const getShitjeProduktiQuery = `
         SELECT produktiID, sasia 
         FROM shitjeProdukti 
@@ -1458,7 +1457,8 @@ ipcMain.handle('anuloTransaksionin', async (event, data) => {
 
       const soldProducts = shitjeProduktiResult.recordset;
 
-      // Step 2: Update product quantities in produkti table
+      // Hapi 2: e perditsojme sasine e produkteve
+
       const updateProduktiQuery = `
         UPDATE produkti
         SET sasia = sasia + @sasia
@@ -1472,7 +1472,7 @@ ipcMain.handle('anuloTransaksionin', async (event, data) => {
           .query(updateProduktiQuery);
       }
 
-      // Step 3: Delete records from shitjeProdukti, shitje, and transaksioni tables
+      // Hapi 3: i fshijme te dhenat nga tabelat  shitjeProdukti,profiti,pagesa, shitje, dhe transaksioni 
 
 
       const deleteProfiti = `
@@ -1535,9 +1535,23 @@ ipcMain.handle('anuloTransaksionin', async (event, data) => {
       await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteTransaksioniQuery);
 
       return { success: true };
-    } 
-    else if(data.lloji == 'Blerje') {
-          // Step 1: Retrieve sold products from shitjeProdukti for the specified transaksioniID
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+ipcMain.handle('anuloBlerjen', async (event, data) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+          // Hapi 1: Marrim produktet e regjistruara ne blerje
           const getBlerjeProduktiQuery = `
           SELECT produktiID, sasia 
           FROM blerjeProdukt 
@@ -1554,7 +1568,7 @@ ipcMain.handle('anuloTransaksionin', async (event, data) => {
 
         const produktetEBlera = blerjeProduktiResult.recordset;
 
-        // Step 2: Update product quantities in produkti table
+        // Hapi 2: Ndryshojme sasine e produkteve 
         const updateProduktiQuery = `
           UPDATE produkti
           SET sasia = sasia - @sasia
@@ -1568,7 +1582,7 @@ ipcMain.handle('anuloTransaksionin', async (event, data) => {
             .query(updateProduktiQuery);
         }
 
-        // Step 3: Delete records from shitjeProdukti, shitje, and transaksioni tables
+        // Hapi 3: Fshijme te dhenat nga tabelat
         const deleteBlerjeProduktiQuery = `
           DELETE FROM blerjeProdukt 
           WHERE blerjeID IN (
@@ -1622,15 +1636,38 @@ ipcMain.handle('anuloTransaksionin', async (event, data) => {
         await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteTransaksioniQuery);
 
         return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
 
-    }else if(data.lloji == 'Shpenzim') {
+
+ipcMain.handle('anuloShpenzimin', async (event, data) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+
         connection = await sql.connect(config);
-          const deleteShpenzimiFromTransaksioni = `
-             DELETE FROM transaksioni 
-             WHERE transaksioniID = @transaksioniID
-          `
-         if(data.nenLloji == 'ngaStoku'){ // ktu menagjohet nje produkt qe osht hi shpenzim prej stokit
-              // Step 1: Retrieve sold products from shitjeProdukti for the specified transaksioniID
+
+        const getNenLloji = `SELECT nenLloji FROM shpenzimi WHERE transaksioniID = @transaksioniID`;
+
+        const result = await connection.request()
+          .input('transaksioniID', sql.Int, data.transaksioniID)
+          .query(getNenLloji);
+
+        const nenLloji = result.recordset.length > 0 ? result.recordset[0].nenLloji : null;
+
+        if(nenLloji == 'ngaStoku'){ 
+          
+          // ktu menagjohet nje produkt qe osht hi shpenzim prej stokit
+              // Hapi 1: Marrim produktin qe e kemi regjistru si shpenzim
               const getShpenzimProduktQuery = `
               SELECT produktiID, sasia 
               FROM shpenzimProdukti 
@@ -1646,7 +1683,7 @@ ipcMain.handle('anuloTransaksionin', async (event, data) => {
 
             const Products = shpenzimProduktiResult.recordset;
 
-            // Step 2: Update product quantities in produkti table
+            // Hapi 2: Ndryshojme sasine e atij produkti
             const updateProduktiQuery = `
               UPDATE produkti
               SET sasia = sasia + @sasia
@@ -1666,43 +1703,45 @@ ipcMain.handle('anuloTransaksionin', async (event, data) => {
           `
           await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShpenzimiFromShpenzimProdukt);
 
+         }else{
+                    //ktu fillon pjesa per menaxhim bilanci
+              const getShuma = `
+              Select shumaShpenzimit
+              from shpenzimi
+              where transaksioniID = @transaksioniID
+            `
+            const getShumaResult = await connection.request()
+              .input('transaksioniID', sql.Int, data.transaksioniID)
+              .query(getShuma)
+
+              const shuma = getShumaResult.recordset
+
+            const updateBalanci = `
+              UPDATE balanci
+              SET shuma = shuma + @shuma
+              WHERE menyraPagesesID = @menyraPagesesID
+            `;
+
+            for (const shmn of shuma) {
+              await connection.request()
+              .input('shuma', sql.Decimal(10,2), shmn.shumaShpenzimit)
+              .input('menyraPagesesID', sql.Int, 1)
+              .query(updateBalanci);
+            }
          }
-    
+
+         const deleteShpenzimiFromTransaksioni = `
+            DELETE FROM transaksioni 
+            WHERE transaksioniID = @transaksioniID
+          `
           const deleteShpenzimiQuery = `
             DELETE FROM shpenzimi 
             WHERE transaksioniID = @transaksioniID
           `;
-
-          //ktu fillon pjesa per menaxhim bilanci
-            const getShuma = `
-            Select shumaShpenzimit
-            from shpenzimi
-            where transaksioniID = @transaksioniID
-          `
-          const getShumaResult = await connection.request()
-            .input('transaksioniID', sql.Int, data.transaksioniID)
-            .query(getShuma)
-
-            const shuma = getShumaResult.recordset
-
-          const updateBalanci = `
-            UPDATE balanci
-            SET shuma = shuma + @shuma
-            WHERE menyraPagesesID = @menyraPagesesID
-          `;
-
-          for (const shmn of shuma) {
-            await connection.request()
-            .input('shuma', sql.Decimal(10,2), shmn.shumaShpenzimit)
-            .input('menyraPagesesID', sql.Int, 1)
-            .query(updateBalanci);
-          }
-
           await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShpenzimiQuery);
           await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShpenzimiFromTransaksioni);
 
           return { success: true };
-    }
 
   } catch (error) {
     console.error('Database error:', error);

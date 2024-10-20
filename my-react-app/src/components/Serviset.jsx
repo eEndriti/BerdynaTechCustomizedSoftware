@@ -172,7 +172,7 @@ export default function Serviset() {
         setModalPerUpdate(false)
     }
   return (
-    <Container>
+    <Container fluid className='mt-5'>
         <Row className='bg-light'>
             <Form className=" rounded-3 ">
                 <h4 className="text-center mb-3 fw-bold border-bottom">Prano Servisin:</h4>

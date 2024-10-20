@@ -1,5 +1,5 @@
 import { useState,useEffect } from "react";
-import { Container, Row,Col,Form, Button,Table,Spinner } from "react-bootstrap";
+import { Container, Row,Col,Form, Button,Table,Spinner,InputGroup } from "react-bootstrap";
 import KerkoSubjektin from './KerkoSubjektin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; 
@@ -178,7 +178,7 @@ export default function Blerje() {
   }
   
   return (
-    <Container>
+    <Container fluid className="pt-5">
       <Row>
         <Col>
           <Form.Group as={Row} controlId="subjekti" className="mb-2">
@@ -331,43 +331,55 @@ export default function Blerje() {
               <Form.Group as={Row} controlId="totaliTvsh" className="mb-2">
                 <Form.Label column xs={6} className="text-end">Totali i TVSH:</Form.Label>
                 <Col xs={6}>
-                  <Form.Control
-                    type="number"
-                    value={totaliTvsh.toFixed(2)}
-                    readOnly
-                  />
+                  <InputGroup >
+                    <Form.Control
+                      type="number"
+                      value={totaliTvsh.toFixed(2)}
+                      readOnly
+                    />
+                    <InputGroup.Text>€</InputGroup.Text>
+                  </InputGroup>
                 </Col>
               </Form.Group>
             </>:''}
               <Form.Group as={Row} controlId="totaliPerPageseShuma" className="mb-2">
                 <Form.Label column xs={6} className="text-end">Totali Per Pagese:</Form.Label>
                 <Col xs={6}>
-                  <Form.Control
-                    type="number"
-                    value={totaliPerPagese.toFixed(2)}
-                    readOnly
-                  />
+                  <InputGroup >
+                    <Form.Control
+                      type="number"
+                      value={totaliPerPagese.toFixed(2)}
+                      readOnly
+                    />
+                    <InputGroup.Text>€</InputGroup.Text>
+                   </InputGroup>
                 </Col>
               </Form.Group>
                 <Form.Group as={Row} controlId="totaliPageses" className="mb-2">
                 <Form.Label column xs={6} className="text-end">Totali Pageses:</Form.Label>
                 <Col xs={6}>
-                  <Form.Control
-                    type="number"
-                    defaultValuevalue={totaliPageses}
-                    onChange={handleTotaliPagesesChange}
-                    min={0}
-                  />
+                  <InputGroup >
+                    <Form.Control
+                      type="number"
+                      defaultValuevalue={totaliPageses}
+                      onChange={handleTotaliPagesesChange}
+                      min={0}
+                    />
+                    <InputGroup.Text>€</InputGroup.Text>
+                  </InputGroup>
                 </Col>
               </Form.Group>
               <Form.Group as={Row} controlId="mbetjaPerPagese" className="mb-2">
                 <Form.Label column xs={6} className="text-end">Mbetja Per Pagese:</Form.Label>
                 <Col xs={6}>
-                  <Form.Control
-                    type="number"
-                    value={mbetjaPerPagese}
-                    readOnly
-                  />
+                  <InputGroup >
+                    <Form.Control
+                      type="number"
+                      value={mbetjaPerPagese}
+                      readOnly
+                    />
+                   <InputGroup.Text>€</InputGroup.Text>
+                  </InputGroup>
                 </Col>
               </Form.Group>
             </div>

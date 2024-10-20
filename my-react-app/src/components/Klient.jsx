@@ -93,7 +93,7 @@ export default function Klient() {
         navigate(`/detajePerSubjekt/${'klient'}/${subjektiID}`)
       }
   return (
-    <Container>
+    <Container className='mt-5'>
         <Row>
             <Col md={2}>
                 <Button className='fs-5' variant='success' onClick={handleShow}>Krijo nje Klient</Button>

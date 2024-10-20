@@ -17,6 +17,7 @@ export default function DetajePerProdukt() {
   const [sasiaShitur,setSasiaShitur] = useState(0)
   const [showProfiti,setShowProfiti] = useState(false)
   const [profiti,setProfiti] = useState()
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -96,7 +97,7 @@ export default function DetajePerProdukt() {
       {loading ? (
         <AnimatedSpinner />
       ) : (
-        <Container>
+        <Container fluid className="pt-3">
           <Row>
             <Col >
                   <h5 className="w-25 float-end"><span className="w-25 float-end" onMouseEnter={()=> setShowProfiti(true)} onMouseLeave={() => setShowProfiti(false)}><FontAwesomeIcon icon={faUserSecret} className={showProfiti ? 'text-dark' : 'text-light'}/></span></h5>
@@ -150,9 +151,9 @@ export default function DetajePerProdukt() {
             </Col>
           </Row>
 
-          <Row>
-            <div className="container my-3">
-              <div className="table-responsive tableHeight50">
+          <Row >
+            <div className=" my-3">
+              <div className="table-responsive tableHeight50 container">
                 <table className="table table-sm table-striped border table-hover text-center">
                   <thead className="table-secondary">
                     <tr className="fs-5">

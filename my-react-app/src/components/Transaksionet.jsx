@@ -96,7 +96,7 @@ export default function Transaksionet() {
   
 
   return (
-    <Container>
+    <Container fluid className='mt-5'>
       <Row className="mb-3">
         <Col>
           <Form.Group>
@@ -160,6 +160,7 @@ export default function Transaksionet() {
           <Table striped bordered hover responsive >
             <thead>
               <tr>
+                <th>Nr.</th>
                 <th>Shifra</th>
                 <th>Lloji</th>
                 <th>Totali per Pagese</th>
@@ -172,9 +173,10 @@ export default function Transaksionet() {
               </tr>
             </thead>
             <tbody>
-              {filteredTransaksionet.map((transaksion) => (
+              {filteredTransaksionet.map((transaksion,index) => (
                 
                 <tr key={transaksion.transaksioniID}>
+                  <td className='fw-bold'>{filteredTransaksionet.length - index}</td>
                   <td>{transaksion.shifra}</td>
                   <td>{transaksion.lloji}</td>
                   <td>{transaksion.totaliperPagese.toFixed(2)} €</td>

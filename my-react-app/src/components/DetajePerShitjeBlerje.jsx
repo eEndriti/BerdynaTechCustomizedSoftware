@@ -43,7 +43,7 @@ export default function DetajePerShitjeBlerje({ shifraPerDetaje, IDPerDetaje,llo
   }, [shifraPerDetaje, IDPerDetaje]);
 
   return (
-    <Container>
+    <Container fluid>
       <Row className='d-flex flex-column my-5 pb-5'>
         {loading ? (
           <AnimatedSpinner />
@@ -55,7 +55,7 @@ export default function DetajePerShitjeBlerje({ shifraPerDetaje, IDPerDetaje,llo
               </h4>
             </Col>
             <Col>
-              <div className="container my-3 tabelaTransaksioneve">
+              <div className="Container fluid my-3 tabelaTransaksioneve">
                 <div className="table-responsive tableHeight50">
                   <table className="table table-sm table-striped border table-hover text-center">
                     <thead className="table-secondary">

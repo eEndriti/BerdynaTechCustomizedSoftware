@@ -55,23 +55,20 @@ function Layout() {
   const LoadingBar = () => {
     const totalShuma = profiti.reduce((accumulator, current) => accumulator + current.shuma, 0);
     const percentage = (totalShuma / 200) * 100;
-    if(percentage > 99) {
-      return null
-    }else{
       return (
         <div style={{ width: '100%', backgroundColor: '#e0e0df', borderRadius: '5px' }}>
           <div
             style={{
               width: `${percentage}%`,
-              backgroundColor: percentage >= 100 ? 'green' : 'orange',
-              height: '10px',
+              backgroundColor: percentage >= 100 ? 'green' : 'red',
+              height: '5px',
               borderRadius: '5px',
               transition: 'width 0.5s ease-in-out',
             }}
           />
         </div>
       );
-    }
+    
   };
 
   const formatDate = (date) => {
@@ -87,8 +84,8 @@ function Layout() {
     return (
       <div className='container-fluid p-0'>
         {/* Top Navigation Bar */}
-        <Container fluid className='navTop text-light p-3'>
-          <Row className='align-items-center'>
+        <Container fluid className='navTop text-light p-3 '>
+          <Row className='align-items-center '>
             <Col xs={12} md={8} className='d-flex justify-content-between'>
               <div className='d-flex align-items-center'>
                 <FontAwesomeIcon icon={faCoins} className='me-2 text-warning fs-5' />
@@ -100,9 +97,9 @@ function Layout() {
                 <Col className='mt-2'>
                   <Col className='d-flex flex-row pb-2'>
                     <FontAwesomeIcon icon={faGift} className='me-2 text-info fs-5' />
-                    <span>Per Bonuse: <strong>{perBonuse} €</strong> <span className='d-inline mx-4 text-secondary'>{totalShumaPerBonuse} €</span></span>
+                    <span>Bonuse: <strong>{perBonuse} €</strong> <span className='d-inline mx-4 text-secondary'>{totalShumaPerBonuse} €</span></span>
                   </Col>
-                  <LoadingBar  /> 
+                  <Col className='w-50'><LoadingBar  /> </Col>
                 </Col>
               </div>
                
@@ -120,7 +117,7 @@ function Layout() {
           </Row>
         </Container>
   
-        <Container fluid className='p-0'>
+        <Container fluid className='p-0 pt-5'>
           <Row className='g-0'>
             {/* Sidebar */}
             <Col xs={12} sm={3} md={2} className='bg-sidebar sidebar'>

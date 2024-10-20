@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Container, Row, Col, Table, Form, Spinner } from "react-bootstrap";
+import { Button, Container, Row, Col, Table, Form, Spinner,InputGroup } from "react-bootstrap";
 import KerkoSubjektin from "./KerkoSubjektin";
 import KerkoProduktin from "./KerkoProduktin";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -181,7 +181,7 @@ export default function Shitje() {
     <>
     {menyratPageses.length < 1 ? <AnimatedSpinner /> : 
 
-    <Container fluid className="mt-2 d-flex flex-column" style={{ minHeight: "95vh" }}>
+    <Container fluid className="mt-5 d-flex flex-column" style={{ minHeight: "95vh" }}>
       <Row className="d-flex flex-row justify-content-between">
             <Col>
               <Form.Group as={Row} controlId="subjekti" className="mb-2">
@@ -382,36 +382,46 @@ export default function Shitje() {
       <Col xs={12} md={6} className="d-flex flex-column align-items-end">
         <div className="d-flex flex-column w-100 justify-content-end">
           <div className="d-flex flex-column w-100">
+            
             <Form.Group as={Row} controlId="totaliPerPageseShuma" className="mb-2">
               <Form.Label column xs={6} className="text-end">Totali Per Pagese:</Form.Label>
               <Col xs={6}>
-                <Form.Control
-                  type="number"
-                  value={totaliPerPagese.toFixed(2)}
-                  readOnly
-                />
+                <InputGroup>
+                  <Form.Control
+                    type="number"
+                    value={totaliPerPagese.toFixed(2)}
+                    readOnly
+                  />
+                  <InputGroup.Text>€</InputGroup.Text>
+                </InputGroup>
               </Col>
             </Form.Group>
             {llojiShitjes == 'dyqan'? <>
               <Form.Group as={Row} controlId="totaliPageses" className="mb-2">
               <Form.Label column xs={6} className="text-end">Totali Pageses:</Form.Label>
               <Col xs={6}>
-                <Form.Control
-                  type="number"
-                  value={totaliPageses}
-                  onChange={handleTotaliPagesesChange}
-                  min={0}
-                />
+                <InputGroup>
+                    <Form.Control
+                      type="number"
+                      value={totaliPageses}
+                      onChange={handleTotaliPagesesChange}
+                      min={0}
+                    />
+                    <InputGroup.Text>€</InputGroup.Text>
+                 </InputGroup>
               </Col>
             </Form.Group>
             <Form.Group as={Row} controlId="mbetjaPerPagese" className="mb-2">
               <Form.Label column xs={6} className="text-end">Mbetja Per Pagese:</Form.Label>
               <Col xs={6}>
-                <Form.Control
-                  type="number"
-                  value={mbetjaPerPagese}
-                  readOnly
-                />
+                <InputGroup >
+                  <Form.Control
+                    type="number"
+                    value={mbetjaPerPagese}
+                    readOnly
+                  />
+                  <InputGroup.Text>€</InputGroup.Text>
+                </InputGroup>
               </Col>
             </Form.Group>
             </>:

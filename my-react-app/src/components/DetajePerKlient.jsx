@@ -1,19 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Container, Row, Col, Form, Spinner,Button } from 'react-bootstrap';
+import { Container, Row, Col, Form, Spinner, Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronRight,faE,faEye } from '@fortawesome/free-solid-svg-icons';
 
 export default function DetajePerKlient() {
-    const { subjektiID,lloji } = useParams();
+    const { subjektiID, lloji } = useParams();
     const [subjekti, setSubjekti] = useState([]);
     const [loading, setLoading] = useState(true);
     const [shitjet, setShitjet] = useState([]);
-    const [blerjet,setBlerjet] = useState([])
+    const [blerjet, setBlerjet] = useState([]);
     const [pagesat, setPagesat] = useState([]);
     const [activeShifra, setActiveShifra] = useState(null); 
     const [startDate, setStartDate] = useState(`${new Date().getFullYear()}-01-01`);
     const [endDate, setEndDate] = useState(new Date().toISOString().substring(0, 10));
+    const [profiti, setProfiti] = useState([]); 
 
     useEffect(() => {
         window.api.fetchTableSubjekti(lloji).then((receivedData) => {
@@ -39,6 +40,28 @@ export default function DetajePerKlient() {
             setLoading(false);
         });
     }, [subjektiID]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+          try {
+            const result = await window.api.fetchTableQuery(`
+                SELECT SUM(p.shuma) AS TotalProfiti
+                FROM profiti p
+                JOIN shitje s ON p.transaksioniID = s.transaksioniID
+                WHERE s.subjektiID = ${subjektiID};
+
+            `);
+            
+            setProfiti(result[0]?.TotalProfiti || 0); // Set to 0 if no result
+          } catch (error) {
+            console.error("Error fetching data:", error);
+          } finally {
+            setLoading(false); // Set loading to false after both data fetches are complete
+          }
+        };
+    
+        fetchData();
+      }, [subjektiID]);
 
     let filteredTransaksionet
 
@@ -101,38 +124,53 @@ export default function DetajePerKlient() {
     }
 
     return (
-        <Container>
-            <Row>
+        <Container fluid >
+           <Row className='my-4'>
+            <Col className='d-flex flex-row'>
+                <Form.Group className='d-flex align-items-center me-3'>
+                <Form.Label className='me-2 fw-bold'>Klienti:</Form.Label>
+                <Form.Control type="text" value={subjekti[0].emertimi} disabled />
+                </Form.Group>
+
+                <Form.Group className='d-flex align-items-center'>
+                <Form.Label className='me-2 fw-bold'>Kontakti:</Form.Label>
+                <Form.Control type="number" value={subjekti[0].kontakti} disabled />
+                </Form.Group>
+
+                <OverlayTrigger placement="right" 
+                    overlay={
+                        <Tooltip id="tooltip-right">
+                            Totali i Fitimit nga ky Klient eshte : {profiti} €
+                        </Tooltip>
+                    }
+                >
+                    <FontAwesomeIcon icon={faEye} style={{ cursor: 'pointer',opacity:0.03 }} />
+                </OverlayTrigger>
+            </Col>
+
+            <Col className='d-flex flex-column align-items-end'>
+                <h4 className='px-3 mb-3'>Transaksionet brenda Periudhes:</h4>
+
                 <Col className='d-flex flex-row'>
-                    <Form.Group className='d-flex flex-row'>
-                        <Form.Label className='mt-3 fw-bold'>Klienti:</Form.Label>
-                        <Form.Control className="m-2" type="text" value={subjekti[0].emertimi} disabled />
-                    </Form.Group>
-                    <Form.Group className='d-flex flex-row mx-3'>
-                        <Form.Label className='mt-3 fw-bold'>Kontakti:</Form.Label>
-                        <Form.Control className="m-2" type="number" value={subjekti[0].kontakti} disabled />
-                    </Form.Group>
+                <Form.Group className='mx-1'>
+                    <Form.Control
+                    type='date'
+                    value={startDate}
+                    onChange={handleStartDateChange}
+                    />
+                </Form.Group>
+
+                <Form.Group className='mx-1'>
+                    <Form.Control
+                    type='date'
+                    value={endDate}
+                    onChange={handleEndDateChange}
+                    />
+                </Form.Group>
                 </Col>
-                <Col className='d-flex flex-column align-items-end'>
-                    <h4 className='px-3 '>Transaksionet brenda Periudhes :</h4>
-                   <Col className='d-flex flex-row '>
-                    <Form.Group className='mx-1'>
-                        <Form.Control
-                            type='date'
-                            value={startDate}
-                            onChange={handleStartDateChange}
-                        />
-                        </Form.Group>
-                        <Form.Group className='mx-1'>
-                        <Form.Control
-                            type='date'
-                            value={endDate}
-                            onChange={handleEndDateChange}
-                        />
-                        </Form.Group>
-                   </Col>
-                </Col>
+            </Col>
             </Row>
+
            
             <Row>
                 <Col>
@@ -162,7 +200,7 @@ export default function DetajePerKlient() {
                                             
                                             return (
                                                 <tr key={index}>
-                                                    <th scope="row">{shitjet.length - index}</th>
+                                                    <th scope="row">{lloji == 'klient' ? shitjet.length - index :blerjet.length - index}</th>
                                                     <td>{item.shifra}</td>
                                                     <td>{item.totaliPerPagese} €</td>
                                                     <td>{item.totaliPageses} €</td>
@@ -204,7 +242,7 @@ export default function DetajePerKlient() {
                     <div className='text-center'>
                         <h5>Pagesat e {lloji == 'klient' ? 'Shitjes' : 'Blerjes'} me Shifer: <span className='fs-3 fw-bold'>{activeShifra}</span></h5>
                     </div>
-                    <div className="container my-3">
+                    <div className="Container fluid my-3">
                         <div className="table-responsive tableHeight50">
                             <table className="table table-sm table-striped border table-hover text-center">
                                 <thead className="table-secondary">
@@ -251,6 +289,7 @@ export default function DetajePerKlient() {
                <Button variant='danger' className='p-3 m-3 w-25 rounded fs-4'>Mbetja per Pagese :<span className='fs-2'>{subjekti[0].totalMbetjaPerPagese.toFixed(2)} €</span></Button> 
             </Col>                                           
         </Row>
+
         </Container>
     );
 }

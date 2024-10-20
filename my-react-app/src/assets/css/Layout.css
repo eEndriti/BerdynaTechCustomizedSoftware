@@ -10,6 +10,8 @@
   /* Layout Styles */
 .navTop{
      background-color: var(--primary-color) !important;
+     position: fixed;
+     z-index: 5;
   }
   
   .bg-sidebar {

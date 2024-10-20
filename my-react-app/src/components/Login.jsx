@@ -1,29 +1,33 @@
 import { useState, useEffect } from 'react';
-import { Form, Button, Row, Modal } from 'react-bootstrap';
+import { Container,Form, Button, Row, Modal } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import AnimatedSpinner from './AnimatedSpinner';
 
 export default function Login() {
   // Clear localStorage on load
-  localStorage.removeItem('aKaUser');
-  localStorage.removeItem('perdoruesiID');
-
+  
   const [perdoruesit, setPerdoruesit] = useState([]);
   const [perdoruesiID, setPerdoruesiID] = useState('');
   const [fjalekalimi, setFjalekalimi] = useState('');
   const [currentShift, setCurrentShift] = useState(null);
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
   const [avansAmount, setAvansAmount] = useState('');
+  const [loading,setLoading] = useState(true)
 
   useEffect(() => {
     window.api.fetchTablePerdoruesi().then(receivedData => {
       setPerdoruesit(receivedData);
     });
-
     window.api.kontrolloNderriminAktual().then(receivedShift => {
       setCurrentShift(receivedShift);
+      setLoading(false);
     });
+    localStorage.removeItem('aKaUser');
+    localStorage.removeItem('perdoruesiID');
+
   }, []);
+  
 
   // Function to handle login and shift management
   const kontrolloKredinencialet = () => {
@@ -43,6 +47,7 @@ export default function Login() {
 
       // Check if the shift belongs to the current day
       const currentDate = new Date().toLocaleDateString();
+      alert(currentShift)
       if (currentShift) {
         const shiftDate = new Date(currentShift.dataFillimit).toLocaleDateString();
         localStorage.setItem('nderrimiID', currentShift.nderrimiID);
@@ -89,57 +94,49 @@ export default function Login() {
   };
 
   return (
-    <div className="container">
+    <Container>
+      {loading ? <AnimatedSpinner /> : 
+      <div className="container">
       <Row className='mt-5 pt-5'>
-        <Form className="col-xs-12 col-sm-12 col-md-10 col-lg-10 w-100 d-flex flex-column justify-content-center align-items-center">
-          <Form.Label style={{ color: '#2C3E50' }}>Perdoruesi:</Form.Label>
-          <Form.Control
-            className="w-25"
-            as="select"
-            value={perdoruesiID}
-            onChange={e => setPerdoruesiID(e.target.value)}
-            style={{ borderColor: '#4CAF50' }}
-          >
-            <option value="" disabled>
-              Selekto Perdoruesin
-            </option>
-            {perdoruesit.map(perdoruesi => (
-              <option key={perdoruesi.perdoruesiID} value={perdoruesi.perdoruesiID}>
-                {perdoruesi.emri}
-              </option>
-            ))}
-          </Form.Control>
+      <Form className="col-md-6 shadow-lg p-4 rounded bg-light">
+            <h3 className="text-center text-primary mb-4">Kyqu</h3>
+            
+            <Form.Group className="mb-3" controlId="formPerdoruesi">
+              <Form.Label>Perdoruesi:</Form.Label>
+              <Form.Control
+                as="select"
+                value={perdoruesiID}
+                onChange={e => setPerdoruesiID(e.target.value)}
+              >
+                <option value="" disabled>
+                  Selekto Perdoruesin
+                </option>
+                {perdoruesit.map(perdoruesi => (
+                  <option key={perdoruesi.perdoruesiID} value={perdoruesi.perdoruesiID}>
+                    {perdoruesi.emri}
+                  </option>
+                ))}
+              </Form.Control>
+            </Form.Group>
 
-          <Form.Label style={{ color: '#2C3E50' }}>Fjalekalimi</Form.Label>
-          <Form.Control
-            className="w-25"
-            type="password"
-            value={fjalekalimi}
-            onChange={e => setFjalekalimi(e.target.value)}
-            style={{ borderColor: '#4CAF50' }}
-            placeholder="Sheno Fjalekalimin..."
-          />
+            <Form.Group className="mb-3" controlId="formFjalekalimi">
+              <Form.Label>Fjalekalimi:</Form.Label>
+              <Form.Control
+                type="password"
+                value={fjalekalimi}
+                onChange={e => setFjalekalimi(e.target.value)}
+                placeholder="Shkruaj fjalekalimin..."
+              />
+            </Form.Group>
 
-          <Button
-            variant="success"
-            className="mt-4 w-25"
-            onClick={kontrolloKredinencialet}
-            style={{ backgroundColor: '#4CAF50', borderColor: '#388E3C', width: '100%' }}
-          >
-            Kyqu
-          </Button>
-
-          {localStorage.getItem('aKaUser') === 'admin' && currentShift && (
             <Button
-              variant="danger"
-              className="mt-2 w-25"
-              onClick={closeAndStartNewShift}
-              style={{ backgroundColor: '#E74C3C', borderColor: '#C0392B', width: '100%' }}
+              variant="primary"
+              className="w-100"
+              onClick={kontrolloKredinencialet}
             >
-              Mbyll dhe Fillo Nderrimin e Ri
+              Kyqu
             </Button>
-          )}
-        </Form>
+          </Form>
       </Row>
 
       {/* Modal for entering advance amount */}
@@ -172,5 +169,7 @@ export default function Login() {
       </Modal>
       <ToastContainer/>
     </div>
+    }
+    </Container>
   );
 }

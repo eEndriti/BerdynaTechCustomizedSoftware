@@ -110,7 +110,7 @@ export default function Kategorite() {
   };
 
   return (
-    <Container>
+    <Container fluid className='mt-5'>
         <h3 className='text-center'>Kategorite:</h3>
         <hr/>
       <Row>
