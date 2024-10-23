@@ -4,7 +4,7 @@ import { Button, Container, Row, Col, Table, Form, Spinner,InputGroup } from "re
 import KerkoSubjektin from "./KerkoSubjektin";
 import KerkoProduktin from "./KerkoProduktin";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ShtoNjeProdukt from "./ShtoNjeProdukt";
@@ -219,6 +219,7 @@ export default function Shitje() {
           <Button variant="info" className="text-dark border fs-5 p-4 m-2" onClick={() => navigate('/shitjet')}>Te Gjitha Shitjet</Button>
         </Col>
       </Row>
+
       <Row className="mt-5">
         <Col xs={12}>
           <div className="table-responsive tabeleMeMaxHeight">
@@ -407,7 +408,8 @@ export default function Shitje() {
                       onChange={handleTotaliPagesesChange}
                       min={0}
                     />
-                    <InputGroup.Text>€</InputGroup.Text>
+                    <InputGroup.Text style={{cursor:'pointer'}} onClick={() => {totaliPageses > 0 ? setTotaliPageses(0) : setTotaliPageses(totaliPerPagese)}}>€</InputGroup.Text>
+
                  </InputGroup>
               </Col>
             </Form.Group>

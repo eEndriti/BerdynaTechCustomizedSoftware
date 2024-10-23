@@ -41,7 +41,6 @@ function Layout() {
     const totalShuma = profiti.reduce((accumulator, current) => accumulator + current.shuma, 0);
     setTotalShumaPerBonuse(totalShuma)
     let bonus = 0;
-    console.log('tsh',totalShuma)
 
     if (totalShuma > 199) {
       bonus = 10; 

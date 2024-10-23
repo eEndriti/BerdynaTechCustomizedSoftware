@@ -7,8 +7,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
 import AnimatedSpinner from './AnimatedSpinner'
 import DetajePerShitjeBlerje from './DetajePerShitjeBlerje';
+import { useNavigate } from 'react-router-dom';
 
 export default function Shitjet() {
+    const navigate = useNavigate()
     const [shitjet, setShitjet] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -209,7 +211,7 @@ const kontrolloStatusinGarancionit = (koha, dataShitjes) => {
                                                     <td>{item.nrPorosise}</td>
                                                     <td>{item.kohaGarancionit > 1 ? <>{item.kohaGarancionit} Muaj / {kontrolloStatusinGarancionit(item.kohaGarancionit,item.dataShitjes)}</>:'Pa Garancion'}</td>
                                                     <td className="text-center d-flex flex-row mb-0 p-2">
-                                                        <Button variant="primary" >
+                                                        <Button variant="primary" onClick={() => navigate(`/ndryshoShitjen/${item.shitjeID}`)}>
                                                             <FontAwesomeIcon  icon={faPen} />
                                                         </Button>
                                                         <Button variant="danger" className='mx-2' onClick={() => thirreModalPerPyetje(item.shitjeID,item.transaksioniID,item.lloji)}>

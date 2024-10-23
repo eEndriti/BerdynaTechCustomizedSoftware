@@ -19,6 +19,7 @@ import Evidenca from './components/Evidenca';
 import Transaksionet from './components/Transaksionet';
 import Serviset from './components/Serviset';
 import DetajePerProdukt from './components/DetajePerProdukt';
+import NdryshoShitjen from './components/NdryshoShitjen';
 
 let aKaUser = localStorage.getItem('aKaUser')
 
@@ -43,6 +44,10 @@ const router = createBrowserRouter([
       {
         path: '/shitje',
         element:<Shitje />
+      },
+      {
+        path: '/ndryshoShitjen/:shitjeID',
+        element:<NdryshoShitjen />
       },
       {
         path: '/shpenzim',
