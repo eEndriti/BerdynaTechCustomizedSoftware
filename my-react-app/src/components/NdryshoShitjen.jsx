@@ -1,5 +1,5 @@
 import {useState,useEffect} from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import AnimatedSpinner from './AnimatedSpinner'
 import { Container,Row,Form,Button,Col, InputGroup,Table, Spinner } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -8,9 +8,11 @@ import KerkoSubjektin from './KerkoSubjektin'
 import KerkoProduktin from './KerkoProduktin'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ModalPerPyetje from './ModalPerPyetje'
 
 export default function NdryshoShitjen() {
     const { shitjeID } = useParams()
+    const navigate = useNavigate()
     const [shitje,setShitje] = useState([])
     const [loading , setLoading] = useState(true)
     const [llojiShitjes,setLlojiShitjes] = useState('')
@@ -29,8 +31,13 @@ export default function NdryshoShitjen() {
     const [totaliPerPagese,setTotaliPerPagese] = useState()
     const [totaliPageses,setTotaliPageses] = useState()
     const [totaliPagesesFillestare,setTotaliPagesesFillestare] = useState()
+    const [totaliPerPageseFillestare,setTotaliPerPageseFillestare] = useState()
     const [mbetjaPerPagese,setMbetjaPerPagese] = useState()
     const [nrPorosise,setNrPorosise] = useState()
+    const [modalPerPyetje,setModalPerPyetje] = useState(false)
+    const [inputDisabled,setInputDisabled] = useState(false)
+    const [nderrimiID,setNderrimiID] = useState()
+    const [shitjeProdukti,setShitjeProdukti] = useState()
 
     useEffect(() => {
         const fetchData = async () => {
@@ -45,9 +52,16 @@ export default function NdryshoShitjen() {
                     where sh.shitjeID = ${shitjeID}
                     `);
                 setShitje(receivedData);
+
+                const shitjeProdukti = await window.api.fetchTableQuery( ` select * from shitjeProdukti
+                    where shitjeID = ${shitjeID}
+                    `);
+                setShitjeProdukti(shitjeProdukti);
             } catch (error) {
                 toast.error('Error fetching data:', error);
             }
+            setNderrimiID(Number(localStorage.getItem('nderrimiID')) || 0); 
+
         };
         fetchData();
     }, [shitjeID]);
@@ -82,6 +96,7 @@ export default function NdryshoShitjen() {
                     setTotaliPerPagese(shitje[0].totaliPerPagese.toFixed(2))
                     setTotaliPageses(shitje[0].totaliPageses.toFixed(2))
                     setTotaliPagesesFillestare(shitje[0].totaliPageses.toFixed(2))
+                    setTotaliPerPageseFillestare(shitje[0].totaliPerPagese.toFixed(2))
                     setMbetjaPerPagese(shitje[0].mbetjaPerPagese)
                     setMenyraPagesesID(shitje[0].menyraPagesesID)
                 } catch (error) {
@@ -110,9 +125,26 @@ export default function NdryshoShitjen() {
             }
             setLoading(false);
         };
-    
         shfaqi();
     }, [produktetFillestare]);
+
+    useEffect(() => {
+        const total = products.reduce((acc, product) => {
+          const cmimiPerCope = parseFloat(product.cmimiPerCope) || 0;
+          const sasiaShitjes = parseFloat(product.sasiaShitjes) || 0;
+          const cmimiBlerjes = parseFloat(product.cmimiBlerjes) || 0;
+    
+          const totali = cmimiPerCope * sasiaShitjes;
+          const profit = totali - (cmimiBlerjes * sasiaShitjes);
+    
+          product.profiti = profit;
+    
+          return acc + totali;
+        }, 0);
+        setTotaliPerPagese(total);
+        setTotaliPageses(totaliPagesesFillestare)
+      }, [products]);
+
 
       const handleSelectSubjekti = (result) => {
         setSelectedSubjekti({
@@ -164,9 +196,67 @@ export default function NdryshoShitjen() {
         setMenyraPagesesID(menyraPagesesID);
       };
       
-      const handleRuajNdryshimet = async () => {
-
+      const handleConfirmModal = () => {
+        handleRuajNdryshimet()
       }
+
+      const handleRuajNdryshimet = async () => {
+        setInputDisabled(true)
+
+        const perdoruesiID = localStorage.getItem('perdoruesiID');
+
+        if (!perdoruesiID || !menyraPagesesID || !selectedSubjekti?.subjektiID || !products?.length) {
+          toast.error('Të gjitha fushat e nevojshme duhet të plotësohen!');
+          return;
+        }
+      
+        setLoading(true);
+        products.pop()  
+        const data = {
+          shitjeID,
+          shifra:shitje[0].shifra,
+          transaksioniIDFillestar:shitje[0].transaksioniID,
+          menyraPagesesIDFillestare:shitje[0].menyraPagesesID,
+          lloji: llojiShitjes,
+          komenti: komentiShitjes,
+          totaliPerPagese,
+          totaliPerPageseFillestare,
+          totaliPageses,
+          totaliPagesesFillestare,
+          mbetjaPerPagese,
+          nrPorosise,
+          menyraPagesesID,
+          perdoruesiID,
+          subjektiID: selectedSubjekti.subjektiID,
+          nderrimiID,
+          dataShitjes,
+          kohaGarancionit:aKaGarancion ? kohaGarancionit:0,
+          produktet: products.map(product => ({
+            produktiID: product.produktiID,
+            sasiaShitjes: product.sasiaShitjes,
+            cmimiPerCope: product.cmimiPerCope,
+            profiti:product.profiti
+          }))
+       };
+  
+    try {
+        console.log('data',data)
+      const result = await window.api.ndryshoShitje(data);
+      if (result.success) {
+        toast.success('Shitja u Ndryshua me Sukses!', {
+          position: "top-center",  
+          autoClose: 1500
+        }); 
+      } else {
+        toast.error('Gabim gjate ndryshimit: ' + result.error);
+      }
+    } catch (error) {
+      toast.error('Gabim gjate komunikimit me server: ' + error.message);
+    } finally {
+      setLoading(false);
+      navigate('/faqjaKryesore/')
+    }
+}
 
       const handleAnulo =  () => {
 
@@ -178,7 +268,7 @@ export default function NdryshoShitjen() {
     :
    
         <Container fluid className='mt-4 '>
-            <Row><h4 className='text-center text-secondary fw-bold'>Ndryshimi i Shitjes : {shitje[0].shifra}</h4></Row>
+            <Row><h4 className='text-center text-secondary fw-bold'>Ndryshimi i Shitjes : {shitje[0].shitjeID}</h4></Row>
             <hr/>
 
             <Row>
@@ -196,7 +286,7 @@ export default function NdryshoShitjen() {
                             <Form.Label>Subjekti:</Form.Label>
                             <InputGroup >
                                 <Form.Control disabled = {true} value={selectedSubjekti.emertimi} />
-                                <InputGroup.Text onClick={() => setNdryshoSubjektinModul(true)} style={{cursor:'pointer'}}><FontAwesomeIcon icon={faPen} className='text-primary' /></InputGroup.Text>
+                                <InputGroup.Text disabled={inputDisabled} onClick={() => setNdryshoSubjektinModul(true)} style={{cursor:'pointer'}}><FontAwesomeIcon icon={faPen} className='text-primary' /></InputGroup.Text>
                             </InputGroup>
                             
                         </Form.Group>
@@ -207,7 +297,7 @@ export default function NdryshoShitjen() {
                     </Form>}
                 </Col>
                 <Col className="d-flex flex-row justify-content-center">
-                <Button
+                <Button disabled={inputDisabled}
                     variant={llojiShitjes === "dyqan" ? "primary" : "outline-primary"}
                     size="md"
                     className="mx-1 w-25"
@@ -215,7 +305,7 @@ export default function NdryshoShitjen() {
                 >
                     Shitje ne Dyqan
                 </Button>
-                <Button
+                <Button disabled={inputDisabled}
                     variant={llojiShitjes === "online" ? "primary" : "outline-primary"}
                     size="md"
                     className="mx-1 w-25"
@@ -227,7 +317,7 @@ export default function NdryshoShitjen() {
                 <Col>
                     <Form>
                         <Form.Label>Data</Form.Label>
-                        <Form.Control type='date' onChange={(e) => setDataShitjes(e.target.value)} value={dataShitjes}/>
+                        <Form.Control disabled={inputDisabled} type='date' onChange={(e) => setDataShitjes(e.target.value)} value={dataShitjes}/>
                     </Form>
                 </Col>
             </Row>
@@ -261,13 +351,13 @@ export default function NdryshoShitjen() {
                             <td>{index + 1}</td>
                             <td>
                                 {product.shifra || (
-                                <Button onClick={() => openModalForRow(index)}>Kerko</Button>
+                                <Button disabled={inputDisabled} onClick={() => openModalForRow(index)}>Kerko</Button>
                                 )}
                             </td>
                             <td>{product.emertimi}</td>
                             <td>{product.pershkrimi}</td>
                             <td>
-                                <Form.Control className="bg-light border-0"
+                                <Form.Control className="bg-light border-0" disabled={inputDisabled}
                                 type="number"
                                 value={product.cmimiPerCope || ''}
                                 onChange={(e) => {
@@ -279,7 +369,7 @@ export default function NdryshoShitjen() {
                             </td>
                             <td>{product.sasia}</td>
                             <td>
-                                <Form.Control className="bg-light border-0"
+                                <Form.Control className="bg-light border-0" disabled={inputDisabled}
                                 type="number"
                                 min={1}
                                 max={product.sasia}
@@ -297,7 +387,7 @@ export default function NdryshoShitjen() {
                             </td>
                             <td>{totali}</td>
                             <td>
-                                <Form.Control className="bg-light border-0"
+                                <Form.Control className="bg-light border-0" disabled={inputDisabled}
                                 type="text"
                                 value={product.komenti || ''}
                                 onChange={(e) => {
@@ -308,9 +398,9 @@ export default function NdryshoShitjen() {
                                 />
                             </td>
                             <td >
-                            <span className="text-danger  text-center" onClick={() => handleDeleteRow(index)} style={{ cursor: 'pointer' }}>
-                                {product.shifra && <FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} />}
-                                </span>                      
+                            <Button variant='transparent' className="text-danger  text-center" disabled={inputDisabled} onClick={() => handleDeleteRow(index)} style={{ cursor: 'pointer' }}>
+                                {product.shifra && <FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} disabled={inputDisabled} />}
+                                </Button>                      
                                 </td>
                             </tr>
                         );
@@ -332,7 +422,7 @@ export default function NdryshoShitjen() {
                 <Col xs={12} md={6} className="d-flex flex-column align-items-center mb-3 mb-md-0">
                 <h5 className="text-center mb-3">
                     Shtype Garancionin
-                    <Form.Check 
+                    <Form.Check  disabled={inputDisabled}
                     className="px-3 ms-2" 
                     inline 
                     onClick={() => setAKaGarancion(!aKaGarancion)} 
@@ -341,7 +431,7 @@ export default function NdryshoShitjen() {
                 </h5>
                 {aKaGarancion && (
                     <div className="d-flex align-items-center justify-content-center">
-                    <Form.Control 
+                    <Form.Control  disabled={inputDisabled}
                         type="number" 
                         className="me-2 w-50 w-md-25" 
                         placeholder="Muaj" 
@@ -361,7 +451,7 @@ export default function NdryshoShitjen() {
                 </Col>
                 
                 <Col xs={12} md={6} className="d-flex justify-content-center">
-                <Form.Control 
+                <Form.Control  disabled={inputDisabled}
                     as="textarea" 
                     onChange={(e) => setKomentiShitjes(e.target.value)} 
                     rows={3} 
@@ -374,10 +464,10 @@ export default function NdryshoShitjen() {
 
             <Row className="section3 my-5 d-flex justify-content-end">
                 <Col xs={12} md={6} className="d-flex justify-content-center align-items-end">
-                    <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleAnulo}>Anulo</Button>
+                    <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleAnulo} disabled={inputDisabled}>Anulo</Button>
                     <Button variant="success" size="lg" className="mx-2 fs-1" 
-                    disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || !(menyraPagesesID) || loading} 
-                    onClick={handleRuajNdryshimet} >{loading ? (
+                        disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || !(menyraPagesesID) || inputDisabled} 
+                        onClick={() => setModalPerPyetje(true)} >{inputDisabled ? (
                     <>
                         <Spinner
                         as="span"
@@ -414,13 +504,13 @@ export default function NdryshoShitjen() {
                         <Form.Label column xs={6} className="text-end">Totali Pageses:</Form.Label>
                         <Col xs={6}>
                             <InputGroup>
-                                <Form.Control
+                                <Form.Control disabled={inputDisabled}
                                 type="number"
                                 value={totaliPageses}
                                 onChange={handleTotaliPagesesChange}
                                 min={0}
                                 />
-                                <InputGroup.Text style={{cursor:'pointer'}} onClick={() => {totaliPageses > 0 ? setTotaliPageses(0) : setTotaliPageses(totaliPerPagese)}}>€</InputGroup.Text>
+                                <InputGroup.Text style={{cursor:'pointer'}} onClick={() => {totaliPageses > 0 ? setTotaliPageses(0)  : setTotaliPageses(totaliPerPagese)}}>€</InputGroup.Text>
 
                             </InputGroup>
                         </Col>
@@ -431,7 +521,7 @@ export default function NdryshoShitjen() {
                             <InputGroup >
                             <Form.Control
                                 type="number"
-                                value={mbetjaPerPagese}
+                                value={totaliPerPagese - totaliPageses}
                                 readOnly
                             />
                             <InputGroup.Text>€</InputGroup.Text>
@@ -442,7 +532,7 @@ export default function NdryshoShitjen() {
                         <Form.Group as={Row} controlId="nrPorosiseShuma" className="mb-2">
                         <Form.Label column xs={6} className="text-end">Nr. Porosise:</Form.Label>
                         <Col xs={6}>
-                        <Form.Control
+                        <Form.Control disabled={inputDisabled}
                         type="text"  // Use "text" instead of "number"
                         maxLength={8}  // Set maxLength to 8
                         onChange={(e) => {
@@ -459,7 +549,7 @@ export default function NdryshoShitjen() {
                     <div className="d-flex flex-row justify-content-end">
                         {menyratPageses.map((menyraPageses) => (
                         
-                        <Button
+                        <Button disabled={inputDisabled}
                             key={menyraPageses.menyraPagesesID}
                             onClick={() => handleMenyraPagesesID(menyraPageses.menyraPagesesID)}
                             className={menyraPagesesID === menyraPageses.menyraPagesesID ? 'bg-primary mx-2' : 'mx-2 bg-transparent text-primary'}
@@ -472,6 +562,11 @@ export default function NdryshoShitjen() {
                 </Col>
                 </Row>
             <ToastContainer/>
+            <ModalPerPyetje
+                show={modalPerPyetje}
+                handleClose={() => setModalPerPyetje(false)}
+                handleConfirm={handleConfirmModal}
+            />
         </Container>
         }
     </>

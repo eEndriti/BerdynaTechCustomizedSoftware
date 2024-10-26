@@ -181,6 +181,7 @@ function FaqjaKryesoreAdmin() {
                 <th scope="col">Nr</th>
                 <th scope="col">Shifra</th>
                 <th scope="col">Lloji</th>
+                <th scope="col">Pershkrimi</th>
                 <th scope="col">Totali Per Pagese</th>
                 <th scope="col">Totali Pageses</th>
                 <th scope="col">Mbetja Per Pagese</th>
@@ -197,6 +198,7 @@ function FaqjaKryesoreAdmin() {
                     <th scope="row">{transaksionetENderrimit.length - index}</th>
                     <td>{item.shifra}</td>
                     <td>{item.lloji}</td>
+                    <td>{item.pershkrimi}</td>
                     <td>{item.totaliperPagese.toFixed(2)} €</td>
                     <td>{item.totaliIPageses.toFixed(2)} €</td>
                     <td className={item.mbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{item.mbetjaPerPagese.toFixed(2)} €</td>
