@@ -9,6 +9,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ShtoNjeProdukt from "./ShtoNjeProdukt";
 import AnimatedSpinner from "./AnimatedSpinner";
+import useAuthData from "../useAuthData";
 
 export default function Shitje() {
   const navigate = useNavigate();  
@@ -27,14 +28,13 @@ export default function Shitje() {
   const [loading, setLoading] = useState(true); 
   const [aKaGarancion,setAKaGarancion] = useState(false)
   const [kohaGarancionit,setKohaGarancionit] = useState('6')
-  const [nderrimiID,setNderrimiID] = useState()
+  const {nderrimiID,perdoruesiID} = useAuthData()
   
   useEffect(() => {
     window.api.fetchTableMenyratPageses().then(receivedData => {
       setMenyratPageses(receivedData);
       setLoading(false);
     });
-    setNderrimiID(Number(localStorage.getItem('nderrimiID')) || 0); 
 
   }, []);
 
@@ -113,7 +113,6 @@ export default function Shitje() {
   };
 
   const handleRegjistro = async () => {
-    const perdoruesiID = localStorage.getItem('perdoruesiID');
     console.log(products)
     if (!perdoruesiID || !menyraPagesesID || !selectedSubjekti?.subjektiID || !products?.length) {
       toast.error('Të gjitha fushat e nevojshme duhet të plotësohen!');

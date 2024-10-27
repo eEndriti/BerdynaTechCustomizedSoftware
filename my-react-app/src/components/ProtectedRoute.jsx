@@ -1,11 +1,12 @@
 import { Navigate } from 'react-router-dom';
+import useAuthData from '../useAuthData';
 
 const ProtectedRoute = ({ role, children }) => {
-  const userRole = localStorage.getItem('aKaUser');
+  const {aKaUser} = useAuthData()
 
-  if (userRole === role) {
+  if (aKaUser === role) {
     return children;
-  } else if (!userRole) {
+  } else if (!aKaUser) {
     return <Navigate to="/login" replace />;
   } else {
     return <Navigate to="/login" replace />;

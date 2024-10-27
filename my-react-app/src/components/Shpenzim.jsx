@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje'
 import KerkoProduktin from './KerkoProduktin';
 import AnimatedSpinner from './AnimatedSpinner';
+import useAuthData from '../useAuthData';
 
 export default function Shpenzim() {
   const [shpenzimet, setShpenzimet] = useState([]);
@@ -34,16 +35,14 @@ export default function Shpenzim() {
   const [kostoTotale,setKostoTotale] = useState()
   const [loadingPerStok,setLoadingPerStok] = useState(false)
   const [kategoriaID,setKategoriaID] = useState() // kjo perdoret per me selektu kategorine me kalu stok ne shpenzim
-  const [nderrimiID,setNderrimiID] = useState()
+  const {nderrimiID,perdoruesiID} = useAuthData()
 
-    console.log(produktiSelektuar,'asd')
   useEffect(() => {2
     // Fetch all shpenzimet data
     window.api.fetchTableShpenzimet().then(receivedData => {
       setShpenzimet(receivedData);
       setFilteredShpenzimet(receivedData); // Initialize filtered data
     });
-    setNderrimiID(Number(localStorage.getItem('nderrimiID')) || 0); 
 
   }, []);
 
@@ -87,7 +86,6 @@ export default function Shpenzim() {
 
   const shtoShpenzimin = async () => {
 
-    const perdoruesiID = localStorage.getItem('perdoruesiID');
     const data = {
       shumaShpenzimit: selectedShumaStandarde,
       komenti: komenti,
@@ -112,7 +110,6 @@ export default function Shpenzim() {
   const handleKaloNgaStoki = async () => {
     setLoadingPerStok(true)
 
-    const perdoruesiID = localStorage.getItem('perdoruesiID');
     const data = {
       cmimiFurnizimit: produktiSelektuar.cmimiBlerjes,
       llojetShpenzimeveID: kategoriaID,

@@ -7,6 +7,7 @@ import ModalPerPyetje from './ModalPerPyetje'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UpdateServise from './UpdateServise'
+import useAuthData from '../useAuthData';
 
 export default function Serviset() {
     const [loading,setLoading] = useState(true)
@@ -30,7 +31,7 @@ export default function Serviset() {
     const [modalPerUpdate,setModalPerUpdate] = useState(false)
     const [data,setData] = useState({})
     const [updateType,setUpdateType] = useState()
-    const [nderrimiID,setNderrimiID] = useState()
+    const {nderrimiID} = useAuthData()
 
     useEffect(() => {
         window.api.fetchTableServisi().then(receivedData => {
@@ -38,7 +39,6 @@ export default function Serviset() {
           setFilteredServiset(receivedData.filter(item => item.statusi === 'Aktiv')); // Default filtering to 'Aktiv'
           setLoading(false);
         });
-    setNderrimiID(Number(localStorage.getItem('nderrimiID')) || 0); 
 
     }, []);
 

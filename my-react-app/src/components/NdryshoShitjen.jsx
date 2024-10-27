@@ -9,6 +9,7 @@ import KerkoProduktin from './KerkoProduktin'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje'
+import useAuthData from '../useAuthData'
 
 export default function NdryshoShitjen() {
     const { shitjeID } = useParams()
@@ -36,7 +37,7 @@ export default function NdryshoShitjen() {
     const [nrPorosise,setNrPorosise] = useState()
     const [modalPerPyetje,setModalPerPyetje] = useState(false)
     const [inputDisabled,setInputDisabled] = useState(false)
-    const [nderrimiID,setNderrimiID] = useState()
+    const {nderrimiID, perdoruesiID} = useAuthData()
     const [shitjeProdukti,setShitjeProdukti] = useState()
 
     useEffect(() => {
@@ -60,7 +61,6 @@ export default function NdryshoShitjen() {
             } catch (error) {
                 toast.error('Error fetching data:', error);
             }
-            setNderrimiID(Number(localStorage.getItem('nderrimiID')) || 0); 
 
         };
         fetchData();
@@ -203,7 +203,6 @@ export default function NdryshoShitjen() {
       const handleRuajNdryshimet = async () => {
         setInputDisabled(true)
 
-        const perdoruesiID = localStorage.getItem('perdoruesiID');
 
         if (!perdoruesiID || !menyraPagesesID || !selectedSubjekti?.subjektiID || !products?.length) {
           toast.error('Të gjitha fushat e nevojshme duhet të plotësohen!');

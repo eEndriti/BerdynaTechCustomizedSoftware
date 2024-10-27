@@ -20,8 +20,13 @@ import Transaksionet from './components/Transaksionet';
 import Serviset from './components/Serviset';
 import DetajePerProdukt from './components/DetajePerProdukt';
 import NdryshoShitjen from './components/NdryshoShitjen';
+import Cookies from 'js-cookie'
+import Administrimi from './components/Administrimi';
 
-let aKaUser = localStorage.getItem('aKaUser')
+
+const isAuthenticated = () => {
+  return !!Cookies.get('aKaUser') 
+};
 
 const router = createBrowserRouter([
   {
@@ -30,89 +35,83 @@ const router = createBrowserRouter([
   },
   {
     path: '/',
-    element: <Layout />,
+    element: isAuthenticated() ? <Layout /> : <Navigate to='/login' replace />,
     children: [
       {
         path: '/faqjakryesore',
-       /* element: (
-          <ProtectedRoute role="admin">
-            <FaqjaKryesoreAdmin />
-          </ProtectedRoute>
-          
-        ),*/element:<FaqjaKryesore />
+        element: <FaqjaKryesore />,
       },
       {
         path: '/shitje',
-        element:<Shitje />
+        element: <Shitje />,
       },
       {
         path: '/ndryshoShitjen/:shitjeID',
-        element:<NdryshoShitjen />
+        element: <NdryshoShitjen />,
       },
       {
         path: '/shpenzim',
-        element:<Shpenzim />
+        element: <Shpenzim />,
       },
       {
         path: '/blerje',
-        element:<Blerje />
+        element: <Blerje />,
       },
       {
         path: '/serviset',
-        element:<Serviset />
+        element: <Serviset />,
       },
       {
         path: '/stoku',
-        element:<Produktet />
+        element: <Produktet />,
       },
       {
         path: '/detajePerProdukt/:produktiID',
-        element:<DetajePerProdukt/>
+        element: <DetajePerProdukt />,
       },
       {
         path: '/kategorite',
-        element:<Kategorite />
+        element: <Kategorite />,
       },
       {
         path: '/klient',
-        element:<Klient />
+        element: <Klient />,
       },
       {
         path: '/furnitor',
-        element:<Furnitor />
+        element: <Furnitor />,
       },
       {
         path: '/blerjet',
-        element:<Blerjet />
+        element: <Blerjet />,
       },
       {
         path: '/shitjet',
-        element:<Shitjet />
+        element: <Shitjet />,
       },
       {
         path: '/detajePerSubjekt/:lloji/:subjektiID',
-        element:<DetajePerKlient />
+        element: <DetajePerKlient />,
       },
       {
         path: '/nderrimet',
-        element:<Nderrimet />
+        element: <Nderrimet />,
       },
       {
         path: '/evidenca',
-        element:<Evidenca />
+        element: <Evidenca />,
       },
       {
         path: '/transaksionet',
-        element:<Transaksionet/>
+        element: <Transaksionet />,
+      },
+      {
+        path: '/administrimi',
+        element: <Administrimi />,
       },
       {
         path: '/',
-        element: (
-          <Navigate
-            to='/faqjaKryesore'
-            replace
-          />
-        ),
+        element: <Navigate to='/faqjakryesore' replace />,
       },
       {
         path: '*',

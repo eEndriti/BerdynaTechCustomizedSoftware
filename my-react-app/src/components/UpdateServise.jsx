@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Modal, Button, Form,Spinner, Toast,InputGroup } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import useAuthData from '../useAuthData';
 
 function UpdateServise({ show, handleClose, updateType, data = {} }) {
     const [loading, setLoading] = useState(false);
@@ -14,12 +15,9 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
     const [totaliPerPagese, setTotaliPerPagese] = useState(0);
     const [totaliIPageses, setTotaliIPageses] = useState(0);
     const [mbetjaPerPagese, setMbetjaPerPagese] = useState(0);
-    const [nderrimiID,setNderrimiID] = useState()
+    const {nderrimiID} = useAuthData()
 
-    useEffect(() => {
-        setNderrimiID(Number(localStorage.getItem('nderrimiID')) || 0); 
-
-    },[])
+    
     
     useEffect(() => {
 

@@ -6,26 +6,15 @@ import '../assets/css/Layout.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faExchangeAlt, faCoins, faGift } from '@fortawesome/free-solid-svg-icons';
 import AnimatedSpinner from './AnimatedSpinner'
+import useAuthData from '../useAuthData';
 
 function Layout() {
   const location = useLocation(); // Hook to get the current location object
-  const [avansi, setAvansi] = useState(0);
-  const [nderrimi, setNderrimi] = useState();
-  const [numriPercjelles, setNumriPercjelles] = useState();
-  const [user, setUser] = useState();
-  const [userRole, setUserRole] = useState();
+  const {avansi,nderrimiID,dataFillimit,numriPercjelles,emriPerdoruesit,aKaUser} = useAuthData ()
   const [perBonuse, setPerBonuse] = useState(0);
   const [profiti, setProfiti] = useState([]);
   const [totalShumaPerBonuse,setTotalShumaPerBonuse] = useState()
 
-  useEffect(() => {
-    setAvansi(localStorage.getItem('avansi'));
-    const data = formatDate(localStorage.getItem('dataFillimit'));
-    setNderrimi(data);
-    setNumriPercjelles(localStorage.getItem('numriPercjelles'));
-    setUser(localStorage.getItem('emriPerdoruesit'));
-    setUserRole(localStorage.getItem('aKaUser'));
-  }, []);
 
   useEffect(() => {
 
@@ -70,10 +59,15 @@ function Layout() {
     
   };
 
-  const formatDate = (date) => {
-    const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
-    return new Intl.DateTimeFormat('en-GB', options).format(new Date(date));
-  };
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+  
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); 
+    const year = date.getFullYear();
+  
+    return `${day}/${month}/${year}`;
+}
 
   const logOut = () => {
     localStorage.clear();
@@ -91,7 +85,7 @@ function Layout() {
                 <span className='me-4'>Avans: <strong>{avansi} €</strong></span>
   
                 <FontAwesomeIcon icon={faExchangeAlt} className='me-2 text-success fs-5' />
-                <span className='me-4'>Nderrimi: <strong>{numriPercjelles}-{nderrimi}</strong></span>
+                <span className='me-4'>Nderrimi: <strong>{numriPercjelles}-{formatDate(dataFillimit)}</strong></span>
   
                 <Col className='mt-2'>
                   <Col className='d-flex flex-row pb-2'>
@@ -107,7 +101,7 @@ function Layout() {
             <Col xs={12} md={4} className='d-flex justify-content-end align-items-center'>
               <span className='me-3'>
                 <FontAwesomeIcon icon={faUser} className='me-2 text-success fs-4' />
-                {user} <span className='d-block text-muted'>Roli: {userRole}</span>
+                {emriPerdoruesit} <span className='d-block text-muted'>Roli: {aKaUser}</span>
               </span>
               <NavLink onClick={() => logOut()} className='btn btn-danger'>
                 <FontAwesomeIcon icon={faSignOutAlt} className='me-1' /> Dil
@@ -157,8 +151,8 @@ function Layout() {
                 <NavLink exact to='/transaksionet' className='nav-link' activeClassName='active'>
                   Transaksionet
                 </NavLink>
-                <NavLink to='/parametrat' className='nav-link' activeClassName='active'>
-                  Parametrat
+                <NavLink to='/administrimi' className='nav-link' activeClassName='active'>
+                  Administrimi
                 </NavLink>
                 <div className='current-url p-3'>
                   <p>Current URL: {location.pathname}</p> {/* Display the current URL */}

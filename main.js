@@ -71,12 +71,27 @@ ipcMain.handle('kontrolloNderriminAktual', async () => {
 
 async function filloNderriminERi(perdoruesiID, avans) {
   const currentDate = new Date();
+  const formattedDate = currentDate.toISOString().split('T')[0]; 
 
   try {
     await sql.connect(config);
+
+    // Kontrollojm sa nderrime egzistojne per daten aktuale 
+    const result = await sql.query`
+      SELECT COUNT(*) AS shiftCount
+      FROM nderrimi
+      WHERE CONVERT(date, dataFillimit) = ${formattedDate}`;
+
+    // e Llogaritim numri Percjelles
+    const shiftCount = result.recordset[0].shiftCount;
+    const numriPercjelles = shiftCount + 1;
+
+    // i insertojme te dhenat e reja
     await sql.query`
       INSERT INTO nderrimi (perdoruesiID, dataFillimit, avansi, numriPercjelles, iHapur)
-      VALUES (${perdoruesiID}, ${currentDate}, ${avans}, 1, 1)`;
+      VALUES (${perdoruesiID}, ${currentDate}, ${avans}, ${numriPercjelles}, 1)`;
+    
+    console.log(`New shift started with numriPercjelles: ${numriPercjelles}`);
   } catch (err) {
     console.error('Error starting new shift:', err);
   } finally {

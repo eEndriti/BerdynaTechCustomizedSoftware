@@ -7,6 +7,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import KerkoProduktin from "./KerkoProduktin";
 import { useNavigate } from "react-router-dom";
+import useAuthData from "../useAuthData";
 
 export default function Blerje() {
 
@@ -27,7 +28,7 @@ export default function Blerje() {
   const [loading,setLoading] = useState(false)
   const [blerjet,setBlerjet] = useState([])
   const [nukPranohetNrFatures,setNukPranohetNrFatures] = useState(false)
-  const [nderrimiID,setNderrimiID] = useState()
+  const { nderrimiID,perdoruesiID } = useAuthData()
   
 
   useEffect(() => {
@@ -37,7 +38,6 @@ export default function Blerje() {
     window.api.fetchTableBlerje().then(receivedData => {
       setBlerjet(receivedData);
     });
-    setNderrimiID(Number(localStorage.getItem('nderrimiID')) || 0); 
 
   }, []);
 
@@ -116,7 +116,6 @@ export default function Blerje() {
 
   const handleRegjistro = async () => {
     setLoading(true);
-    const perdoruesiID = localStorage.getItem('perdoruesiID');
   
     if (!perdoruesiID || !menyraPagesesID) {
       setLoading(false); 

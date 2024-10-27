@@ -7,6 +7,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UpdateServise from './UpdateServise';
 import AnimatedSpinner from './AnimatedSpinner';
+import useAuthData from '../useAuthData';
 
 function FaqjaKryesoreAdmin() {
   const [loading,setLoading] = useState(true)
@@ -23,10 +24,9 @@ function FaqjaKryesoreAdmin() {
   const [modalPerServisUpdate,setModalPerServisUpdate] = useState()
   const [data,setData] = useState('')
   const [updateServisType,setUpdateServisType] = useState()
-  const [nderrimiID,setNderrimiID] = useState()
+  const { nderrimiID } = useAuthData()
   
   useEffect(() => {
-    setNderrimiID(Number(localStorage.getItem('nderrimiID')) || 0); 
 
     const fetchData = async () => {
       const [transaksionetData, shitjetData, servisetData] = await Promise.all([

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Modal, Button, Form, InputGroup, Spinner } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import useAuthData from '../useAuthData';
 
 const ShtoNjeProdukt = ({ show, handleClose,prejardhja }) => {
   const [kategorite, setKategorite] = useState([]);
@@ -17,6 +18,7 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja }) => {
     cmimiShitjes: '',
     komenti: ''
   });
+  const {perdoruesiID} = useAuthData()
 
   useEffect(() => {
     window.api.fetchTableKategoria().then((data) => setKategorite(data));
@@ -44,7 +46,6 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja }) => {
         return; 
       }
     setLoading(true);
-    const perdoruesiID = localStorage.getItem('perdoruesiID');
     let pershkrimi = productDetails.pershkrimi || null;
     const cpu = productDetails.cpu + '/' || '';
     const ram = productDetails.ram + '/' || '';

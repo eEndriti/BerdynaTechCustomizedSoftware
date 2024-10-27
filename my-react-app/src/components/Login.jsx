@@ -3,9 +3,9 @@ import { Container,Form, Button, Row, Modal } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AnimatedSpinner from './AnimatedSpinner';
+import Cookies from 'js-cookie'
 
 export default function Login() {
-  // Clear localStorage on load
   
   const [perdoruesit, setPerdoruesit] = useState([]);
   const [perdoruesiID, setPerdoruesiID] = useState('');
@@ -16,82 +16,127 @@ export default function Login() {
   const [loading,setLoading] = useState(true)
 
   useEffect(() => {
-    window.api.fetchTablePerdoruesi().then(receivedData => {
-      setPerdoruesit(receivedData);
-    });
-    window.api.kontrolloNderriminAktual().then(receivedShift => {
-      setCurrentShift(receivedShift);
-      setLoading(false);
-    });
-    localStorage.removeItem('aKaUser');
-    localStorage.removeItem('perdoruesiID');
-
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [receivedData, receivedShift] = await Promise.all([
+          window.api.fetchTablePerdoruesi(),
+          window.api.kontrolloNderriminAktual()
+        ]);
+        setPerdoruesit(receivedData);
+        setCurrentShift(receivedShift);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+        localStorage.clear()
+        clearAllCookies()
+      }
+    };
+  
+    fetchData();
   }, []);
   
+  const setSessionCookie = (name, value) => {
+    Cookies.set(name, value); // Metoda per me kriju cookies
+  };
+  function clearAllCookies() {
+    const cookies = document.cookie.split(";");
+  
+    cookies.forEach((cookie) => {
+      const name = cookie.split("=")[0].trim();
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    });
+  }
+  // Funksioni per te menagjuar login dhe nderrimet 
+  const kontrolloKredinencialet = async () => {
+    try {
+      const perdoruesi = perdoruesit.find(
+        user => user.perdoruesiID == perdoruesiID && user.fjalekalimiHash == fjalekalimi
+      );
+  
+      if (perdoruesi) {
+        
+        setSessionCookie('perdoruesiID', perdoruesiID);
+        setSessionCookie('emriPerdoruesit', perdoruesi.emri);
+        setSessionCookie('aKaUser', perdoruesi.roli);
 
-  // Function to handle login and shift management
-  const kontrolloKredinencialet = () => {
-    const perdoruesi = perdoruesit.find(
-      user => user.perdoruesiID == perdoruesiID && user.fjalekalimiHash == fjalekalimi
-    );
+        const currentDate = new Date().toLocaleDateString();
+  
+        if (currentShift) {
+          const shiftDate = new Date(currentShift.dataFillimit).toLocaleDateString();
 
-    if (perdoruesi) {
-      localStorage.setItem('perdoruesiID', perdoruesiID);
-      localStorage.setItem('emriPerdoruesit',perdoruesi.emri)
-
-      if (perdoruesi.roli === 'admin') {
-        localStorage.setItem('aKaUser', 'admin');
-      } else {
-        localStorage.setItem('aKaUser', 'perdorues');
-      }
-
-      // Check if the shift belongs to the current day
-      const currentDate = new Date().toLocaleDateString();
-      alert(currentShift)
-      if (currentShift) {
-        const shiftDate = new Date(currentShift.dataFillimit).toLocaleDateString();
-        localStorage.setItem('nderrimiID', currentShift.nderrimiID);
-        localStorage.setItem('avansi', currentShift.avansi); // Assuming 'avansi' is a direct property
-        localStorage.setItem('numriPercjelles', currentShift.numriPercjelles);
-        localStorage.setItem('dataFillimit', currentShift.dataFillimit);
-
-        if (currentDate !== shiftDate) {
-          // Automatically close the previous day's shift if it's still open
-          window.api.mbyllNderriminAktual().then(() => {
-            console.log('Previous shift closed.');
-            setShowAdvanceModal(true); // Show modal to enter advance amount for new shift
-          });
+          setSessionCookie('nderrimiID', currentShift.nderrimiID);
+          setSessionCookie('avansi', currentShift.avansi);
+          setSessionCookie('numriPercjelles', currentShift.numriPercjelles);
+          setSessionCookie('dataFillimit', currentShift.dataFillimit);
+  
+          if (currentDate !== shiftDate) {
+            await window.api.mbyllNderriminAktual();
+            console.log('Nderrimi paraprak u mbyll.');
+            setShowAdvanceModal(true);
+          } else {
+            window.location.href = 'faqjaKryesore';
+          }
         } else {
-          // Join the current shift if it's open for the current day
-          window.location.href = 'faqjaKryesore';
+          setShowAdvanceModal(true);
         }
       } else {
-        // No shift exists yet, so start a new one
-        setShowAdvanceModal(true); // Show modal for advance amount
+        toast.error('Keni Gabuar Perdoruesin ose Fjalekalimin');
       }
-    } else {
-      toast.error('Keni Gabuar Perdoruesin ose Fjalekalimin')
+    } catch (error) {
+      console.error("Error during login process:", error);
     }
   };
+  
+// Fillimi i nderrimit te ri
+    const filloNderriminERi = async () => {
+      try {
+        // Fillon nderrimin e ri duke perdorur perdoruesin dhe avansin e caktuar
+        await window.api.filloNderriminERi(perdoruesiID, avansAmount);
+        alert('Nderrimi i Ri Filloi, Punoni Trima!');
+        
+        // Pasi fillon nderrimi, ridrejto ne faqen kryesore
+        dataForCookies()
+        
+        // Mbyll modalin dhe pastron fushen e avansit
+        setShowAdvanceModal(false);
+        setAvansAmount('');
+      } catch (error) {
+        console.error("Gabim gjate fillimit te nderrimit te ri:", error);
+      }
+    };
 
-  // Start a new shift
-  const filloNderriminERi = () => {
-    window.api.filloNderriminERi(perdoruesiID, avansAmount).then(() => {
-      alert('Nderrimi i Ri Filloi, Punoni Trima!');
-      window.location.href = 'faqjaKryesore';
-    });
-    setShowAdvanceModal(false); // Close the modal
-    setAvansAmount(''); // Clear the advance amount
-  };
+    const dataForCookies = async () => {
+        try {
+          const [receivedShift] = await Promise.all([
+            window.api.kontrolloNderriminAktual()
+          ]);
 
-  // Admin can close the current shift and start a new one
-  const closeAndStartNewShift = () => {
-    if (currentShift) {
-      setShowAdvanceModal(true); // Show modal for new shift's advance amount
-    } else {
-      alert('No active shift to close.');
+          setSessionCookie('nderrimiID', receivedShift.nderrimiID);
+          setSessionCookie('avansi', receivedShift.avansi);
+          setSessionCookie('numriPercjelles', receivedShift.numriPercjelles);
+          setSessionCookie('dataFillimit', receivedShift.dataFillimit);
+
+        }catch(error){
+          console.log(error)
+        }finally {
+          window.location.href = 'faqjaKryesore';
+        }
     }
-  };
+
+    // Metoda per me mbyll nderrimin aktual edhe me fillu tjetrin
+    const closeAndStartNewShift = () => {
+      // Kontrollon nese ka nje nderrim aktual aktiv
+      if (currentShift) {
+        // Nese po, hap modalin per te lejuar perdoruesin te vendose avansin e ri
+        setShowAdvanceModal(true);
+      } else {
+        // Nese nuk ka nderrim aktiv, shfaq nje mesazh gabimi
+        alert('No active shift to close.');
+      }
+    };
+
 
   return (
     <Container>
@@ -139,7 +184,7 @@ export default function Login() {
           </Form>
       </Row>
 
-      {/* Modal for entering advance amount */}
+      {/* Modal per me shenu avansin */}
       <Modal show={showAdvanceModal} onHide={() => setShowAdvanceModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Sheno Avansin:</Modal.Title>
@@ -158,9 +203,9 @@ export default function Login() {
           </Button>
           <Button variant="primary" onClick={() => {
             if (currentShift) {
-              closeAndStartNewShift(); // Start a new shift after closing the current one
+              closeAndStartNewShift(); // Mbylle nderrimin aktual dhe fillo tjetrin
             } else {
-              filloNderriminERi(); // Start a new shift directly
+              filloNderriminERi(); // fillo nderrimin tjeter
             }
           }}>
             Vazhdo
