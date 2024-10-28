@@ -6,7 +6,7 @@ import MenyratPagesave from './MenyratPagesave';
 
 export default function Administrimi() {
   const [showModal, setShowModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('userManagement');
+  const [activeTab, setActiveTab] = useState('punonjesit');
   
   const openModal = () => setShowModal(true);
   const closeModal = () => setShowModal(false);

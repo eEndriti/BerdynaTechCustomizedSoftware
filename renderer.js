@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
 
     fetchTablePerdoruesi: () => ipcRenderer.invoke('fetchTablePerdoruesi'),
+    fetchTablePunonjesit: () => ipcRenderer.invoke('fetchTablePunonjesit'),
     kontrolloNderriminAktual: () => ipcRenderer.invoke('kontrolloNderriminAktual'),
     filloNderriminERi: (perdoruesiID, avans) => ipcRenderer.invoke('filloNderriminERi', perdoruesiID, avans),
     mbyllNderriminAktual: () => ipcRenderer.invoke('mbyllNderriminAktual'),
@@ -31,12 +32,15 @@ contextBridge.exposeInMainWorld('api', {
     insertKategorine: (data) => ipcRenderer.invoke('insertKategorine', data) ,
     insertSubjekti: (data) => ipcRenderer.invoke('insertSubjekti', data) ,
     insertServisi: (data) => ipcRenderer.invoke('insertServisi', data) ,
+    shtoPunonjes: (data) => ipcRenderer.invoke('shtoPunonjes', data) ,
+
     
     anuloShitjen: (data) => ipcRenderer.invoke('anuloShitjen', data) ,
     anuloBlerjen: (data) => ipcRenderer.invoke('anuloBlerjen', data) ,
     anuloShpenzimin: (data) => ipcRenderer.invoke('anuloShpenzimin', data) ,
     anuloPorosineOnline: (idPerAnulim) => ipcRenderer.invoke('anuloPorosineOnline', idPerAnulim) ,
     fshijeProduktin: (idPerAnulim) => ipcRenderer.invoke('fshijeProduktin', idPerAnulim) ,
+    fshijePunonjesin: (idPerAnulim) => ipcRenderer.invoke('fshijePunonjesin', idPerAnulim) ,
     deleteKategoria: (idPerAnulim) => ipcRenderer.invoke('deleteKategoria', idPerAnulim) ,
     deleteLlojiShpenzimit: (idPerAnulim) => ipcRenderer.invoke('deleteLlojiShpenzimit', idPerAnulim) ,
     deleteSubjekti: (idPerAnulim) => ipcRenderer.invoke('deleteSubjekti', idPerAnulim) ,
@@ -44,6 +48,7 @@ contextBridge.exposeInMainWorld('api', {
 
     ndryshoShpenzimin: (data) => ipcRenderer.invoke('ndryshoShpenzimin', data), 
     ndryshoLlojinShpenzimit: (data) => ipcRenderer.invoke('ndryshoLlojinShpenzimit', data),
+    ndryshoPunonjes: (data) => ipcRenderer.invoke('ndryshoPunonjes', data),
     ndryshoKategorine: (data) => ipcRenderer.invoke('ndryshoKategorine', data),
     ndryshoServisin: (data) => ipcRenderer.invoke('ndryshoServisin', data),
     ndryshoShitje: (data) => ipcRenderer.invoke('ndryshoShitje', data),

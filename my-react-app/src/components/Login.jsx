@@ -139,82 +139,84 @@ export default function Login() {
 
 
   return (
-    <Container>
-      {loading ? <AnimatedSpinner /> : 
-      <div className="container">
-      <Row className='mt-5 pt-5'>
-      <Form className="col-md-6 shadow-lg p-4 rounded bg-light">
-            <h3 className="text-center text-primary mb-4">Kyqu</h3>
-            
-            <Form.Group className="mb-3" controlId="formPerdoruesi">
-              <Form.Label>Perdoruesi:</Form.Label>
-              <Form.Control
-                as="select"
-                value={perdoruesiID}
-                onChange={e => setPerdoruesiID(e.target.value)}
-              >
-                <option value="" disabled>
-                  Selekto Perdoruesin
-                </option>
-                {perdoruesit.map(perdoruesi => (
-                  <option key={perdoruesi.perdoruesiID} value={perdoruesi.perdoruesiID}>
-                    {perdoruesi.emri}
-                  </option>
-                ))}
-              </Form.Control>
-            </Form.Group>
-
-            <Form.Group className="mb-3" controlId="formFjalekalimi">
-              <Form.Label>Fjalekalimi:</Form.Label>
-              <Form.Control
-                type="password"
-                value={fjalekalimi}
-                onChange={e => setFjalekalimi(e.target.value)}
-                placeholder="Shkruaj fjalekalimin..."
-              />
-            </Form.Group>
-
-            <Button
-              variant="primary"
-              className="w-100"
-              onClick={kontrolloKredinencialet}
+   <>
+    {loading ? <AnimatedSpinner/> :  <Container>
+    {loading ? <AnimatedSpinner /> : 
+    <div className="container">
+    <Row className='mt-5 pt-5'>
+    <Form className="col-md-6 shadow-lg p-4 rounded bg-light">
+          <h3 className="text-center text-primary mb-4">Kyqu</h3>
+          
+          <Form.Group className="mb-3" controlId="formPerdoruesi">
+            <Form.Label>Perdoruesi:</Form.Label>
+            <Form.Control
+              as="select"
+              value={perdoruesiID}
+              onChange={e => setPerdoruesiID(e.target.value)}
             >
-              Kyqu
-            </Button>
-          </Form>
-      </Row>
+              <option value="" disabled>
+                Selekto Perdoruesin
+              </option>
+              {perdoruesit.map(perdoruesi => (
+                <option key={perdoruesi.perdoruesiID} value={perdoruesi.perdoruesiID}>
+                  {perdoruesi.emri}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
 
-      {/* Modal per me shenu avansin */}
-      <Modal show={showAdvanceModal} onHide={() => setShowAdvanceModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Sheno Avansin:</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form.Control
-            type="number"
-            placeholder="Sheno Shumen e Avansit..."
-            value={avansAmount}
-            onChange={e => setAvansAmount(e.target.value)}
-          />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowAdvanceModal(false)}>
-            Anulo
+          <Form.Group className="mb-3" controlId="formFjalekalimi">
+            <Form.Label>Fjalekalimi:</Form.Label>
+            <Form.Control
+              type="password"
+              value={fjalekalimi}
+              onChange={e => setFjalekalimi(e.target.value)}
+              placeholder="Shkruaj fjalekalimin..."
+            />
+          </Form.Group>
+
+          <Button
+            variant="primary"
+            className="w-100"
+            onClick={kontrolloKredinencialet}
+          >
+            Kyqu
           </Button>
-          <Button variant="primary" onClick={() => {
-            if (currentShift) {
-              closeAndStartNewShift(); // Mbylle nderrimin aktual dhe fillo tjetrin
-            } else {
-              filloNderriminERi(); // fillo nderrimin tjeter
-            }
-          }}>
-            Vazhdo
-          </Button>
-        </Modal.Footer>
-      </Modal>
-      <ToastContainer/>
-    </div>
-    }
-    </Container>
+        </Form>
+    </Row>
+
+    {/* Modal per me shenu avansin */}
+    <Modal show={showAdvanceModal} onHide={() => setShowAdvanceModal(false)}>
+      <Modal.Header closeButton>
+        <Modal.Title>Sheno Avansin:</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form.Control
+          type="number"
+          placeholder="Sheno Shumen e Avansit..."
+          value={avansAmount}
+          onChange={e => setAvansAmount(e.target.value)}
+        />
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={() => setShowAdvanceModal(false)}>
+          Anulo
+        </Button>
+        <Button variant="primary" onClick={() => {
+          if (currentShift) {
+            closeAndStartNewShift(); // Mbylle nderrimin aktual dhe fillo tjetrin
+          } else {
+            filloNderriminERi(); // fillo nderrimin tjeter
+          }
+        }}>
+          Vazhdo
+        </Button>
+      </Modal.Footer>
+    </Modal>
+    <ToastContainer/>
+  </div>
+  }
+  </Container>}
+   </>
   );
 }

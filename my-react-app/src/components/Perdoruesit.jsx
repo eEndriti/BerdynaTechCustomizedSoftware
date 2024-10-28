@@ -49,12 +49,13 @@ export default function Perdoruesit() {
                     <td>{item.fjalekalimiHash}</td>
                     <td>{item.roli}</td>
                     <td>
-                    <Button className='btn btn-primary'  onClick={'() => ndryshoTransaksionin(item.lloji, item.transaksioniID)'}>
-                        <FontAwesomeIcon icon={faPen}/>
-                    </Button>
-                    <Button className='btn bg-transparent border-0 text-danger' onClick={''}>
-                        <FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} />
-                    </Button>
+                    <Button variant="outline-primary" className="me-2" onClick={'() => ndryshoTransaksionin(item.lloji, item.transaksioniID)'}>
+                              <FontAwesomeIcon icon={faPen} /> Ndrysho
+                            </Button>
+                            
+                            <Button variant="outline-danger" className="me-2" onClick={'() => handleDelete(item.transaksioniID)'}>
+                              <FontAwesomeIcon icon={faTrashCan} /> Fshij
+                            </Button>
                     </td>
                 </>
                 ) : 'Nuk ka te dhena!'}

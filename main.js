@@ -51,6 +51,24 @@ ipcMain.handle('fetchTablePerdoruesi', async () => {
   return data;
 });
 
+async function fetchTablePunonjesit() {
+  try {
+    await sql.connect(config);
+    const result = await sql.query`SELECT * FROM punonjesit`;
+    return result.recordset;
+  } catch (err) {
+    console.error('Error retrieving data:', err);
+    return [];
+  } finally {
+    await sql.close();
+  }
+}
+
+ipcMain.handle('fetchTablePunonjesit', async () => {
+  const data = await fetchTablePunonjesit();
+  return data;
+});
+
 async function kontrolloNderriminAktual() {
   try {
     await sql.connect(config);
@@ -554,6 +572,43 @@ ipcMain.handle('insertLogs', async (event, data) => {
     }
   }
 });
+
+ipcMain.handle('shtoPunonjes', async (event, data) => {
+  let connection;
+  let dataDheOra
+  try {
+    dataDheOra = await getDateTime(); // Await the result of getDateTime
+    // Connect to the database
+    connection = await sql.connect(config);
+
+    const insertPunonjesi = `
+      INSERT INTO punonjesit (
+        emri, mbiemri, dataPunësimit, pagaBaze, aktiv, nrTelefonit
+      ) VALUES (
+        @emri, @mbiemri, @dataPunësimit, @pagaBaze, @aktiv, @nrTelefonit
+      )
+    `;
+
+    await connection.request()
+      .input('emri', sql.VarChar, data.emri)
+      .input('mbiemri', sql.VarChar, data.mbiemri)
+      .input('dataPunësimit', sql.Date, dataDheOra)
+      .input('pagaBaze', sql.Decimal(18, 2), data.pagaBaze)
+      .input('aktiv', sql.Int, 1)
+      .input('nrTelefonit', sql.Int, data.nrTelefonit)
+      .query(insertPunonjesi);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
 
 ipcMain.handle('insertShpenzimi', async (event, data) => {
   let connection;
@@ -2076,6 +2131,31 @@ ipcMain.handle('fshijeProduktin', async (event, idPerAnulim) => {
   }
 });
 
+ipcMain.handle('fshijePunonjesin', async (event, idPerAnulim) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const deleteQuery = `
+        DELETE FROM punonjesit 
+        WHERE punonjesID = @punonjesID
+      `;
+
+      await connection.request().input('punonjesID', sql.Int, idPerAnulim).query(deleteQuery);
+      
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
 ipcMain.handle('deleteKategoria', async (event, idPerAnulim) => {
   let connection;
 
@@ -2255,6 +2335,43 @@ ipcMain.handle('ndryshoLlojinShpenzimit', async (event, data) => {
       .input('shumaStandarde', sql.Decimal(10,2), data.shumaStandarde)
       .input('llojetShpenzimeveID', sql.Int, data.llojetShpenzimeveID)
       .query(updateLlojetShpezimeveQuery);   
+
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+ipcMain.handle('ndryshoPunonjes', async (event, data) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const updatePunonjes = `
+        Update punonjesit 
+        SET emri = @emri,
+            mbiemri = @mbiemri,
+            pagaBaze = @pagaBaze,
+            aktiv = @aktiv,
+            nrTelefonit = @nrTelefonit
+        where punonjesID = @punonjesID
+      `;
+
+      await connection.request()
+      .input('emri', sql.VarChar, data.emri)
+      .input('mbiemri', sql.VarChar, data.mbiemri)
+      .input('pagaBaze', sql.Decimal(10,2), data.pagaBaze)
+      .input('aktiv', sql.Int, data.aktiv)
+      .input('nrTelefonit', sql.VarChar, data.nrTelefonit)
+      .input('punonjesID', sql.Int, data.punonjesID)
+      .query(updatePunonjes);   
 
       return { success: true };
 
