@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Table, Modal, Form, InputGroup, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faTrashCan, faGift, faCoins, faCheckCircle, faTimesCircle, faPhone } from '@fortawesome/free-solid-svg-icons';
+import { faPen, faTrashCan, faGift, faCoins, faCheckCircle, faTimesCircle,faPencil,faCheck } from '@fortawesome/free-solid-svg-icons';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AnimatedSpinner from './AnimatedSpinner';
 import ModalPerPyetje from './ModalPerPyetje'
+import DetajePunonjes from './DetajePunonjes';
 
 export default function Punonjesit() {
     const [loading, setLoading] = useState(true);
@@ -14,13 +15,16 @@ export default function Punonjesit() {
     const [buttonLoading, setButtonLoading] = useState(false);
     const [dataPerPunonjes, setDataPerPunonjes] = useState({ emri: '', mbiemri: '', pagaBaze: '', nrTelefonit: '',aktiv:1 ,punonjesID:'' });
     const [showModalPerPyetje,setShowModalPerPyetje] = useState(false)
-    const [idPerDelete,setIdPerDelete] = useState()
+    const [idPerPerdorim,setIdPerPerdorim] = useState()
     const [perNdryshim,setPerNdryshim] = useState()
     const [loadingPerBonuse,setLoadingPerBonuse] = useState(true)
     const [modalPerBonuse,setModalPerBonuse] = useState(false)
     const [muaji,setMuaji] = useState()
     const [viti,setViti] = useState()
     const [bonuset,setBonuset] = useState()
+    const [editingBonuset,setEditingBonuset] = useState(false)
+    const [showDetaje,setShowDetaje] = useState(false)
+
     const monthNamesAlbanian = [
       "Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor",
       "Korrik", "Gusht", "Shtator", "Tetor", "Nëntor", "Dhjetor"
@@ -45,12 +49,12 @@ export default function Punonjesit() {
         if (localStorage.getItem('sukses') === 'true') {
             toast.success(localStorage.getItem('msg'));
             setTimeout(() => {
-              setTimeout(localStorage.removeItem('sukses') , 1500)
+              setTimeout((localStorage.removeItem('sukses'),localStorage.removeItem('msg')) , 1500)
             }, 1000)
         }else if(localStorage.getItem('sukses') === 'false') {
             toast.error('Punonjesi u shtua me sukses!');
             setTimeout(() => {
-              setTimeout(localStorage.removeItem('sukses') , 1500)
+              setTimeout((localStorage.removeItem('sukses'),localStorage.removeItem('msg')) , 1500)
             }, 1000)
         }
     }, []);
@@ -90,7 +94,7 @@ export default function Punonjesit() {
     };
 
     const modalPerPyetje = (id) => {
-      setIdPerDelete(id)
+      setIdPerPerdorim(id)
       setShowModalPerPyetje(true)
     }
     const handleConfirmModal = async() => {
@@ -124,8 +128,9 @@ export default function Punonjesit() {
       }
   };
 
-  const kalkuloBonuset = async () => {
+  const kalkuloBonuset = async (punonjesID) => {
     setModalPerBonuse(true)
+    setIdPerPerdorim(punonjesID)
     const date = new Date();
     
      setMuaji(monthNamesAlbanian[date.getMonth()])
@@ -184,6 +189,30 @@ export default function Punonjesit() {
     }
   },[bonuset])
 
+  const paguajBonuset = async () => {
+
+    setButtonLoading(true);
+    const data = {
+        punonjesID:idPerPerdorim,
+        shuma:totalBonuset,
+        muajiViti: muaji+viti
+    }
+
+      try {
+         if(data){
+            await window.api.paguajBonuset(data);
+            localStorage.setItem('sukses', 'true');
+            localStorage.setItem('msg', 'Pagesa e Bonuseve Perfundoi me Sukses');
+         }
+      } catch (error) {
+          localStorage.setItem('sukses', 'false');
+          localStorage.setItem('msg', error);
+      } finally {
+          setButtonLoading(false);
+          window.location.reload();
+      }
+  }
+
     return (
         <>
             <ToastContainer position="top-center" autoClose={3000} />
@@ -229,6 +258,11 @@ export default function Punonjesit() {
                                                     <Button variant="outline-danger" className="me-2" onClick={() => modalPerPyetje(item.punonjesID)}>
                                                         <FontAwesomeIcon icon={faTrashCan} /> Fshij
                                                     </Button>
+
+                                                    <Button variant="outline-secondary"  onClick={() => setShowDetaje(!showDetaje)}>
+                                                        Detaje...
+                                                    </Button>
+
                                                    {item.aktiv ? <> <Button variant="outline-success" className="me-2" onClick={() => kalkuloBonuset(item.punonjesID)}>
                                                         <FontAwesomeIcon icon={faGift} /> Bonuse
                                                     </Button>
@@ -246,6 +280,11 @@ export default function Punonjesit() {
                         </Table>
                     </Row>
 
+                    {showDetaje && 
+                        <Row>
+                            <DetajePunonjes/>
+                        </Row>
+                    }
                     <Modal
                         show={shtoPunonjesModal}
                         onHide={() => {
@@ -363,7 +402,7 @@ export default function Punonjesit() {
                      <Modal size='lg'
                         show={modalPerBonuse}
                         onHide={() => {
-                            buttonLoading ? null : setModalPerBonuse(false);
+                            buttonLoading || editingBonuset ? null : setModalPerBonuse(false);
                         }}
                         centered
                     >
@@ -417,7 +456,7 @@ export default function Punonjesit() {
                                                 <tr key={index}>
                                                   <td>{index + 1}</td>
                                                   <td>{formattedDate}</td>
-                                                  <td>{item.totaliBonuseve.toFixed(2)} €</td>
+                                                  <td>{item.totaliBonuseve} €</td>
                                                 </tr>
                                               );
                                             })}
@@ -428,24 +467,41 @@ export default function Punonjesit() {
                                   <AnimatedSpinner />
                                 )}
                             </Form>
-                            <Row>
-                              <h5 className='text-end px-4'>Totali i Bonuseve eshte: <span className='d-inline fs-5 fw-bold text-success border-bottom border-1 rounded border-dark'>{totalBonuset.toFixed(2)}</span> €</h5>
+                             <Row className="d-flex justify-content-center">
+                                <Form className="w-75 p-3  rounded shadow-sm">
+                                    <Col className="w-100 d-flex align-items-center justify-content-end">
+                                        <Form.Label className="me-2 mb-0">Totali: </Form.Label>
+                                        <Form.Control
+                                            className="d-inline fs-5 fw-bold  border-bottom  w-25"
+                                            value={totalBonuset}
+                                            onChange={(e) => setTotalBonuset(e.target.value)}
+                                            disabled={!editingBonuset}
+                                        />
+                                        <Button
+                                            variant={editingBonuset ?"outline-success" :"outline-primary"}
+                                            className="ms-2"
+                                            onClick={() => setEditingBonuset(!editingBonuset)}
+                                        >
+                                            {editingBonuset ? <FontAwesomeIcon icon={faCheck} /> : <FontAwesomeIcon icon={faPencil} />}
+                                        </Button>
+                                    </Col>
+                                </Form>
                             </Row>
                         </Modal.Body>
                         }
                         <Modal.Footer>
                             <Button variant="outline-secondary" disabled={buttonLoading} onClick={() => {
-                            buttonLoading ? null : setModalPerBonuse(false);
+                            buttonLoading || editingBonuset ? null : setModalPerBonuse(false);
                         }}>
                                 Mbyll
                             </Button>
-                            <Button variant="primary" disabled={buttonLoading} onClick={() => {perNdryshim ? ndryshoPunonjes() :shtoPunonjes()}}>
+                            <Button variant="primary" disabled={buttonLoading || editingBonuset} onClick={() => paguajBonuset()}>
                                 {buttonLoading ? (
                                     <>
                                         <Spinner size="sm" /> {'Duke ruajtur'}
                                     </>
                                 ) : (
-                                    <>{perNdryshim ? 'Ruaj Ndryshimet' : 'Regjistro'}</>
+                                     'Paguaj Bonuset' 
                                 )}
                             </Button>
                         </Modal.Footer>

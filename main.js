@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const sql = require('mssql');
+const bcrypt = require('bcrypt');
 
 // MSSQL connection configuration
 const config = {
@@ -13,6 +14,24 @@ const config = {
     trustServerCertificate: true
   }
 };
+
+async function hashData(plainTextPassword) {
+  try {
+    const saltRounds = 10;
+
+    // Generate the salt
+    const salt = await bcrypt.genSalt(saltRounds);
+    
+    // Generate the hash using the salt
+    const hash = await bcrypt.hash(plainTextPassword, salt);
+    
+    // Return both the salt and hash
+    return { success: true, salt, hash };
+  } catch (error) {
+    console.error('Error generating hash and salt:', error);
+    return { success: false, error: error.message };
+  }
+}
 
 async function getDateTime() {
   const apiUrl = 'http://worldtimeapi.org/api/ip'; // World Time API endpoint for datetime
@@ -32,6 +51,60 @@ async function getDateTime() {
   }
 }
 
+async function verifyHashData(input, storedHash) {
+  try {
+    // Compare the input password with the stored hash
+    const isMatch = await bcrypt.compare(input, storedHash);
+
+    if (isMatch) {
+      return { success: true, message: 'Fjalekalimi i sakte' };
+    } else {
+      return { success: false, message: 'Fjalekalimi i gabuar' };
+    }
+  } catch (error) {
+    console.error('Error verifying:', error);
+    return { success: false, message: error.message };
+  }
+}
+
+ipcMain.handle('login', async (event, data) => {
+  let connection;
+  try {
+    connection = await sql.connect(config);
+
+    // Query to get the user by their ID
+    const result = await connection.request()
+      .input('perdoruesiID', sql.Int, data.perdoruesiID)
+      .query('SELECT * FROM Perdoruesi WHERE perdoruesiID = @perdoruesiID');
+
+    if (result.recordset.length === 0) {
+      return { success: false, message: 'Nuk Egziston Perdoruesi!' };
+    }
+
+    const user = result.recordset[0];
+
+    const matchResult = await verifyHashData( data.fjalekalimi, user.fjalekalimiHash);
+
+    if (!matchResult.success) {
+      return { success: false, message: matchResult.message }; 
+    }
+
+    return {
+      success: true,
+      perdoruesiID: user.perdoruesiID,
+      emertimi: user.emri,
+      roli: user.roli
+    };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, message: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
 
 async function fetchTablePerdoruesi() {
   try {
@@ -573,6 +646,87 @@ ipcMain.handle('insertLogs', async (event, data) => {
   }
 });
 
+ipcMain.handle('shtoPerdoruesin', async (event, data) => {
+  let connection;
+  try {
+    connection = await sql.connect(config);
+
+    const { success, hash, salt, error } = await hashData(data.fjalekalimi);
+
+    if (!success) {
+      return { success: false, error: error };
+    }
+
+    const insert = `
+      INSERT INTO Perdoruesi (
+        emri, fjalekalimiHash, salt, roli
+      ) VALUES (
+        @emri, @fjalekalimiHash, @salt, @roli
+      )
+    `;
+    await connection.request()
+      .input('emri', sql.VarChar, data.emri)
+      .input('fjalekalimiHash', sql.VarChar, hash)
+      .input('salt', sql.VarChar, salt)
+      .input('roli', sql.VarChar, data.roli)
+      .query(insert);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+ipcMain.handle('shtoOpsionPagese', async (event, data) => {
+  let connection;
+  try {
+    connection = await sql.connect(config);
+
+    const insert = `
+      INSERT INTO menyraPageses (
+        emertimi
+      ) OUTPUT INSERTED.menyraPagesesID VALUES (
+        @emertimi
+      )
+    `;
+
+    const insertedResult  = await connection.request()
+      .input('emertimi', sql.VarChar, data.emertimi)
+      .query(insert);
+
+      const menyraID = insertedResult.recordset[0].menyraPagesesID;
+
+      const insertBalanci = `
+      INSERT INTO balanci (
+        shuma,menyraPagesesID
+      ) OUTPUT INSERTED.menyraPagesesID VALUES (
+        @shuma,@menyraPagesesID
+      )
+    `;
+
+    await connection.request()
+      .input('shuma', sql.VarChar, data.shuma)
+      .input('menyraPagesesID', sql.Int, menyraID)
+      .query(insertBalanci);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+
+
 ipcMain.handle('shtoPunonjes', async (event, data) => {
   let connection;
   let dataDheOra
@@ -955,6 +1109,62 @@ ipcMain.handle('deleteSubjekti', async (event, idPerAnulim) => {
   }
 });
 
+ipcMain.handle('deleteOpsionPagese', async (event, idPerAnulim) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const deleteFromBalanci = `
+        DELETE FROM balanci 
+        WHERE menyraPagesesID = @menyraPagesesID
+      `;
+
+      const deleteFromMenyraPagesave = `
+        DELETE FROM menyraPageses 
+        WHERE menyraPagesesID = @menyraPagesesID
+      `;
+
+      await connection.request().input('menyraPagesesID', sql.Int, idPerAnulim).query(deleteFromBalanci);
+      await connection.request().input('menyraPagesesID', sql.Int, idPerAnulim).query(deleteFromMenyraPagesave);
+      
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+ipcMain.handle('deletePerdoruesi', async (event, idPerAnulim) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const deletePerdoruesi = `
+        DELETE FROM Perdoruesi 
+        WHERE perdoruesiID = @perdoruesiID
+      `;
+
+      await connection.request().input('perdoruesiID', sql.Int, idPerAnulim).query(deletePerdoruesi);
+      
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
 ipcMain.handle('deleteServisi', async (event, idPerAnulim) => {
   let connection;
 
@@ -998,6 +1208,87 @@ ipcMain.handle('ndryshoSubjektin', async (event, data) => {
       .input('kontakti', sql.Int, data.kontakti)
       .input('subjektiID', sql.Int, data.subjektiID)
       .query(updateSubjektiQuery);   
+
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+ipcMain.handle('ndryshoOpsionPagese', async (event, data) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const updateBalanci = `
+        Update balanci 
+        SET shuma = @shuma
+        where menyraPagesesID = @menyraPagesesID
+      `;
+
+      await connection.request()
+      .input('shuma', sql.Decimal(18,2), data.shuma)
+      .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+      .query(updateBalanci);   
+
+      const updateMenyra = `
+      Update menyraPageses 
+      SET emertimi = @emertimi
+      where menyraPagesesID = @menyraPagesesID
+      `;
+
+      await connection.request()
+      .input('emertimi', sql.VarChar, data.emertimi)
+      .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+      .query(updateMenyra);   
+
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+ipcMain.handle('ndryshoPerdorues', async (event, data) => {
+  let connection;
+
+  const { success, hash, salt, error } = await hashData(data.fjalekalimi);
+
+    if (!success) {
+      return { success: false, error: error };
+    }
+
+  try {
+    connection = await sql.connect(config);
+
+      const update = `
+        Update Perdoruesi 
+        SET emri = @emri,
+            fjalekalimiHash = @hash,
+            salt = @salt,
+            roli = @roli
+        where perdoruesiID = @perdoruesiID
+      `;
+
+      await connection.request()
+      .input('emri', sql.VarChar, data.emri)
+      .input('hash', sql.VarChar, hash)
+      .input('salt', sql.VarChar, salt)
+      .input('roli', sql.VarChar, data.roli)
+      .input('perdoruesiID', sql.Int, data.perdoruesiID)
+      .query(update);   
 
       return { success: true };
 
@@ -1372,6 +1663,63 @@ ipcMain.handle('insertLlojiShpenzimit', async (event, data) => {
     }
   }
 });
+
+const monthYearToDate = (muajiViti) => {
+  const months = {
+      'Janar': '01', 'Shkurt': '02', 'Mars': '03', 'Prill': '04',
+      'Maj': '05', 'Qershor': '06', 'Korrik': '07', 'Gusht': '08',
+      'Shtator': '09', 'Tetor': '10', 'Nentor': '11', 'Dhjetor': '12'
+  };
+
+  const month = muajiViti.slice(0, -4); 
+  const year = muajiViti.slice(-4); 
+
+  return `${year}-${months[month] || '01'}-01`; // Format as YYYY-MM-DD
+};
+
+ipcMain.handle('paguajBonuset', async (event, data) => {
+    let connection;
+    try {
+      // Connect to the database
+      connection = await sql.connect(config);
+      const formattedMuajiViti = monthYearToDate(data.muajiViti);
+
+      const insert = `
+        INSERT INTO bonuset (
+          punonjesID, shuma,muajiViti
+        )  VALUES (
+          @punonjesID, @shuma,@muajiViti
+        )
+      `;
+      console.log('asssssssssssssssssssss',data)
+      await connection.request()
+        .input('punonjesID', sql.Int, data.punonjesID)
+        .input('shuma', sql.Decimal(18,2), data.shuma)
+        .input('muajiViti', sql.Date, formattedMuajiViti)
+        .query(insert);
+
+        const updateBalanci = `
+        UPDATE balanci
+        SET shuma = shuma - @shuma
+        WHERE menyraPagesesID = @menyraPagesesID
+      `;
+ 
+      await connection.request()
+        .input('shuma', sql.Decimal(10,2), data.shuma)
+        .input('menyraPagesesID', sql.Int, 1)
+        .query(updateBalanci);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Database error:', error);
+      return { success: false, error: error.message };
+    } finally {
+      if (connection) {
+        await sql.close();
+      }
+    }
+  });
+
 
 ipcMain.handle('insertBlerje', async (event, data) => {
   let connection;
@@ -2384,6 +2732,8 @@ ipcMain.handle('ndryshoPunonjes', async (event, data) => {
     }
   }
 });
+
+
 
 const createWindow = () => {
   const win = new BrowserWindow({
