@@ -277,6 +277,66 @@ ipcMain.handle('fetchTableShitje', async () => {
   return data;
 });
 
+async function fetchTablePagat() {
+  try {
+    await sql.connect(config);
+    const result = await sql.query`
+        select p.pagaID,p.punonjesID,p.dataPageses,p.paga,p.bonusi,p.zbritje,pn.emri,m.emertimi as 'menyraPageses' from paga p
+        join punonjesit pn on pn.punonjesID = p.punonjesID
+		    join menyraPageses m on m.menyraPagesesID = p.menyraPagesesID
+        `;
+    return result.recordset;
+  } catch (err) {
+    console.error('Error retrieving data:', err);
+    return [];
+  } finally {
+    await sql.close();
+  }
+}
+ipcMain.handle('fetchTablePagat', async () => {
+  const data = await fetchTablePagat();
+  return data;
+});
+
+async function fetchTableBonuset() {
+  try {
+    await sql.connect(config);
+    const result = await sql.query`
+        select b.bonusID,b.muajiViti,b.punonjesID,b.shuma, m.emertimi as 'menyraPageses' from bonuset b
+	      join menyraPageses m on m.menyraPagesesID = b.menyraPagesesID
+        `;
+    return result.recordset;
+  } catch (err) {
+    console.error('Error retrieving data:', err);
+    return [];
+  } finally {
+    await sql.close();
+  }
+}
+ipcMain.handle('fetchTableBonuset', async () => {
+  const data = await fetchTableBonuset();
+  return data;
+});
+
+async function fetchTablePushimet() {
+  try {
+    await sql.connect(config);
+    const result = await sql.query`
+        select * from pushimet
+        `;
+    return result.recordset;
+  } catch (err) {
+    console.error('Error retrieving data:', err);
+    return [];
+  } finally {
+    await sql.close();
+  }
+}
+ipcMain.handle('fetchTablePushimet', async () => {
+  const data = await fetchTablePushimet();
+  return data;
+});
+
 async function fetchTableBlerje() {
   try {
     await sql.connect(config);
@@ -1686,9 +1746,9 @@ ipcMain.handle('paguajBonuset', async (event, data) => {
 
       const insert = `
         INSERT INTO bonuset (
-          punonjesID, shuma,muajiViti
+          punonjesID, shuma,muajiViti,menyraPagesesID
         )  VALUES (
-          @punonjesID, @shuma,@muajiViti
+          @punonjesID, @shuma,@muajiViti,@menyraPagesesID
         )
       `;
       console.log('asssssssssssssssssssss',data)
@@ -1696,6 +1756,7 @@ ipcMain.handle('paguajBonuset', async (event, data) => {
         .input('punonjesID', sql.Int, data.punonjesID)
         .input('shuma', sql.Decimal(18,2), data.shuma)
         .input('muajiViti', sql.Date, formattedMuajiViti)
+        .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
         .query(insert);
 
         const updateBalanci = `
@@ -1706,7 +1767,7 @@ ipcMain.handle('paguajBonuset', async (event, data) => {
  
       await connection.request()
         .input('shuma', sql.Decimal(10,2), data.shuma)
-        .input('menyraPagesesID', sql.Int, 1)
+        .input('menyraPagesesID', sql.Int, data.menyraPageses)
         .query(updateBalanci);
 
       return { success: true };
@@ -1720,6 +1781,51 @@ ipcMain.handle('paguajBonuset', async (event, data) => {
     }
   });
 
+ipcMain.handle('paguajPagen', async (event, data) => {
+    let connection;
+    try {
+      // Connect to the database
+      connection = await sql.connect(config);
+
+      const insert = `
+        INSERT INTO paga (
+          punonjesID, dataPageses,paga,bonusi,zbritje,menyraPagesesID
+        )  VALUES (
+          @punonjesID, @dataPageses,@paga,@bonusi,@zbritje,@menyraPagesesID
+        )
+      `;
+      console.log('asssssssssssssssssssss',data)
+      await connection.request()
+        .input('punonjesID', sql.Int, data.punonjesID)
+        .input('dataPageses', sql.Date, data.dataPageses)
+        .input('paga', sql.Decimal(18,2), data.paga)
+        .input('bonusi', sql.Decimal(18,2), data.bonusi)
+        .input('zbritje', sql.Decimal(18,2), data.zbritje)
+        .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+        .query(insert);
+
+        const updateBalanci = `
+        UPDATE balanci
+        SET shuma = shuma - @shuma
+        WHERE menyraPagesesID = @menyraPagesesID
+      `;
+      const shumaPerPagese = Number(data.paga) + Number(data.bonusi) - Number(data.zbritje)
+      console.log(shumaPerPagese)
+      await connection.request()
+        .input('shuma', sql.Decimal(10,2), shumaPerPagese)
+        .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+        .query(updateBalanci);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Database error:', error);
+      return { success: false, error: error.message };
+    } finally {
+      if (connection) {
+        await sql.close();
+      }
+    }
+  });
 
 ipcMain.handle('insertBlerje', async (event, data) => {
   let connection;
@@ -2504,6 +2610,31 @@ ipcMain.handle('fshijePunonjesin', async (event, idPerAnulim) => {
   }
 });
 
+ipcMain.handle('fshijePagen', async (event, idPerAnulim) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const deleteQuery = `
+        DELETE FROM paga 
+        WHERE pagaID = @pagaID
+      `;
+
+      await connection.request().input('pagaID', sql.Int, idPerAnulim).query(deleteQuery);
+      
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
 ipcMain.handle('deleteKategoria', async (event, idPerAnulim) => {
   let connection;
 
@@ -2586,6 +2717,99 @@ ipcMain.handle('ndryshoKategorine', async (event, data) => {
     }
   }
 });
+
+ipcMain.handle('ndryshoPagen', async (event, data) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+      const oldDataQuery = `SELECT menyraPagesesID, paga,bonusi,zbritje FROM paga WHERE pagaID = @pagaID`;
+      const oldDataResult = await connection.request()
+          .input('pagaID', sql.Int, data.pagaID)
+          .query(oldDataQuery);
+
+      if (oldDataResult.recordset.length === 0) {
+          throw new Error("Record not found");
+      }
+
+      const oldData = oldDataResult.recordset[0];
+      const oldMenyraPagesesID = oldData.menyraPagesesID;
+      const oldBalanci = oldData.paga + oldData.bonusi - oldData.zbritje;
+      const newBalanci = data.shuma + data.bonusi - data.zbritje
+      let updateBalanciQuery;
+
+      if(oldMenyraPagesesID == data.menyraPagesesID){
+        if(oldBalanci < newBalanci){
+          updateBalanciQuery = `UPDATE balanci 
+                                SET shuma = shuma - @shuma
+                                where menyraPagesesID = @menyraPagesesID
+                                `      
+                                await connection.request()
+                                .input('shuma', sql.Decimal(10,2), newBalanci)
+                                .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+                                .query(updateBalanciQuery);
+                                                                     
+        }else if(oldBalanci > newBalanci){
+          updateBalanciQuery = `UPDATE balanci 
+                                SET shuma = shuma + @shuma
+                                where menyraPagesesID = @menyraPagesesID
+                                `
+                                await connection.request()
+                                .input('shuma', sql.Decimal(10,2), newBalanci)
+                                .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+                                .query(updateBalanciQuery);
+        }
+      }else {
+          updateBalanciQuery = `UPDATE balanci 
+          SET shuma = shuma + @shuma
+          where menyraPagesesID = @menyraPagesesID
+          `
+  
+        await connection.request()
+          .input('shuma', sql.Decimal(10,2), oldBalanci)
+          .input('menyraPagesesID', sql.Int, oldMenyraPagesesID)
+          .query(updateBalanciQuery);
+
+          updateBalanciQuery = `UPDATE balanci 
+          SET shuma = shuma - @shuma
+          where menyraPagesesID = @menyraPagesesID
+          `
+  
+        await connection.request()
+          .input('shuma', sql.Decimal(10,2), newBalanci)
+          .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+          .query(updateBalanciQuery);
+      }
+
+      const update = `
+        Update paga 
+        SET paga = @paga,
+            bonusi = @bonusi,
+            zbritje = @zbritje,
+            menyraPagesesID = @menyraPagesesID
+        where pagaID = @pagaID
+      `;
+
+      await connection.request()
+      .input('paga', sql.Decimal(18,2), data.paga)
+      .input('bonusi', sql.Decimal(18,2), data.bonusi)
+      .input('zbritje', sql.Decimal(18,2), data.zbritje)
+      .input('pagaID', sql.Int, data.pagaID)
+      .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+      .query(update);   
+
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
 ipcMain.handle('ndryshoShpenzimin', async (event, data) => {
   let connection;
   try {

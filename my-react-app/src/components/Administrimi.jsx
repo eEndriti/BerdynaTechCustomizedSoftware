@@ -1,38 +1,66 @@
 import React, { useState } from 'react';
-import { Button, Modal, Form, Tabs, Tab, Table } from 'react-bootstrap';
+import { Button, Container } from 'react-bootstrap';
 import Punonjesit from './Punonjesit';
 import Perdoruesit from './Perdoruesit';
 import MenyratPagesave from './MenyratPagesave';
+import Nderrimet from './Nderrimet'
 
 export default function Administrimi() {
+  const [activeSection, setActiveSection] = useState('punonjesit');
 
-  const [activeTab, setActiveTab] = useState('perdoruesit');
-  
+  const renderActiveSection = () => {
+    switch (activeSection) {
+      case 'punonjesit':
+        return <Punonjesit />;
+      case 'perdoruesit':
+        return <Perdoruesit />;
+      case 'menyratPagesave':
+        return <MenyratPagesave />;
+      case 'nderrimet':
+        return <Nderrimet/>
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="administrimi-container p-4" style={{ backgroundColor: '#f5f5f5' }}>
+    <Container className="administrimi-container p-4" >
       <h2 className="mb-4 text-center" style={{ color: '#2A3D4E' }}>Administrimi dhe Menaxhimi</h2>
-      
-      <Tabs
-        id="administrimi-tabs"
-        activeKey={activeTab}
-        onSelect={(tab) => setActiveTab(tab)}
-        className="mb-4"
-      >
-       
-        
-        <Tab eventKey="punonjesit" title="Menaxhimi i Punonjësve" >
-          <Punonjesit />
-        </Tab>
+      <hr/>
+      <div className="d-flex justify-content-center mb-4">
+        <Button
+          variant={activeSection === 'punonjesit' ? 'primary' : 'outline-primary'}
+          onClick={() => setActiveSection('punonjesit')}
+          className="mx-2"
+        >
+          Menaxhimi i Punonjësve
+        </Button>
+        <Button
+          variant={activeSection === 'perdoruesit' ? 'primary' : 'outline-primary'}
+          onClick={() => setActiveSection('perdoruesit')}
+          className="mx-2"
+        >
+          Menaxhimi i Perdoruesve
+        </Button>
+        <Button
+          variant={activeSection === 'menyratPagesave' ? 'primary' : 'outline-primary'}
+          onClick={() => setActiveSection('menyratPagesave')}
+          className="mx-2"
+        >
+          Menaxhimi i Menyrave te Pagesave
+        </Button>
+        <Button
+          variant={activeSection === 'nderrimet' ? 'primary' : 'outline-primary'}
+          onClick={() => setActiveSection('nderrimet')}
+          className="mx-2"
+        >
+          Menaxhimi i Nderrimeve
+        </Button>
+      </div>
 
-        <Tab eventKey="perdoruesit" title="Menaxhimi i Perdoruesve">
-            <Perdoruesit />
-        </Tab>
-
-        <Tab eventKey="menyratPagesave" title="Menaxhimi i Menyrave te Pagesave">
-          <MenyratPagesave />
-        </Tab>
-      </Tabs>
-    </div>
+      <div className="section-content">
+        {renderActiveSection()}
+      </div>
+    </Container>
   );
 }

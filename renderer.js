@@ -21,6 +21,10 @@ contextBridge.exposeInMainWorld('api', {
     fetchTablePagesa: () => ipcRenderer.invoke('fetchTablePagesa'),
     fetchTableProfiti: () => ipcRenderer.invoke('fetchTableProfiti'),
     fetchTableProfitiDitor: () => ipcRenderer.invoke('fetchTableProfitiDitor'),
+    fetchTableBonuset: () => ipcRenderer.invoke('fetchTableBonuset'),
+    fetchTablePushimet: () => ipcRenderer.invoke('fetchTablePushimet'),
+    fetchTablePagat: () => ipcRenderer.invoke('fetchTablePagat'),
+
 
     insertTransaksioniAndShitje: (data) => ipcRenderer.invoke('insert-transaksioni-and-shitje', data),
     insertShpenzimi: (data) => ipcRenderer.invoke('insertShpenzimi', data),
@@ -46,6 +50,7 @@ contextBridge.exposeInMainWorld('api', {
     anuloPorosineOnline: (idPerAnulim) => ipcRenderer.invoke('anuloPorosineOnline', idPerAnulim) ,
     fshijeProduktin: (idPerAnulim) => ipcRenderer.invoke('fshijeProduktin', idPerAnulim) ,
     fshijePunonjesin: (idPerAnulim) => ipcRenderer.invoke('fshijePunonjesin', idPerAnulim) ,
+    fshijePagen: (idPerAnulim) => ipcRenderer.invoke('fshijePagen', idPerAnulim) ,
     deleteKategoria: (idPerAnulim) => ipcRenderer.invoke('deleteKategoria', idPerAnulim) ,
     deleteLlojiShpenzimit: (idPerAnulim) => ipcRenderer.invoke('deleteLlojiShpenzimit', idPerAnulim) ,
     deleteSubjekti: (idPerAnulim) => ipcRenderer.invoke('deleteSubjekti', idPerAnulim) ,
@@ -54,6 +59,8 @@ contextBridge.exposeInMainWorld('api', {
     deleteOpsionPagese: (idPerAnulim) => ipcRenderer.invoke('deleteOpsionPagese', idPerAnulim) ,
 
     paguajBonuset: (data) => ipcRenderer.invoke('paguajBonuset', data),
+    paguajPagen: (data) => ipcRenderer.invoke('paguajPagen', data),
+
 
     ndryshoShpenzimin: (data) => ipcRenderer.invoke('ndryshoShpenzimin', data), 
     ndryshoLlojinShpenzimit: (data) => ipcRenderer.invoke('ndryshoLlojinShpenzimit', data),
@@ -63,6 +70,7 @@ contextBridge.exposeInMainWorld('api', {
     ndryshoShitje: (data) => ipcRenderer.invoke('ndryshoShitje', data),
     ndryshoPerdorues: (data) => ipcRenderer.invoke('ndryshoPerdorues', data),
     ndryshoOpsionPagese: (data) => ipcRenderer.invoke('ndryshoOpsionPagese', data),
+    ndryshoPagen: (data) => ipcRenderer.invoke('ndryshoPagen', data),
     ndryshoSubjektin: (data) => ipcRenderer.invoke('ndryshoSubjektin', data)
 
 

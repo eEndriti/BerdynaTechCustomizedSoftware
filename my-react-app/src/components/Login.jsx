@@ -106,7 +106,6 @@ export default function Login() {
     setButtonLoading(true);
     try {
       await window.api.filloNderriminERi(perdoruesiID, avansAmount);
-      alert('Nderrimi i Ri Filloi, Punoni Trima!');
       await dataForCookies(); 
       setShowAdvanceModal(false);
       setAvansAmount('');

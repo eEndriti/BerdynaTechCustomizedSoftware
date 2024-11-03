@@ -17,20 +17,8 @@ export default function Punonjesit() {
     const [showModalPerPyetje,setShowModalPerPyetje] = useState(false)
     const [idPerPerdorim,setIdPerPerdorim] = useState()
     const [perNdryshim,setPerNdryshim] = useState()
-    const [loadingPerBonuse,setLoadingPerBonuse] = useState(true)
-    const [modalPerBonuse,setModalPerBonuse] = useState(false)
-    const [muaji,setMuaji] = useState()
-    const [viti,setViti] = useState()
-    const [bonuset,setBonuset] = useState()
-    const [editingBonuset,setEditingBonuset] = useState(false)
     const [showDetaje,setShowDetaje] = useState(false)
 
-    const monthNamesAlbanian = [
-      "Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor",
-      "Korrik", "Gusht", "Shtator", "Tetor", "Nëntor", "Dhjetor"
-    ];
-    const [totalBonuset,setTotalBonuset] = useState()
-    let t;
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -128,90 +116,6 @@ export default function Punonjesit() {
       }
   };
 
-  const kalkuloBonuset = async (punonjesID) => {
-    setModalPerBonuse(true)
-    setIdPerPerdorim(punonjesID)
-    const date = new Date();
-    
-     setMuaji(monthNamesAlbanian[date.getMonth()])
-     setViti(date.getFullYear())
-    try{
-      await window.api.fetchTableQuery(`
-              DECLARE @Year INT = 2024;
-              DECLARE @Month INT = ${date.getMonth()+1};
-
-              WITH DailyProfit AS (
-                  SELECT 
-                      CONVERT(DATE, t.dataTransaksionit) AS dataTransaksionit,
-                      SUM(p.shuma) AS DailyShuma
-                  FROM 
-                      transaksioni AS t
-                  JOIN 
-                      profiti AS p ON t.transaksioniID = p.transaksioniID
-                  WHERE 
-                      YEAR(t.dataTransaksionit) = @Year AND MONTH(t.dataTransaksionit) = @Month
-                  GROUP BY 
-                      CONVERT(DATE, t.dataTransaksionit)
-              ),
-              DailyBonuses AS (
-                  SELECT 
-                      dataTransaksionit,
-                      DailyShuma,
-                      CASE 
-                          WHEN DailyShuma >= 200 THEN FLOOR((DailyShuma - 200) / 100.0) * 5 + 10
-                          ELSE 0 
-                      END AS DailyBonus
-                  FROM 
-                      DailyProfit
-              )
-              SELECT 
-                  dataTransaksionit,
-                  SUM(DailyBonus) AS totaliBonuseve
-              FROM 
-                  DailyBonuses
-              GROUP BY 
-                  dataTransaksionit
-              ORDER BY 
-                  dataTransaksionit;`).then((receivedData) => {
-                setBonuset(receivedData.filter((data) => data.totaliBonuseve > 0))
-              })
-    }catch(error){
-      console.log(error)
-    }finally{
-      setLoadingPerBonuse(false)
-    }
-  }
-
-  useEffect(()=>{
-    if(bonuset && bonuset.length > 0){
-      const total = bonuset.reduce((acc, item) => acc + item.totaliBonuseve, 0);
-      setTotalBonuset(total)
-    }
-  },[bonuset])
-
-  const paguajBonuset = async () => {
-
-    setButtonLoading(true);
-    const data = {
-        punonjesID:idPerPerdorim,
-        shuma:totalBonuset,
-        muajiViti: muaji+viti
-    }
-
-      try {
-         if(data){
-            await window.api.paguajBonuset(data);
-            localStorage.setItem('sukses', 'true');
-            localStorage.setItem('msg', 'Pagesa e Bonuseve Perfundoi me Sukses');
-         }
-      } catch (error) {
-          localStorage.setItem('sukses', 'false');
-          localStorage.setItem('msg', error);
-      } finally {
-          setButtonLoading(false);
-          window.location.reload();
-      }
-  }
 
     return (
         <>
@@ -220,7 +124,9 @@ export default function Punonjesit() {
                 <AnimatedSpinner />
             ) : (
                 <Container>
+                    
                     <Row>
+                        
                         <Button variant="success" className="w-25" onClick={() => {emptyDataPerPunonjes(); setShtoPunonjesModal(true)}}>
                             Shto Punonjës të Ri
                         </Button>
@@ -252,23 +158,16 @@ export default function Punonjesit() {
                                                 <td>{item.aktiv == 1 ? 'Aktiv' : 'Jo Aktiv'}</td>
                                                 <td>{item.nrTelefonit}</td>
                                                 <td>
-                                                    <Button variant="outline-primary" className="me-2" onClick={() => {setPerNdryshim(item); setShtoPunonjesModal(true);setDataPerPunonjes(item)}}>
+                                                    <Button variant="outline-primary" className="me-2" onClick={() => {emptyDataPerPunonjes();setPerNdryshim(item); setShtoPunonjesModal(true);setDataPerPunonjes(item)}}>
                                                         <FontAwesomeIcon icon={faPen} /> Ndrysho
                                                     </Button>
-                                                    <Button variant="outline-danger" className="me-2" onClick={() => modalPerPyetje(item.punonjesID)}>
+                                                    <Button variant="outline-danger" className="me-2" onClick={() => {emptyDataPerPunonjes();modalPerPyetje(item.punonjesID)}}>
                                                         <FontAwesomeIcon icon={faTrashCan} /> Fshij
                                                     </Button>
 
-                                                    <Button variant="outline-secondary"  onClick={() => setShowDetaje(!showDetaje)}>
+                                                    <Button variant="outline-secondary"  onClick={() => {setShowDetaje(prev => !prev);setDataPerPunonjes(item)}}>
                                                         Detaje...
-                                                    </Button>
-
-                                                   {item.aktiv ? <> <Button variant="outline-success" className="me-2" onClick={() => kalkuloBonuset(item.punonjesID)}>
-                                                        <FontAwesomeIcon icon={faGift} /> Bonuse
-                                                    </Button>
-                                                    <Button variant="outline-secondary">
-                                                        <FontAwesomeIcon icon={faCoins} className="text-warning" /> Rroga
-                                                    </Button></>: null}
+                                                    </Button>                                          
                                                 </td>
                                             </>
                                         ) : (
@@ -279,10 +178,10 @@ export default function Punonjesit() {
                             </tbody>
                         </Table>
                     </Row>
-
+                    <hr/>
                     {showDetaje && 
                         <Row>
-                            <DetajePunonjes/>
+                            <DetajePunonjes punonjesID = {dataPerPunonjes.punonjesID} emri = {dataPerPunonjes.emri} defaultPaga={dataPerPunonjes.pagaBaze.toFixed(2)}/>
                         </Row>
                     }
                     <Modal
@@ -392,116 +291,6 @@ export default function Punonjesit() {
                                     </>
                                 ) : (
                                     <>{perNdryshim ? 'Ruaj Ndryshimet' : 'Regjistro'}</>
-                                )}
-                            </Button>
-                        </Modal.Footer>
-                    </Modal>
-
-                     {/** Modal per Bonuse */}
-
-                     <Modal size='lg'
-                        show={modalPerBonuse}
-                        onHide={() => {
-                            buttonLoading || editingBonuset ? null : setModalPerBonuse(false);
-                        }}
-                        centered
-                    >
-                        <Modal.Header closeButton>
-                            <Modal.Title className="text-dark">Forma Per Kalkulim dhe Pagese te Bonuseve</Modal.Title>
-                        </Modal.Header>
-                          {loadingPerBonuse ? <AnimatedSpinner /> : 
-                          <Modal.Body>
-                            <Form>
-                                <Row className="mb-3 d-flex justify-content-start">
-                                    <Col md={3}>
-                                        <Form.Group controlId="formFirstName">
-                                            <Form.Label>Muaji</Form.Label>
-                                            <Form.Control
-                                                type="text"
-                                                name="muaji"
-                                                value={muaji}
-                                                disabled={true}
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                    <Col md={3}>
-                                      <Form.Group controlId="formFirstName">
-                                              <Form.Label>Viti</Form.Label>
-                                              <Form.Control
-                                                  type="text"
-                                                  name="viti"
-                                                  value={viti}
-                                                  disabled={true}
-                                              />
-                                          </Form.Group>
-                                    </Col>
-                                </Row>
-                                {bonuset && bonuset.length > 0 ? (
-                                  <Row className="mb-3 align-items-center">
-                                     <Table striped bordered hover responsive className="text-center">
-                                          <thead className="table-light">
-                                            <tr>
-                                              <th>Nr.</th>
-                                              <th>Data</th>
-                                              <th>Shuma (€)</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody>
-                                            {bonuset.map((item, index) => {
-                                               t = t+item.totaliBonuseve
-                                               console.log('t',t)
-                                              const transactionDate = new Date(item.dataTransaksionit);
-                                              const formattedDate = `${transactionDate.getDate()} ${monthNamesAlbanian[transactionDate.getMonth()]} ${transactionDate.getFullYear()}`;
-                                              return (
-                                                <tr key={index}>
-                                                  <td>{index + 1}</td>
-                                                  <td>{formattedDate}</td>
-                                                  <td>{item.totaliBonuseve} €</td>
-                                                </tr>
-                                              );
-                                            })}
-                                          </tbody>
-                                        </Table>
-                                  </Row>
-                                ) : (
-                                  <AnimatedSpinner />
-                                )}
-                            </Form>
-                             <Row className="d-flex justify-content-center">
-                                <Form className="w-75 p-3  rounded shadow-sm">
-                                    <Col className="w-100 d-flex align-items-center justify-content-end">
-                                        <Form.Label className="me-2 mb-0">Totali: </Form.Label>
-                                        <Form.Control
-                                            className="d-inline fs-5 fw-bold  border-bottom  w-25"
-                                            value={totalBonuset}
-                                            onChange={(e) => setTotalBonuset(e.target.value)}
-                                            disabled={!editingBonuset}
-                                        />
-                                        <Button
-                                            variant={editingBonuset ?"outline-success" :"outline-primary"}
-                                            className="ms-2"
-                                            onClick={() => setEditingBonuset(!editingBonuset)}
-                                        >
-                                            {editingBonuset ? <FontAwesomeIcon icon={faCheck} /> : <FontAwesomeIcon icon={faPencil} />}
-                                        </Button>
-                                    </Col>
-                                </Form>
-                            </Row>
-                        </Modal.Body>
-                        }
-                        <Modal.Footer>
-                            <Button variant="outline-secondary" disabled={buttonLoading} onClick={() => {
-                            buttonLoading || editingBonuset ? null : setModalPerBonuse(false);
-                        }}>
-                                Mbyll
-                            </Button>
-                            <Button variant="primary" disabled={buttonLoading || editingBonuset} onClick={() => paguajBonuset()}>
-                                {buttonLoading ? (
-                                    <>
-                                        <Spinner size="sm" /> {'Duke ruajtur'}
-                                    </>
-                                ) : (
-                                     'Paguaj Bonuset' 
                                 )}
                             </Button>
                         </Modal.Footer>
