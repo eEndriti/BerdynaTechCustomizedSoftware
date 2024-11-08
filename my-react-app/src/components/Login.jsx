@@ -86,7 +86,6 @@ export default function Login() {
 
           if (currentDate !== shiftDate) {
             await window.api.mbyllNderriminAktual();
-            console.log('Nderrimi paraprak u mbyll.');
             setShowAdvanceModal(true);
           } else {
             window.location.href = 'faqjaKryesore';
@@ -204,16 +203,15 @@ export default function Login() {
                 Anulo
               </Button>
               <Button variant="primary" disabled={buttonLoading} onClick={() => {
-                if (currentShift) {
-                  closeAndStartNewShift();
-                } else {
+                
                   filloNderriminERi();
-                }
+                
               }}>
                 {buttonLoading ? <><Spinner size="sm" /> {'Duke Startuar...'}</> : 'Vazhdo'}
               </Button>
             </Modal.Footer>
           </Modal>
+
           <ToastContainer />
         </Container>
       )}

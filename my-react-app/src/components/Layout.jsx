@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
+import { Container, Row, Col,ProgressBar } from 'react-bootstrap';
 import logo from '../assets/BtechLogo.png';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import '../assets/css/Layout.css'
@@ -10,7 +10,7 @@ import useAuthData from '../useAuthData';
 
 function Layout() {
   const location = useLocation(); // Hook to get the current location object
-  const {avansi,nderrimiID,dataFillimit,numriPercjelles,emriPerdoruesit,aKaUser} = useAuthData ()
+  const {avansi,dataFillimit,numriPercjelles,emriPerdoruesit,aKaUser} = useAuthData ()
   const [perBonuse, setPerBonuse] = useState(0);
   const [profiti, setProfiti] = useState([]);
   const [totalShumaPerBonuse,setTotalShumaPerBonuse] = useState()
@@ -40,23 +40,10 @@ function Layout() {
     setPerBonuse(bonus);
   }
 
-  const LoadingBar = () => {
+  const getPerBonuseFillBar = () => {
     const totalShuma = profiti.reduce((accumulator, current) => accumulator + current.shuma, 0);
     const percentage = (totalShuma / 200) * 100;
-      return (
-        <div style={{ width: '100%', backgroundColor: '#e0e0df', borderRadius: '5px' }}>
-          <div
-            style={{
-              width: `${percentage}%`,
-              backgroundColor: percentage >= 100 ? 'green' : 'red',
-              height: '5px',
-              borderRadius: '5px',
-              transition: 'width 0.5s ease-in-out',
-            }}
-          />
-        </div>
-      );
-    
+      return percentage  
   };
 
   function formatDate(dateString) {
@@ -92,7 +79,7 @@ function Layout() {
                     <FontAwesomeIcon icon={faGift} className='me-2 text-info fs-5' />
                     <span>Bonuse: <strong>{perBonuse} €</strong> <span className='d-inline mx-4 text-secondary'>{totalShumaPerBonuse} €</span></span>
                   </Col>
-                  <Col className='w-50'><LoadingBar  /> </Col>
+                  <Col className='w-50'><ProgressBar animated variant={getPerBonuseFillBar() > 199 ? 'success' : 'info'} now={getPerBonuseFillBar()} style={{height:'7px'}}/></Col>
                 </Col>
               </div>
                

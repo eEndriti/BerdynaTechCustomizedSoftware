@@ -18,6 +18,7 @@ export default function Punonjesit() {
     const [idPerPerdorim,setIdPerPerdorim] = useState()
     const [perNdryshim,setPerNdryshim] = useState()
     const [showDetaje,setShowDetaje] = useState(false)
+    const [reload,setReload] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -45,7 +46,7 @@ export default function Punonjesit() {
               setTimeout((localStorage.removeItem('sukses'),localStorage.removeItem('msg')) , 1500)
             }, 1000)
         }
-    }, []);
+    }, [reload]);
 
     const handleChangeShtoPunonjes = (event) => {
         const { name, value } = event.target;
@@ -81,14 +82,18 @@ export default function Punonjesit() {
         }
     };
 
+    const triggerReload = () => {
+        setReload(prev => !prev)
+    }
+
     const modalPerPyetje = (id) => {
       setIdPerPerdorim(id)
       setShowModalPerPyetje(true)
     }
     const handleConfirmModal = async() => {
-      if(idPerDelete){
+      if(idPerPerdorim){
         try{
-          await window.api.fshijePunonjesin(idPerDelete)
+          await window.api.fshijePunonjesin(idPerPerdorim)
           localStorage.setItem('sukses', 'true');
           localStorage.setItem('msg', 'Punonjesi u Fshie me Sukses');
       } catch (error) {
@@ -112,8 +117,9 @@ export default function Punonjesit() {
           localStorage.setItem('msg', error);
       } finally {
           setButtonLoading(false);
-          window.location.reload();
-      }
+          setShtoPunonjesModal(false)
+          triggerReload()
+        }
   };
 
 
