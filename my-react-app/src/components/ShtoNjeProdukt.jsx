@@ -3,11 +3,13 @@ import { Modal, Button, Form, InputGroup, Spinner } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import useAuthData from '../useAuthData';
+import AnimatedSpinner from './AnimatedSpinner';
 
-const ShtoNjeProdukt = ({ show, handleClose,prejardhja }) => {
+const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
   const [kategorite, setKategorite] = useState([]);
   const [selectedKategoria, setSelectedKategoria] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [meFature, setMeFature] = useState(false);
   const [productDetails, setProductDetails] = useState({
     emertimi: '',
     cpu: '',
@@ -19,10 +21,18 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja }) => {
     komenti: ''
   });
   const {perdoruesiID} = useAuthData()
-
+  
   useEffect(() => {
+    
     window.api.fetchTableKategoria().then((data) => setKategorite(data));
-  }, []);
+    if(produkti){
+      setMeFature(produkti.meFatureTeRregullt == 'po') 
+      setProductDetails(produkti)
+      console.log('prd',produkti)
+      handleCategoryChange(produkti.kategoriaID)
+    }
+    
+  }, [produkti]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -30,7 +40,13 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja }) => {
   };
 
   const handleCategoryChange = (e) => {
-    const selectedCategoryId = parseInt(e.target.value, 10);
+    let selectedCategoryId
+    if(produkti){
+      selectedCategoryId = parseInt(e, 10);
+      
+    }else{
+      selectedCategoryId = parseInt(e.target.value, 10);
+    }
     const selectedCategory = kategorite.find(
       (kategoria) => kategoria.kategoriaID === selectedCategoryId
     );
@@ -68,9 +84,9 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja }) => {
         cpu: cpu,
         ram: ram,
         disku: disku,
-        gpu: gpu
+        gpu: gpu,
+        meFature
       };
-
       try {
         const result = await window.api.insertProduktin(data);
 
@@ -103,10 +119,76 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja }) => {
     }
   };
 
+  const ndryshoProduktin = async () => {
+    if (parseFloat(productDetails.cmimiShitjes) <= parseFloat(productDetails.cmimiBlerjes)) {
+        toast.warn('Cmimi Shitjes duhet të jetë më i madh se Cmimi Blerjes!', {
+          position: 'top-center',
+          autoClose: 1500,
+        });
+        return; 
+      }
+    setLoading(true);
+    let pershkrimi = productDetails.pershkrimi || null;
+    const cpu = productDetails.cpu + '/' || '';
+    const ram = productDetails.ram + '/' || '';
+    const disku = productDetails.disku + '/' || '';
+    const gpu = productDetails.gpu + '/' || '';
+
+    if (selectedKategoria.komponenta === 'true') {
+      pershkrimi = cpu + ram + disku + gpu;
+    }
+
+    if (selectedKategoria && productDetails.emertimi && perdoruesiID) {
+      const data = {
+        emertimi: productDetails.emertimi,
+        pershkrimi: pershkrimi,
+        sasia: 0,
+        cmimiBlerjes: productDetails.cmimiBlerjes,
+        cmimiShitjes: productDetails.cmimiShitjes,
+        kategoriaID: selectedKategoria.kategoriaID,
+        komenti: productDetails.komenti || '',
+        cpu: cpu,
+        ram: ram,
+        disku: disku,
+        gpu: gpu,
+        meFature,
+        produktiID:produkti.produktiID
+      };
+      try {
+        const result = await window.api.ndryshoProduktin(data);
+
+        if (result.success) {
+          toast.success('Produkti u Ndryshua me Sukses!', {
+            position: 'top-center',
+            autoClose: 1500,
+          });
+          setTimeout(() => {
+            handleClose();
+          }, 1500);
+        } else {
+          toast.error('Gabim gjatë regjistrimit: ' + result.error);
+        }
+      } catch (error) {
+        toast.error('Gabim gjatë komunikimit me serverin.' + error);
+      } finally {
+        setLoading(false);
+        if(prejardhja == 'meRefresh'){
+            window.location.reload()
+        }
+      }
+    } else {
+      toast.warn('Ju Lutem Plotesoni te Gjitha Fushat!', {
+        position: 'top-center',
+        autoClose: 1500,
+      });
+      setLoading(false);
+    }
+  };
+
   return (
     <Modal show={show} onHide={handleClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Shto Një Produkt</Modal.Title>
+        <Modal.Title>{produkti ? 'Ndrysho' : 'Shto'} Një Produkt</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form>
@@ -249,6 +331,14 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja }) => {
               onChange={handleInputChange}
             />
           </Form.Group>
+
+          <Form.Group className='d-flex mt-3'>
+            <Form.Label className='mx-2'>Me Fature te Rregullt</Form.Label>
+            <Form.Check
+              checked = {meFature}
+              onClick={() => setMeFature(prev => !prev)}
+            />
+          </Form.Group>
         </Form>
       </Modal.Body>
       <Modal.Footer>
@@ -257,8 +347,8 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja }) => {
         </Button>
         <Button
           variant="primary"
-          onClick={handleShtoProduktin}
-          disabled={loading || productDetails.emertimi.length < 1 || selectedKategoria == null || productDetails.cmimiBlerjes.length < 1 || productDetails.cmimiShitjes.length < 1}
+          onClick={() => {produkti != null ? ndryshoProduktin() : handleShtoProduktin()}}
+          disabled={loading}
         >
           {loading ? (
             <>
@@ -272,7 +362,7 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja }) => {
               Duke ruajtur...
             </>
           ) : (
-            'Ruaj Produktin'
+            <>{produkti != null ? 'Ruaj Ndryshimet' : 'Shto Produktin'}</>
           )}
         </Button>
       </Modal.Footer>

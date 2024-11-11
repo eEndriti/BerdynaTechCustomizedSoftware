@@ -446,7 +446,7 @@ async function fetchTableProdukti() {
   try {
     await sql.connect(config);
     const result = await sql.query`
-    select  p.produktiID,p.shifra,p.emertimi,p.pershkrimi,p.sasia,p.cmimiBlerjes,p.cmimiShitjes,p.dataKrijimit,p.komenti,p.meFatureTeRregullt,k.emertimi as 'emertimiKategorise',k.tvsh,k.kategoriaID from produkti p
+    select  p.produktiID,p.shifra,p.emertimi,p.pershkrimi,p.sasia,p.cmimiBlerjes,p.cmimiShitjes,p.dataKrijimit,p.komenti,p.meFatureTeRregullt,p.cpu,p.ram,p.gpu,p.disku,k.emertimi as 'emertimiKategorise',k.tvsh,k.kategoriaID from produkti p
 join kategoria k on k.kategoriaID = p.kategoriaID
     `;
     return result.recordset;
@@ -996,13 +996,14 @@ ipcMain.handle('insertProduktin', async (event, data) => {
    
     const insertProdukti = `
       INSERT INTO produkti (
-        shifra, emertimi, pershkrimi, sasia, cmimiBlerjes, cmimiShitjes, kategoriaID,dataKrijimit,komenti,cpu,ram,gpu,disku
+        shifra, emertimi, pershkrimi, sasia, cmimiBlerjes, cmimiShitjes, kategoriaID,dataKrijimit,komenti,cpu,ram,gpu,disku,meFatureTeRregullt
       )  VALUES (
-       @shifra, @emertimi, @pershkrimi, @sasia, @cmimiBlerjes, @cmimiShitjes, @kategoriaID,@dataKrijimit,@komenti,@cpu,@ram,@gpu,@disku
+       @shifra, @emertimi, @pershkrimi, @sasia, @cmimiBlerjes, @cmimiShitjes, @kategoriaID,@dataKrijimit,@komenti,@cpu,@ram,@gpu,@disku,@meFatureTeRregullt
       )
     `;
+    const meFature = data.meFature ? 'po' : 'jo'
 
-    const produktiResult = await connection.request()
+    await connection.request()
       .input('shifra', sql.VarChar, shifra)
       .input('emertimi', sql.VarChar, data.emertimi)
       .input('pershkrimi', sql.VarChar, data.pershkrimi)
@@ -1016,6 +1017,7 @@ ipcMain.handle('insertProduktin', async (event, data) => {
       .input('ram', sql.VarChar, data.ram)
       .input('gpu', sql.VarChar, data.gpu)
       .input('disku', sql.VarChar, data.disku)
+      .input('meFatureTeRregullt', sql.VarChar, meFature)
       .query(insertProdukti);
 
     return { success: true };
@@ -1028,6 +1030,58 @@ ipcMain.handle('insertProduktin', async (event, data) => {
     }
   }
 });
+
+ipcMain.handle('ndryshoProduktin', async (event, data) => {
+  let connection;
+  let dataDheOra
+  try {
+    dataDheOra = await getDateTime(); // Await the result of getDateTime
+    // Connect to the database
+    connection = await sql.connect(config);
+   
+    const insertProdukti = `
+     Update produkti 
+        SET emertimi = @emertimi,
+            pershkrimi = @pershkrimi,
+            cmimiBlerjes = @cmimiBlerjes,
+            cmimiShitjes = @cmimiShitjes,
+            kategoriaID = @kategoriaID,
+            komenti = @komenti,
+            cpu = @cpu,
+            ram = @ram,
+            gpu = @gpu,
+            disku = @disku,
+            meFatureTeRregullt = @meFatureTeRregullt
+        where produktiID = @produktiID
+`
+    const meFature = data.meFature ? 'po' : 'jo'
+    console.log('daaaaaaaaaaaaaaaadaaaaaaaa',data)
+    await connection.request()
+      .input('emertimi', sql.VarChar, data.emertimi)
+      .input('pershkrimi', sql.VarChar, data.pershkrimi)
+      .input('cmimiBlerjes', sql.Decimal(18,2), data.cmimiBlerjes)
+      .input('cmimiShitjes', sql.Decimal(18,2), data.cmimiShitjes)
+      .input('kategoriaID', sql.Int, data.kategoriaID)
+      .input('komenti', sql.VarChar, data.komenti)
+      .input('cpu', sql.VarChar, data.cpu)
+      .input('ram', sql.VarChar, data.ram)
+      .input('gpu', sql.VarChar, data.gpu)
+      .input('disku', sql.VarChar, data.disku)
+      .input('meFatureTeRregullt', sql.VarChar, meFature)
+      .input('produktiID', sql.Int, data.produktiID)
+      .query(insertProdukti);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
 
 ipcMain.handle('insertKategorine', async (event, data) => {
   let connection;
@@ -1677,45 +1731,68 @@ ipcMain.handle('insertLlojiShpenzimit', async (event, data) => {
   }
 });
 
-const monthYearToDate = (muajiViti) => {
-  const months = {
-      'Janar': '01', 'Shkurt': '02', 'Mars': '03', 'Prill': '04',
-      'Maj': '05', 'Qershor': '06', 'Korrik': '07', 'Gusht': '08',
-      'Shtator': '09', 'Tetor': '10', 'Nentor': '11', 'Dhjetor': '12'
-  };
+ipcMain.handle('shtoPushimin', async (event, data) => {
+  let connection;
+  try {
+    // Connect to the database
+    connection = await sql.connect(config);
 
-  const month = muajiViti.slice(0, -4); 
-  const year = muajiViti.slice(-4); 
+    const insertPushimi = `
+      INSERT INTO pushimet (
+        punonjesID,dataFillimit,dataMbarimit,lloji,aprovohet,arsyeja,nrDiteve
+      )  VALUES (
+        @punonjesID,@dataFillimit,@dataMbarimit,@lloji,@aprovohet,@arsyeja,@nrDiteve
+      )
+    `;
 
-  return `${year}-${months[month] || '01'}-01`; // Format as YYYY-MM-DD
-};
+    await connection.request()
+      .input('punonjesID', sql.Int, data.punonjesID)
+      .input('dataFillimit', sql.Date, data.dataFillimit)
+      .input('dataMbarimit', sql.Date, data.dataMbarimit)
+      .input('lloji', sql.VarChar, data.lloji)
+      .input('aprovohet', sql.Bit, 1)
+      .input('arsyeja', sql.VarChar, data.arsyeja)
+      .input('nrDiteve', sql.Int, data.nrDiteve)
+      .query(insertPushimi);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
 
 ipcMain.handle('paguajBonuset', async (event, data) => {
     let connection;
     let dataDheOra
+    console.log('data logged',data)
     try {
       dataDheOra = await getDateTime(); 
       connection = await sql.connect(config);
-      const formattedMuajiViti = monthYearToDate(data.muajiViti);
 
       const insert = `
-        INSERT INTO bonuset (
-          punonjesID, shuma,muajiViti,menyraPagesesID,dataPageses
+        INSERT INTO bonusetPunonjesit (
+          punonjesiID, bonusetID,statusi,menyraPagesesID,dataPageses
         )  VALUES (
-          @punonjesID, @shuma,@muajiViti,@menyraPagesesID,@dataPageses
+          @punonjesiID, @bonusetID,@statusi,@menyraPagesesID,@dataPageses
         )
       `;
 
-      await connection.request()
-        .input('punonjesID', sql.Int, data.punonjesID)
-        .input('shuma', sql.Decimal(18,2), data.shuma)
-        .input('muajiViti', sql.Date, formattedMuajiViti)
-        .input('dataPageses', sql.Date, dataDheOra)
-        .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
-        .query(insert);
+      for (const item of data.bonusetPerPunonjes) {
+        await connection.request()
+            .input('punonjesiID', sql.Int, data.punonjesiID)
+            .input('bonusetID', sql.Int, item.bonusetID)
+            .input('statusi', sql.TinyInt, 1)
+            .input('dataPageses', sql.Date, dataDheOra)
+            .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+            .query(insert);
+    }
 
-        await ndryshoBalancin
-(data.menyraPageses,data.shuma,'-')
+      await ndryshoBalancin(data.menyraPagesesID,data.totalBonuset,'+')
 
       return { success: true };
     } catch (error) {
@@ -1788,18 +1865,38 @@ ipcMain.handle('paguajPagen', async (event, data) => {
     }
   });
 
+ipcMain.handle('transferoMjetet', async (event, data) => {
+    let connection;
+    try {
+      // Connect to the database
+
+      connection = await sql.connect(config);
+      
+      await ndryshoBalancin(data.ngaOpsioni,data.shuma,'-')
+      await ndryshoBalancin(data.neOpsionin,data.shuma,'+')
+
+      return { success: true };
+    } catch (error) {
+      console.error('Database error:', error);
+      return { success: false, error: error.message };
+    } finally {
+      if (connection) {
+        await sql.close();
+      }
+    }
+  });
+
 ipcMain.handle('insertBlerje', async (event, data) => {
   let connection;
   let dataDheOra
 
   try {
-    dataDheOra = await getDateTime(); // Await the result of getDateTime
+    dataDheOra = await getDateTime(); 
 
     connection = await sql.connect(config);
 
-    // Generate the next unique 'shifra' for transaksioni
     const shifra = await generateNextShifra('blerje', 'B');
-    // Insert into the 'transaksioni' table and get the inserted ID
+
     const insertTransaksioniQuery = `
       INSERT INTO transaksioni (
         shifra, lloji, totaliPerPagese, totaliIPageses, mbetjaPerPagese, dataTransaksionit, perdoruesiID, nderrimiID, komenti
@@ -1822,7 +1919,6 @@ ipcMain.handle('insertBlerje', async (event, data) => {
 
     const transaksioniID = transaksioniResult.recordset[0].transaksioniID;
 
-    // Insert into the 'blerje' table and get the inserted ID
     const insertBlerjeQuery = `
       INSERT INTO blerje (
         shifra, totaliPerPagese, totaliPageses, mbetjaPerPagese,dataBlerjes, dataFatures, komenti, fatureERregullt,nrFatures, perdoruesiID, subjektiID, transaksioniID,menyraPagesesID, nderrimiID
@@ -2456,6 +2552,36 @@ ipcMain.handle('anuloBlerjen', async (event, data) => {
   }
 });
 
+ipcMain.handle('anuloBonusin', async (event, data) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+       
+        const deleteQuery = `
+          DELETE FROM bonusetPunonjesit 
+          WHERE bonusetID = @bonusetID and punonjesiID = @punonjesiID
+        `;
+
+       await connection.request()
+        .input('bonusetID', sql.Int, data.bonusetID)
+        .input('punonjesiID', sql.Int, data.punonjesID)
+        .query(deleteQuery)
+
+    console.log('dddddaaaaaaaaatttttttaaaaaa',data)
+      await ndryshoBalancin(data.menyraPagesesID,data.shumaPageses,'-')
+
+        return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
 
 ipcMain.handle('anuloShpenzimin', async (event, data) => {
   let connection;
@@ -2697,6 +2823,32 @@ ipcMain.handle('deleteLlojiShpenzimit', async (event, idPerAnulim) => {
   }
 });
 
+ipcMain.handle('deletePushimi', async (event, idPerAnulim) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const deleteLlojetShpenzimeveQuery = `
+        DELETE FROM pushimet 
+        WHERE pushimID = @pushimID
+      `;
+
+      await connection.request().input('pushimID', sql.Int, idPerAnulim).query(deleteLlojetShpenzimeveQuery);
+
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
+
 ipcMain.handle('ndryshoKategorine', async (event, data) => {
   let connection;
 
@@ -2882,6 +3034,44 @@ ipcMain.handle('ndryshoLlojinShpenzimit', async (event, data) => {
     }
   }
 });
+
+ipcMain.handle('ndryshoPushimin', async (event, data) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      const updateLlojetShpezimeveQuery = `
+        Update pushimet 
+        SET dataFillimit = @dataFillimit,
+            dataMbarimit = @dataMbarimit,
+            lloji = @lloji,
+            arsyeja = @arsyeja,
+            nrDiteve = @nrDiteve
+        where pushimID = @pushimID
+      `;
+
+      await connection.request()
+      .input('dataFillimit', sql.Date, data.dataFillimit)
+      .input('dataMbarimit', sql.Date, data.dataMbarimit)
+      .input('lloji', sql.VarChar, data.lloji)
+      .input('arsyeja', sql.VarChar, data.arsyeja)
+      .input('nrDiteve', sql.Int, data.nrDiteve)
+      .input('pushimID', sql.Int, data.pushimID)
+      .query(updateLlojetShpezimeveQuery);   
+
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (connection) {
+      await sql.close();
+    }
+  }
+});
+
 
 ipcMain.handle('ndryshoPunonjes', async (event, data) => {
   let connection;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Button, Table, Modal, Form, Spinner, Card, Toast,InputGroup,Alert } from 'react-bootstrap';
+import { Container, Row, Col, Button, Table, Modal, Form, Spinner, Card, Toast,InputGroup,Alert,OverlayTrigger,Tooltip, FormControl} from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck,faPencil, faPen, faTrashCan,faUmbrellaBeach,faGift, faCoins,faTriangleExclamation,faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
+import { faCheck,faPencil, faPen, faTrashCan,faUmbrellaBeach,faGift, faCoins,faTriangleExclamation,faExclamationCircle,faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import AnimatedSpinner from './AnimatedSpinner';
 import { toast, ToastContainer } from 'react-toastify';
@@ -20,18 +20,20 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     const [buttonLoading,setButtonLoading] = useState(false)
     const [modalPerBonuset,setModalPerBonuse] = useState(false)
     const [totalBonuset,setTotalBonuset] = useState()
-    const [IDPerPerdorim,setIDPerPerdorim]= useState()
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: currentYear - 2020 + 1 }, (_, i) => 2020 + i);
     const [muaji,setMuaji] = useState(new Date().getMonth()+1)
     const [muajiEmertim,setMuajiEmertim] = useState()
     const [viti,setViti] = useState(currentYear)
-    const [editingBonuset,setEditingBonuset] = useState(false)
     const [activeSalary,setActiveSalary] = useState([])
     const [ndryshoModal,setNdryshoModal] = useState(false)
     const [showModalPerPyetje,setShowModalPerPyetje] = useState(false)
     const [pageseRroge,setPageseRroge] = useState(false)
     const [selectedMenyraPageses,setSelectedMenyraPageses] = useState(null)
+    const [modalPerPushime,setModalPerPushime] = useState(false)
+    const [idPerPerdorim,setIdPerPerdorim] = useState()
+    const [perNdryshim,setPerNdryshim] = useState()
+    const [dataPerPushim,setDataPerPushim] = useState({dataFillimit:'',dataMbarimit:'',nrDiteve:'',lloji:'',arsyeja:''})
 
     const albanianMonths = [
         "Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor",
@@ -71,6 +73,11 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
         }
     }, []);
 
+    useEffect(() => {
+        const total = bonusetPerPunonjes.reduce((acc, item) => acc + item.shuma, 0);
+        setTotalBonuset(total);
+    }, [bonusetPerPunonjes]);
+
       const updateMenyraPageses = (menyraPageses) => {
         setSelectedMenyraPageses(menyraPageses);
       };
@@ -102,14 +109,6 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
 
     const handleShowData = (element) => {
         setShowData((prevData) => (prevData === element ? null : element));
-      };
-
-    const formatDateToAlbanian = (dateString) => {
-        const date = new Date(dateString);      
-        const month = albanianMonths[date.getMonth()];
-        const year = date.getFullYear();
-        
-        return `${month}-${year}`;
       };
 
       const formatLongDateToAlbanian = (dateString) => {
@@ -224,11 +223,146 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
         setBonusetPerPunonjes(bonusetPerPunonjes);
         setModalPerBonuse(true);
     };
+
+    const paguajBonuset = async () => {
+        setButtonLoading(true)
+        const data = {
+            punonjesiID:punonjesID,
+            menyraPagesesID:selectedMenyraPageses.menyraPagesesID,
+            bonusetPerPunonjes,
+            totalBonuset
+        }
+        try{
+            await window.api.paguajBonuset(data)
+        }catch(error){
+            console.log(error)
+        }finally{
+            setButtonLoading(false)
+        }
+    }
+
+    const handleAnuloBonusin = async (id,shumaPageses,menyraPagesesID) => {
+        const data = {
+            bonusetID:id,
+            shumaPageses,
+            punonjesID,
+            menyraPagesesID
+        }
+        try{
+            console.log(data)
+
+            window.api.anuloBonusin(data)
+        }catch(error){
+            console.log(error)
+        }
+    }
+
+    const dataPerPushimChange = (event) => {
+        const { name, value } = event.target;
+        setDataPerPushim({
+            ...dataPerPushim,
+            [name]: value,
+            punonjesID:punonjesID
+        });
+        console.log(dataPerPushim)
+    }
+
+
+    const addDays = (dateStr, days) => {
+        const date = new Date(dateStr);
+        date.setDate(date.getDate() + parseInt(days, 10));
+        return date.toISOString().split('T')[0]; 
+    };
+
+     useEffect(() => {
+            if (dataPerPushim.dataFillimit && dataPerPushim.nrDiteve) {
+                const calculatedEndDate = addDays(dataPerPushim.dataFillimit, dataPerPushim.nrDiteve);
+                setDataPerPushim({
+                    ...dataPerPushim,
+                    dataMbarimit:calculatedEndDate
+                });
+            }
+        
+     },[dataPerPushim.nrDiteve])
+
+     useEffect(() => {      
+                if (dataPerPushim.dataFillimit && dataPerPushim.dataMbarimit) {
+                const startDate = new Date(dataPerPushim.dataFillimit);
+                const endDate = new Date(dataPerPushim.dataMbarimit);
+                const timeDiff = endDate.getTime() - startDate.getTime();
+                const calculatedDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                setDataPerPushim({
+                    ...dataPerPushim,
+                    nrDiteve:calculatedDays
+                })
+            }
     
+    },[dataPerPushim.dataMbarimit])
+
+    useEffect(() => {      
+        if (dataPerPushim.dataMbarimit && dataPerPushim.nrDiteve) {
+
+        const startDate = new Date(dataPerPushim.dataFillimit);
+        const endDate = new Date(dataPerPushim.dataMbarimit);
+        const timeDiff = endDate.getTime() - startDate.getTime();
+        const calculatedDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        setDataPerPushim({
+            ...dataPerPushim,
+            nrDiteve:calculatedDays
+        })
+    }
+
+},[dataPerPushim.dataFillimit])
+
+    const handleShtoPushimin = async () => {
+        setButtonLoading(true)
+        if(dataPerPushim){
+            try{
+                window.api.shtoPushimin(dataPerPushim)
+            }catch(error){
+                console.log(error)
+            }finally{
+                setButtonLoading(false)
+            }
+        }
+    }
+
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
     
-    
-    
-    
+        return `${year}-${month}-${day}`;
+    }
+
+    const openModalNdryshoPushimin = (pushimi) => {
+        setPerNdryshim(true)
+        pushimi.dataFillimit = formatDate(pushimi.dataFillimit)
+        pushimi.dataMbarimit = formatDate(pushimi.dataMbarimit)
+        setDataPerPushim(pushimi)
+        setModalPerPushime(true)
+    }
+
+    const handleNdryshoPushimin = async () => {
+        setButtonLoading(true)
+        if(dataPerPushim){
+            try{
+                window.api.ndryshoPushimin(dataPerPushim)
+            }catch(error){
+                console.log(error)
+            }finally{
+                setButtonLoading(false)
+            }
+        }
+    }
+
+    const handlePushimiDelete = async (pushimiID) => {
+        try{
+            await window.api.deletePushimi(pushimiID)
+        }catch(error){
+            console.log(error)
+        }
+    }
     return (
         <Container className="py-5">
             <h4 className="text-center mb-4">Menaxho Punonjësin: <span className='d-inline fw-bold fs-5 border-bottom border-1 border-dark '>{emri} / ID:{punonjesID}</span></h4>
@@ -332,10 +466,10 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                                     <td>{pushimi.lloji}</td>
                                                     <td>{pushimi.arsyeja}</td>
                                                     <td>
-                                                        <Button variant="outline-primary" className='mx-1' onClick={() => handleDelete(pushimi.pushimID)}>
+                                                        <Button variant="outline-primary" className='mx-1' onClick={() => openModalNdryshoPushimin(pushimi)}>
                                                             <FontAwesomeIcon icon={faPen} /> Ndrysho
                                                         </Button>
-                                                        <Button variant="outline-danger" className='mx-1' onClick={() => handleDelete(pushimi.pushimID)}>
+                                                        <Button variant="outline-danger" className='mx-1' onClick={() => handlePushimiDelete(pushimi.pushimID)}>
                                                             <FontAwesomeIcon icon={faTrashCan} /> Fshij
                                                         </Button>
                                                     </td>
@@ -346,7 +480,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                     
                                 </Card.Body>
                                 <Card.Footer>
-                                    <Button variant='outline-success' className='float-end'><FontAwesomeIcon icon={faUmbrellaBeach} /> Shto Nje Pushim</Button>
+                                    <Button variant='outline-success' className='float-end' onClick={() => setModalPerPushime(true)}><FontAwesomeIcon icon={faUmbrellaBeach} /> Shto Nje Pushim</Button>
                                 </Card.Footer>
                             </Card>
                         </Col>
@@ -357,7 +491,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                             <Card className="mb-4 shadow">
                                 <Card.Body>
                                 <Card.Title className='fs-3 pb-2'>Menaxho Bonuset:</Card.Title>
-                                {bonusetNeDetaje && <Table striped bordered hover variant="light">
+                                {bonusetNeDetaje && <Table striped bordered hover className='text-center' variant="light">
                                         <thead>
                                             <tr>
                                                 <th>Nr.</th>
@@ -375,11 +509,8 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                                     <td>{formatLongDateToAlbanian(bonus.dataPageses)}</td>
                                                     <td>{bonus.emertimi}</td>
                                                     <td>                                                       
-                                                        <Button variant="outline-primary" className='mx-1' disabled = {!isWithin45Days(bonus.dataPageses)} onClick={() => handleNdrysho(bonus.bonusID)}>
-                                                            <FontAwesomeIcon icon={faPen} /> Ndrysho
-                                                        </Button>
-                                                        <Button variant="outline-danger" className='mx-1' onClick={() => handleDelete(bonus.bonusID)}>
-                                                            <FontAwesomeIcon icon={faTrashCan} /> Fshij
+                                                        <Button variant="outline-danger" className='mx-1' disabled = {!isWithin45Days(bonus.dataPageses)} onClick={() => handleAnuloBonusin(bonus.bonusetID,bonus.shuma,bonus.menyraPagesesID)}>
+                                                            <FontAwesomeIcon icon={faTrashCan} /> Anulo Pagesen
                                                         </Button>
                                                     </td>
                                                 </tr>
@@ -408,129 +539,125 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
 
 
             {/** Modal per Bonuse */}
-            <Modal size="lg" show={modalPerBonuset} onHide={() => setModalPerBonuse(false)} centered>
-    <Modal.Header closeButton>
-        <Modal.Title className="text-dark">Forma Per Kalkulim dhe Pagese te Bonuseve</Modal.Title>
-    </Modal.Header>
-    <Modal.Body>
-        <Form>
-            <Row className="mb-3 d-flex justify-content-start">
-                <Col md={3}>
-                    <Form.Group controlId="formFirstName">
-                        <Form.Label>Muaji</Form.Label>
-                        <Form.Select
-                            name="muaji"
-                            value={muaji}
-                            onChange={(e) => {
-                                const selectedMonth = parseInt(e.target.value, 10);
-                                setMuaji(selectedMonth);
-                                setMuajiEmertim(albanianMonths[selectedMonth - 1]); // Update Albanian month name
-                            }} 
-                        >
-                            <option value="">Zgjidhni muajin</option>
-                            {albanianMonths.map((month, index) => (
-                                <option key={index} value={index + 1}>
-                                    {month}
-                                </option>
-                            ))}
-                        </Form.Select>
-                    </Form.Group>
-                </Col>
-                <Col md={3}>
-                    <Form.Group controlId="formFirstName">
-                        <Form.Label>Viti</Form.Label>
-                        <Form.Select
-                            name="viti"
-                            value={viti}
-                            onChange={(e) => setViti(e.target.value)} 
-                        >
-                            <option value="">Zgjidhni Vitin</option>
-                            {years.map((year) => (
-                                <option key={year} value={year}>
-                                    {year}
-                                </option>
-                            ))}
-                        </Form.Select>
-                    </Form.Group>
-                </Col>
-            </Row>
-            {bonusetPerPunonjes.length > 0 ? (
-                    <Row className='d-flex flex-column'>
-                        <Col className="mb-3 align-items-center">
-                            <Table striped bordered hover responsive className="text-center">
-                                <thead className="table-light">
-                                    <tr>
-                                        <th>Nr.</th>
-                                        <th>Data</th>
-                                        <th>Shuma (€)</th>
-                                        <th>Veprime</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {bonusetPerPunonjes.map((item, index) => {
-                                    return (
-                                        <tr key={index}>
-                                            <td>{index + 1}</td>
-                                            <td>{formatLongDateToAlbanian(item.dataBonuseve)}</td>
-                                            <td>{item.shuma} €</td>
-                                            <td>
-                                                <Button variant='outline-success'>
-                                                    Paguaj
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </Table>
-                    </Col>
-                    <Col className="d-flex justify-content-center">
-                    <Form className="w-75 p-3 d-flex flex-row flex-wrap justify-content-between rounded ">
-                        <Col className="w-100 d-flex align-items-center justify-content-start">
-                            <Form.Label className="me-2 mb-0">Totali: </Form.Label>
-                            <Form.Control
-                                className="d-inline fs-5 fw-bold  border-bottom  w-25"
-                                value={totalBonuset}
-                                onChange={(e) => setTotalBonuset(e.target.value)}
-                                disabled={!editingBonuset}
-                            />
-                            <Button
-                                variant={editingBonuset ?"outline-success" :"outline-primary"}
-                                className="ms-2"
-                                onClick={() => setEditingBonuset(!editingBonuset)}
-                            >
-                                {editingBonuset ? <FontAwesomeIcon icon={faCheck} /> : <FontAwesomeIcon icon={faPencil} />}
-                            </Button>
-                        </Col>
-                        <Col>  
-                            <MenyratPagesesExport updateMenyraPageses={updateMenyraPageses} />
-                        </Col>
-                    </Form>
-                    
-                </Col>
-                                    </Row>
+            <Modal size="lg" show={modalPerBonuset} onHide={() => {buttonLoading ? null: setModalPerBonuse(false)}} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title className="text-dark">Forma Per Kalkulim dhe Pagese te Bonuseve</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Row className="mb-3 d-flex justify-content-start">
+                            <Col md={3}>
+                                <Form.Group controlId="formFirstName">
+                                    <Form.Label>Muaji</Form.Label>
+                                    <Form.Select
+                                        name="muaji"
+                                        value={muaji}
+                                        onChange={(e) => {
+                                            const selectedMonth = parseInt(e.target.value, 10);
+                                            setMuaji(selectedMonth);
+                                            setMuajiEmertim(albanianMonths[selectedMonth - 1]); 
+                                        }} 
+                                    >
+                                        <option value="">Zgjidhni muajin</option>
+                                        {albanianMonths.map((month, index) => (
+                                            <option key={index} value={index + 1}>
+                                                {month}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group controlId="formFirstName">
+                                    <Form.Label>Viti</Form.Label>
+                                    <Form.Select
+                                        name="viti"
+                                        value={viti}
+                                        onChange={(e) => setViti(e.target.value)} 
+                                    >
+                                        <option value="">Zgjidhni Vitin</option>
+                                        {years.map((year) => (
+                                            <option key={year} value={year}>
+                                                {year}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+                        {bonusetPerPunonjes.length > 0 ? (
+                                <Row className='d-flex flex-column'>
+                                    <Col className="mb-3 align-items-center">
+                                        <Table striped bordered hover responsive>
+                                            <thead className="table-light">
+                                                <tr>
+                                                    <th>Nr.</th>
+                                                    <th>Data</th>
+                                                    <th>Shuma (€)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {bonusetPerPunonjes.map((item, index) => {
+                                                return (
+                                                    <tr key={index}>
+                                                        <td>{index + 1}</td>
+                                                        <td>{formatLongDateToAlbanian(item.dataBonuseve)}</td>
+                                                        <td >{item.shuma} €</td>
+                                                        
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </Table>
+                                </Col>
+                                <Col className="d-flex justify-content-center">
+                                <Form className="w-75 p-4 d-flex flex-row flex-wrap align-items-center rounded-3 shadow bg-white">
+                                    <Col md={6} className="d-flex align-items-center">
+                                        <Form.Label className="me-3 mb-0 fw-bold fs-5 ">
+                                            Totali:
+                                        </Form.Label>
+                                        <InputGroup>
+                                            <Form.Control
+                                                type="text"
+                                                value={totalBonuset.toFixed(2)}
+                                                className="form-control fs-5  bg-light text-end "
+                                                disabled
+                                                readOnly
+                                            />
+                                            <InputGroup.Text>€</InputGroup.Text>
+                                        </InputGroup>
+                                    </Col>
 
-                    ) : (
-                        <Alert variant="warning" className="d-flex align-items-center justify-content-center">
-                            <FontAwesomeIcon icon={faExclamationCircle} size="lg" className="me-3" />
-                            <p className="mb-0 fw-bold">Nuk Egzistojne Bonuse per kete Date!</p>
-                        </Alert>
-                    )}
-        </Form>
-    </Modal.Body>
-    <Modal.Footer>
-        <Button variant="outline-secondary" disabled={buttonLoading} onClick={() => setModalPerBonuse(false)}>
-            Mbyll
-        </Button>
-        <Button variant="primary" disabled={buttonLoading || editingBonuset || !selectedMenyraPageses} onClick={() => paguajBonuset()}>
-            {buttonLoading ? (
-                <><Spinner size="sm" /> {'Duke ruajtur'}</>
-            ) : (
-                'Paguaj Totalin'
-            )}
-        </Button>
-    </Modal.Footer>
-</Modal>
+                                    <Col md={6} className="d-flex justify-content-end">
+                                        <MenyratPagesesExport updateMenyraPageses={updateMenyraPageses} />
+                                    </Col>
+                                </Form>
+
+                                
+                            </Col>
+                                                </Row>
+
+                                ) : (
+                                    <Alert variant="warning" className="d-flex align-items-center justify-content-center">
+                                        <FontAwesomeIcon icon={faExclamationCircle} size="lg" className="me-3" />
+                                        <p className="mb-0 fw-bold">Nuk Egzistojne Bonuse per kete Date!</p>
+                                    </Alert>
+                                )}
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="outline-secondary" disabled={buttonLoading} onClick={() => {buttonLoading ? null: setModalPerBonuse(false)}}>
+                        Mbyll
+                    </Button>
+                    <Button variant="primary" disabled={buttonLoading || !selectedMenyraPageses} onClick={() => paguajBonuset()}>
+                        {buttonLoading ? (
+                            <><Spinner size="sm" /> {'Duke ruajtur'}</>
+                        ) : (
+                            'Paguaj Totalin'
+                        )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
             {/**Modal per ndryshim ose pagese rroge */}
             <Modal size='md'
@@ -641,7 +768,111 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                         </Modal.Footer>
             </Modal>
 
-            <ModalPerPyetje show={showModalPerPyetje} handleClose={() => {setShowModalPerPyetje(false)}} handleConfirm={handleConfirm} />
+            {/**Modal per ndryshim ose regjistrim pushimi */}
+            <Modal show={modalPerPushime} onHide={() => {buttonLoading ? null : setModalPerPushime(false)}} centered size="md" className="shadow-lg">
+            <Modal.Header closeButton className="border-bottom">
+                <Modal.Title className="">{perNdryshim ? 'Ndrysho' : 'Regjistro'} Ditët e Pushimit</Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="px-4">
+                <Form>
+                    <Row className="mb-3">
+                        <Col md={6}>
+                            <Form.Group controlId="dataFillimit">
+                                <Form.Label className="fw-semibold">Data e Fillimit</Form.Label>
+                                    <div className="input-group shadow-sm">
+                                         <FormControl
+                                            type='date'
+                                            name='dataFillimit'
+                                            onChange={(e) => dataPerPushimChange(e)}
+                                            dateFormat="dd/MM/yyyy"
+                                            className="form-control"
+                                            placeholderText="Zgjidhni datën"
+                                            value={dataPerPushim.dataFillimit}
+                                            selected={dataPerPushim.dataMbarimit}
+
+                                        />
+                                       
+                                    </div>
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group controlId="dataMbarimit">
+                                <Form.Label className="fw-semibold">Data e Mbarimit</Form.Label>
+                               
+                                    <div className="input-group shadow-sm">
+                                        <FormControl
+                                            type='date'
+                                            selected={dataPerPushim.dataMbarimit}
+                                            value={dataPerPushim.dataMbarimit}
+                                            name='dataMbarimit'
+                                            onChange={(e) => dataPerPushimChange(e)}
+                                            dateFormat="dd/MM/yyyy"
+                                            className="form-control"
+                                            placeholderText="Zgjidhni datën"
+                                            minDate={dataPerPushim.dataFillimit}
+                                        />
+                                    </div>
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                    <Row className="mb-3">
+                        <Col md={6}>
+                            <Form.Group controlId="nrDiteve">
+                                <Form.Label className="fw-semibold">Nr. Ditëve</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        min="1"
+                                        name='nrDiteve'
+                                        value={dataPerPushim.nrDiteve}
+                                        onChange={(e) => dataPerPushimChange(e)}
+                                        className="shadow-sm"
+                                        placeholder="Numri i ditëve"
+                                    />
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group controlId="lloji">
+                                <Form.Label className="fw-semibold">Lloji</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={dataPerPushim.lloji}
+                                        name='lloji'
+                                        onChange={(e) => dataPerPushimChange(e)}
+                                        className="shadow-sm"
+                                        placeholder="Lloji i pushimit"
+                                    />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                    <Form.Group controlId="arsyeja" className="mb-3">
+                        <Form.Label className="fw-semibold">Arsyeja</Form.Label>
+                        
+                            <Form.Control
+                                as="textarea"
+                                rows={3}
+                                value={dataPerPushim.arsyeja}
+                                name='arsyeja'
+                                onChange={(e) => dataPerPushimChange(e)}
+                                className="shadow-sm"
+                                placeholder="Shkruani arsyen"
+                            />
+                    </Form.Group>
+                </Form>
+            </Modal.Body>
+            <Modal.Footer className="d-flex justify-content-between border-0">
+                <Button variant="outline-secondary" onClick={() => {buttonLoading ? null : setModalPerPushime(false)}} className="px-4">Anulo</Button>
+                <Button variant="primary" disabled={buttonLoading || !dataPerPushim.arsyeja || !dataPerPushim.lloji || !dataPerPushim.dataFillimit || !dataPerPushim.dataMbarimit || !dataPerPushim.nrDiteve} onClick={() => {perNdryshim ? handleNdryshoPushimin() :handleShtoPushimin()}}>
+                                {buttonLoading  ? (
+                                    <>
+                                        <Spinner size="sm" /> {'Duke ruajtur'}
+                                    </>
+                                ) : (
+                                    <> {perNdryshim ? 'Ruaj Ndryshimet' : 'Regjistro'} </>
+                                )}
+                            </Button>            </Modal.Footer>
+            </Modal>
+
+            <ModalPerPyetje show={showModalPerPyetje} handleClose={() => {buttonLoading ? null : setShowModalPerPyetje(false)}} handleConfirm={handleConfirm} />
 
             <ToastContainer/>
         </Container>

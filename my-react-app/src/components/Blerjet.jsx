@@ -86,7 +86,7 @@ export default function Blerjet() {
 }   
     return (
         <Container fluid>
-            <h4 className="text-center fw-bold">Të Gjitha Blerjet:</h4>
+            <h4 className="text-center fw-bold pt-4">Të Gjitha Blerjet:</h4>
             <hr />
 
             <Row className="mb-3 p-1 ">

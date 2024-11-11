@@ -410,6 +410,7 @@ export default function NdryshoShitjen() {
                     <KerkoProduktin
                         show={showModal}
                         onHide={() => setShowModal(false)}
+                        meFatureProp={null}
                         onSelect={handleProductSelect}
                     />
                     )}

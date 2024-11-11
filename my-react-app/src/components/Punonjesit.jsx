@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Container, Row, Col, Button, Table, Modal, Form, InputGroup, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Button, Table, Modal, Form, InputGroup, Spinner,OverlayTrigger,Tooltip } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faTrashCan, faGift, faCoins, faCheckCircle, faTimesCircle,faPencil,faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faPen, faTrashCan, faGift, faCoins, faCheckCircle, faTimesCircle,faPencil } from '@fortawesome/free-solid-svg-icons';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AnimatedSpinner from './AnimatedSpinner';
@@ -161,7 +161,22 @@ export default function Punonjesit() {
                                                 <td>{item.mbiemri}</td>
                                                 <td>{new Date(item.dataPunësimit).toLocaleDateString('al-AL')}</td>
                                                 <td>{item.pagaBaze.toFixed(2)} €</td>
-                                                <td>{item.aktiv == 1 ? 'Aktiv' : 'Jo Aktiv'}</td>
+                                                <td>
+                                                    <OverlayTrigger
+                                                        placement="top"
+                                                        overlay={
+                                                            <Tooltip>
+                                                                {item.aktiv ? 'Aktiv' : 'Jo Aktiv'}
+                                                            </Tooltip>
+                                                        }
+                                                    >
+                                                        <FontAwesomeIcon
+                                                            icon={item.aktiv ? faCheckCircle : faTimesCircle}
+                                                            className={item.aktiv ? 'text-success' : 'text-danger'}
+                                                            size="lg"
+                                                        />
+                                                    </OverlayTrigger>
+                                                </td>
                                                 <td>{item.nrTelefonit}</td>
                                                 <td>
                                                     <Button variant="outline-primary" className="me-2" onClick={() => {emptyDataPerPunonjes();setPerNdryshim(item); setShtoPunonjesModal(true);setDataPerPunonjes(item)}}>

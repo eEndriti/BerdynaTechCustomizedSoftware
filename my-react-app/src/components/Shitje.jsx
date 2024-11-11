@@ -308,6 +308,7 @@ export default function Shitje() {
               <KerkoProduktin
                 show={showModal}
                 onHide={() => setShowModal(false)}
+                meFatureProp={null}
                 onSelect={handleProductSelect}
               />
             )}

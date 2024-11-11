@@ -48,6 +48,7 @@ export default function Blerje() {
       subjektiID: result.subjektiID,
     });
   };
+
   const handleProductSelect = (product) => {
     const updatedProducts = [...products];
     updatedProducts[selectedRow] = product;
@@ -64,16 +65,19 @@ export default function Blerje() {
     setSelectedRow(index);
     setShowModal(true);
   };
+
   const handleDeleteRow = (index,productID) => {
     const updatedProducts = products.filter((_, i) => i !== index);
     setProducts(updatedProducts);
   };
+
   const handleKomentiBlerjesChange = (event) =>{
     setKomentiBlerjes(event.target.value)
   }
   const handleMeFatureTeRregullt = () =>{
     setMeFatureTeRregullt(!meFatureTeRregullt)
   }
+
   useEffect(() => {
     let totalPerPagese = 0;
     let llogaritjaETvsh = 0;
@@ -81,12 +85,12 @@ export default function Blerje() {
     products.forEach((product) => {
       const cmimiBlerjes = parseFloat(product.cmimiBlerjes) || 0;
       const sasiaBlerjes = parseFloat(product.sasiaBlerjes) || 0;
-      const tvsh = parseFloat(product.tvsh) || 0; // Ensure `tvsh` is valid
+      const tvsh = parseFloat(product.tvsh) || 0; 
       const totali = cmimiBlerjes * sasiaBlerjes;
   
       const tvshEProduktit = (totali * tvsh) / 100;
       
-      llogaritjaETvsh += tvshEProduktit || 0; // Handle NaN case by defaulting to 0
+      llogaritjaETvsh += tvshEProduktit || 0; 
       totalPerPagese += totali;
     });
   
@@ -94,7 +98,6 @@ export default function Blerje() {
     setTotaliTvsh(llogaritjaETvsh);
   }, [products]);
   
-
 
   const handleTotaliPagesesChange = (e) => {
     setTotaliPageses(parseFloat(e.target.value) || 0);
@@ -124,7 +127,6 @@ export default function Blerje() {
         autoClose: 1500,
       });
     }
-  console.log('pr',products)
     const data = {
       totaliPerPagese,
       totaliPageses,
@@ -169,7 +171,6 @@ export default function Blerje() {
     setNukPranohetNrFatures(false)
     setNrFatures(nrFatures)
     blerjet.map(item =>{
-      console.log(item.subjektiID,item.nrFatures,selectedSubjekti.subjektiID,nrFatures)
       if(item.subjektiID == selectedSubjekti.subjektiID && item.nrFatures == nrFatures){
         setNukPranohetNrFatures(true)
       }
@@ -284,6 +285,7 @@ export default function Blerje() {
               <KerkoProduktin
                 show={showModal}
                 onHide={() => setShowModal(false)}
+                meFatureProp = {meFatureTeRregullt}
                 onSelect={handleProductSelect}
               />
             )}

@@ -1,11 +1,13 @@
 import  { useState, useEffect } from "react";
-import { Modal, Form, Table, Button,Spinner } from "react-bootstrap";
+import { Modal, Form, Table, Button,Spinner,Alert } from "react-bootstrap";
 import ShtoNjeProdukt from "./ShtoNjeProdukt";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AnimatedSpinner from "./AnimatedSpinner";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'; 
 
-export default function KerkoProduktin({ show, onHide, onSelect }) {
+export default function KerkoProduktin({ show, onHide, onSelect,meFatureProp }) {
   const [queryShifra, setQueryShifra] = useState("");
   const [queryEmertimi, setQueryEmertimi] = useState("");
   const [queryPershkrimi, setQueryPershkrimi] = useState("");
@@ -24,11 +26,18 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
         const matchesEmertimi = item.emertimi.toLowerCase().includes(queryEmertimi.toLowerCase());
         const matchesPershkrimi = item.pershkrimi.toLowerCase().includes(queryPershkrimi.toLowerCase());
         const matchesSasia = eliminoVleratZero ? item.sasia > 0 : true;
-        return matchesShifra && matchesEmertimi && matchesPershkrimi && matchesSasia;
+        let meFature;
+        let vleraPerReturn;
+        if(meFatureProp != null){
+           meFature = meFatureProp ? item.meFatureTeRregullt == 'po' : item.meFatureTeRregullt == 'jo'
+           vleraPerReturn = matchesShifra && matchesEmertimi && matchesPershkrimi && matchesSasia && meFature;
+        }else{
+          vleraPerReturn = matchesShifra && matchesEmertimi && matchesPershkrimi && matchesSasia
+        }
+        return vleraPerReturn
       });
       setResults(filteredResults);
       setLoading(false)
-
     };
 
     fetchAndFilterData();
@@ -50,7 +59,12 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
     <>
     {loading ? <AnimatedSpinner /> : <Modal show={show} onHide={onHide} size="lg">
       <Modal.Header closeButton>
-        <Modal.Title>Kërko Produktin</Modal.Title>
+        <Modal.Title >Kërko Produktin {meFatureProp != null ?  <Alert variant="warning" className="d-flex align-items-center mt-3">
+                                        <FontAwesomeIcon icon={faTriangleExclamation} size={20} className="me-2" />
+                                        <span>
+                                            <strong>Kujdes!</strong> Keni zgjedhur opsionin {meFatureProp? 'me' : 'pa'} fature te rregullt, produktet e shfaqura jane te filtruara!
+                                        </span>
+                                    </Alert>:null}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <div className="d-flex flex-row justify-content-between">
@@ -127,7 +141,7 @@ export default function KerkoProduktin({ show, onHide, onSelect }) {
           Mbyll
         </Button> 
       </Modal.Footer>
-      <ShtoNjeProdukt show={showShtoProduktinModal} prejardhja={'paRefresh'} handleClose={handleCloseShtoProduktinModal} /> 
+        <ShtoNjeProdukt show={showShtoProduktinModal} prejardhja={'paRefresh'} handleClose={handleCloseShtoProduktinModal} /> 
       <ToastContainer/>
     </Modal>}
     </>

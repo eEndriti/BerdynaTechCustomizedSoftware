@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Col, Container, Row, Button, Form, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan,faPencil } from '@fortawesome/free-solid-svg-icons';
 import ModalPerPyetje from './ModalPerPyetje';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -22,6 +22,7 @@ export default function Produktet() {
   const [filterEmertimi, setFilterEmertimi] = useState('');
   const [filterSasia, setFilterSasia] = useState('');
   const [filterKategoria, setFilterKategoria] = useState('');
+  const [produkti,setProdukti] = useState({})
 
   useEffect(() => {
     window.api.fetchTableProdukti().then(receivedData => {
@@ -29,7 +30,7 @@ export default function Produktet() {
       setFilteredProduktet(receivedData);
     });
     setLoading(false)
-  }, []);
+  }, [produktet]);
 
   const thirreModalPerPyetje = (produktiID) => {
     setIdPerAnulim(produktiID);
@@ -89,12 +90,21 @@ export default function Produktet() {
   const handleDetaje = (subjektiID) =>{
     navigate(`/detajePerProdukt/${subjektiID}`)
   }
+
+  const thirreNdryshoProduktin = (produkti) => {
+    setProdukti(produkti)
+    setShowModal(true)
+  }
+  const thirreShtoProduktin = () => {
+    setProdukti(null)
+    setShowModal(true)
+  }
   
   return (
     <Container fluid className='mt-5'>
       <Row>
         <Col className='d-flex justify-content-start'>
-          <Button variant='success' className='text-light p-3 fs-5 mx-3' onClick={() => setShowModal(true)}>Krijo Nje Produkt</Button>
+          <Button variant='success' className='text-light p-3 fs-5 mx-3' onClick={() => thirreShtoProduktin()}>Krijo Nje Produkt</Button>
           <Button variant='info' className='text-dark p-3 fs-5 mx-3' onClick={() => navigate('/kategorite')}>Kategorite</Button>
         </Col>
       </Row>
@@ -184,18 +194,19 @@ export default function Produktet() {
                   <td>{item.emertimiKategorise}</td>
                   <td>{item.tvsh} %</td>
                   <td>
-                    <Button className='btn btn-primary' onClick={() => handleDetaje(item.produktiID)}>Detaje...</Button>
+                    <Button  variant='info' onClick={() => handleDetaje(item.produktiID)}>Detaje...</Button>
                     {item.sasia > 0 ? '' :
-                      <Button className='btn bg-transparent border-0 text-danger' onClick={() => thirreModalPerPyetje(item.produktiID)}>
+                      <Button variant='outline-danger' className='m-1' onClick={() => thirreModalPerPyetje(item.produktiID)}>
                         {loading && idPerAnulim === item.produktiID ? (
                           <Spinner animation="border" role="status" size="sm">
                             <span className="visually-hidden">Loading...</span>
                           </Spinner>
                         ) : (
-                          <FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} />
+                          <FontAwesomeIcon icon={faTrashCan} />
                         )}
                       </Button>
                     }
+                    <Button  variant='outline-primary' className='m-1' onClick={() => thirreNdryshoProduktin(item)}><FontAwesomeIcon icon={faPencil}/></Button>
                   </td>
                 </tr>
               ))}
@@ -205,7 +216,7 @@ export default function Produktet() {
         }
       </Row>
 
-      <ShtoNjeProdukt show={showModal} prejardhja={'meRefresh'} handleClose={handleCloseModal} />
+      <ShtoNjeProdukt show={showModal} prejardhja={'meRefresh'} handleClose={handleCloseModal} produkti = {produkti}/>
       <ModalPerPyetje show={showModalPerPyetje} handleConfirm={handleConfirmModalPerPyetje} handleClose={handleCloseModalPerPyetje} />
       <ToastContainer />
     </Container>

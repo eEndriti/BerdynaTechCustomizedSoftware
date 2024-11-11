@@ -39,6 +39,7 @@ contextBridge.exposeInMainWorld('api', {
     shtoPunonjes: (data) => ipcRenderer.invoke('shtoPunonjes', data) ,
     shtoPerdoruesin: (data) => ipcRenderer.invoke('shtoPerdoruesin', data) ,
     shtoOpsionPagese: (data) => ipcRenderer.invoke('shtoOpsionPagese', data) ,
+    shtoPushimin: (data) => ipcRenderer.invoke('shtoPushimin', data) ,
     login: (data) => ipcRenderer.invoke('login', data),
 
 
@@ -57,12 +58,17 @@ contextBridge.exposeInMainWorld('api', {
     deleteServisi: (idPerAnulim) => ipcRenderer.invoke('deleteServisi', idPerAnulim) ,
     deletePerdoruesi: (idPerAnulim) => ipcRenderer.invoke('deletePerdoruesi', idPerAnulim) ,
     deleteOpsionPagese: (idPerAnulim) => ipcRenderer.invoke('deleteOpsionPagese', idPerAnulim) ,
+    deletePushimi: (idPerAnulim) => ipcRenderer.invoke('deletePushimi', idPerAnulim) ,
+    anuloBonusin: (data) => ipcRenderer.invoke('anuloBonusin', data) ,
 
     paguajBonuset: (data) => ipcRenderer.invoke('paguajBonuset', data),
     paguajPagen: (data) => ipcRenderer.invoke('paguajPagen', data),
+    transferoMjetet: (data) => ipcRenderer.invoke('transferoMjetet', data),
+
 
 
     ndryshoShpenzimin: (data) => ipcRenderer.invoke('ndryshoShpenzimin', data), 
+    ndryshoPushimin: (data) => ipcRenderer.invoke('ndryshoPushimin', data), 
     ndryshoLlojinShpenzimit: (data) => ipcRenderer.invoke('ndryshoLlojinShpenzimit', data),
     ndryshoPunonjes: (data) => ipcRenderer.invoke('ndryshoPunonjes', data),
     ndryshoKategorine: (data) => ipcRenderer.invoke('ndryshoKategorine', data),
@@ -71,6 +77,7 @@ contextBridge.exposeInMainWorld('api', {
     ndryshoPerdorues: (data) => ipcRenderer.invoke('ndryshoPerdorues', data),
     ndryshoOpsionPagese: (data) => ipcRenderer.invoke('ndryshoOpsionPagese', data),
     ndryshoPagen: (data) => ipcRenderer.invoke('ndryshoPagen', data),
+    ndryshoProduktin: (data) => ipcRenderer.invoke('ndryshoProduktin', data),
     ndryshoSubjektin: (data) => ipcRenderer.invoke('ndryshoSubjektin', data)
 
 

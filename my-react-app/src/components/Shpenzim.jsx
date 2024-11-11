@@ -504,6 +504,7 @@ export default function Shpenzim() {
               <KerkoProduktin
                 show={showModalProduct}
                 onHide={() => setShowModalProduct(false)}
+                meFatureProp={null}
                 onSelect={handleProductSelect}
               />
             )}      <ModalPerPyetje show={ShowModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />

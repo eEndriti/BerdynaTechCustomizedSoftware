@@ -1,20 +1,36 @@
 import {useState,useEffect} from 'react'
 import { Container,Row,Col,Button,Table,Modal,Form,Spinner,InputGroup } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faPen, faTrashCan,faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import { toast, ToastContainer } from 'react-toastify';
 import AnimatedSpinner from './AnimatedSpinner';
 import ModalPerPyetje from './ModalPerPyetje'
 
 export default function MenyratPagesave() {
     const [loading,setLoading] = useState(true)
+    const [buttonLoading,setButtonLoading] = useState(false)
     const [menyratPagesave,setMenyratPagesave] = useState([])
     const [data,setData] = useState({emertimi:'',shuma:''})
     const [perNdryshim,setPerNdryshim] = useState(false)
     const [modal,setModal] = useState(false)
-    const [buttonLoading,setButtonLoading] = useState(false)
     const [idPerNdryshim,setIdPerNdryshim] = useState()
     const [modalPerPyetje,setModalPerPyetje] = useState()
+    const [levizjeModal,setLevizjeModal] = useState(false)
+    const [ngaOpsioni, setngaOpsioni] = useState("");
+    const [neOpsionin, setneOpsionin] = useState("");
+    const [shuma, setshuma] = useState("");
+  
+    const handleFromChange = (e) => {
+      setngaOpsioni(e.target.value);
+    };
+  
+    const handleToChange = (e) => {
+      setneOpsionin(e.target.value);
+    };
+  
+    const handleshumaChange = (e) => {
+      setshuma(e.target.value);
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -72,7 +88,7 @@ export default function MenyratPagesave() {
         setPerNdryshim(null)
       }
 
-      const shtoOpsion = async () => {
+    const shtoOpsion = async () => {
         setButtonLoading(true);
         try {
             await window.api.shtoOpsionPagese(data);
@@ -122,56 +138,77 @@ export default function MenyratPagesave() {
         }
       }
   
+      const handleTransferoMjete = async () => {
+        setButtonLoading(true)
+
+        const data = {
+            ngaOpsioni,
+            neOpsionin,
+            shuma
+        }
+
+        try{
+            await window.api.transferoMjetet(data)
+        }catch(error){
+            console.log(error)
+        }finally{
+            setLevizjeModal(false)
+            setButtonLoading(false)
+        }
+      }
   return (
   <>
     {loading ? <AnimatedSpinner/> : <Container>
-        <Row>    
-            <Button variant="success" className='w-25' onClick={() => {emptyData();setModal(true)}}>Shto Opsion të Ri Pagese</Button>
+        <Row>  
+            <Col className='d-flex flex-row flex-wrap justify-content-between mt-3'>
+                <Button variant="success" className='w-25' onClick={() => {emptyData();setModal(true)}}>Shto Opsion të Ri Pagese</Button>
+                <Button variant='secondary' onClick={() => setLevizjeModal(true)}>Levizje Interne ( Deponim / Terheqje )</Button>
+            </Col>            
         </Row>
         <Row>
-        <Table striped bordered hover className="mt-3">
-            <thead>
-            <tr>
-                <th>Nr.</th>
-                <th>Emertimi</th>
-                <th>Bilanci Aktual</th>
-                <th>Veprime</th>
-            </tr>
-            </thead>
-            <tbody>
-            {menyratPagesave.slice().reverse().map((item, index) => (
-            <tr key={index}>
-                {menyratPagesave.length != 0 ? (
-                <>
-                    <th scope="row">{menyratPagesave.length - index}</th>
-                    <td>{item.emertimi}</td>
-                    <td>{item.shuma.toFixed(2)} €</td>
-                    <td>
-                        <Button variant="outline-primary" className="me-2" onClick={() => {setPerNdryshim(true); setData(item);setModal(true)}}>
-                            <FontAwesomeIcon icon={faPen} /> Ndrysho
-                        </Button>
-                                
-                        <Button
-                            variant="outline-danger"
-                            className="me-2"
-                            onClick={() => thirreModalPerPyetje(item.menyraPagesesID)}
-                            disabled={item.DataExists}
-                        >
-                             <FontAwesomeIcon icon={faTrashCan} /> Fshij
-                        </Button>
-                    </td>
-                </>
-                ) : 'Nuk ka te dhena!'}
-            </tr>
-            ))}
+            <Table striped bordered hover className="mt-3">
+                <thead>
+                <tr>
+                    <th>Nr.</th>
+                    <th>Emertimi</th>
+                    <th>Bilanci Aktual</th>
+                    <th>Veprime</th>
+                </tr>
+                </thead>
+                <tbody>
+                {menyratPagesave.slice().reverse().map((item, index) => (
+                <tr key={index}>
+                    {menyratPagesave.length != 0 ? (
+                    <>
+                        <th scope="row">{menyratPagesave.length - index}</th>
+                        <td>{item.emertimi}</td>
+                        <td>{item.shuma.toFixed(2)} €</td>
+                        <td>
+                            <Button variant="outline-primary" className="me-2" onClick={() => {setPerNdryshim(true); setData(item);setModal(true)}}>
+                                <FontAwesomeIcon icon={faPen} /> Ndrysho
+                            </Button>
+                                    
+                            <Button
+                                variant="outline-danger"
+                                className="me-2"
+                                onClick={() => thirreModalPerPyetje(item.menyraPagesesID)}
+                                disabled={item.DataExists}
+                            >
+                                <FontAwesomeIcon icon={faTrashCan} /> Fshij
+                            </Button>
+                        </td>
+                    </>
+                    ) : 'Nuk ka te dhena!'}
+                </tr>
+                ))}
 
-            </tbody>
-        </Table>
+                </tbody>
+            </Table>
         </Row>
-
+        
         <ToastContainer/>
 
-        <Modal
+            <Modal
                 show={modal}
                 onHide={() => {
                     buttonLoading ? null : setModal(false);
@@ -232,6 +269,66 @@ export default function MenyratPagesave() {
 
             <ModalPerPyetje show={modalPerPyetje} handleClose={() => {setModalPerPyetje(false)}} handleConfirm={handleConfirm} />
 
+            <Modal show={levizjeModal} onHide={()=> {buttonLoading ? null :setLevizjeModal(false)}}>
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                    <FontAwesomeIcon icon={faExchangeAlt} /> Transfero Mjetet
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                    <Form.Group controlId="ngaOpsioni">
+                        <Form.Label>Nga:</Form.Label>
+                        <Form.Control as="select" value={ngaOpsioni} onChange={handleFromChange} disabled={buttonLoading} >
+                        <option value="">Selekto Opsionin e Pageses</option>
+                        {menyratPagesave.map((method, index) => (
+                            <option key={index} value={method.menyraPagesesID}>
+                            {method.emertimi}
+                            </option>
+                        ))} 
+                        </Form.Control>
+                    </Form.Group>
+
+                    <Form.Group controlId="neOpsionin">
+                        <Form.Label>Transfero në:</Form.Label>
+                        <Form.Control
+                        as="select"
+                        value={neOpsionin}
+                        onChange={handleToChange}
+                        disabled={!ngaOpsioni || buttonLoading}
+                        >
+                        <option value="">Selekto Opsionin Perfitues:</option>
+                        {menyratPagesave
+                            .filter((method) => method !== ngaOpsioni)
+                            .map((method, index) => (
+                            <option key={index} value={method.menyraPagesesID}>
+                                {method.emertimi}
+                            </option>
+                            ))} 
+                        </Form.Control>
+                    </Form.Group>
+
+                    <Form.Group controlId="shuma">
+                        <Form.Label>Shuma:</Form.Label>
+                        <Form.Control
+                        type="number"
+                        value={shuma}
+                        onChange={handleshumaChange}
+                        placeholder="Shkruaj Shumen..."
+                        disabled={buttonLoading}
+                        />
+                    </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={()=> {buttonLoading ? null :setLevizjeModal(false)}}>
+                        Close
+                    </Button>
+                    <Button variant="primary" onClick={()=> handleTransferoMjete()} disabled={!ngaOpsioni || !neOpsionin || !shuma || buttonLoading}>
+                        Transfero
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
     </Container>}
   </>
