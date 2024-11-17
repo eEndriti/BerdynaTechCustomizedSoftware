@@ -1,5 +1,5 @@
 import { useState,useEffect } from 'react'
-import { Container,Button,Row,Col } from 'react-bootstrap'
+import { Container,Button,Row,Col,Modal,Form, Spinner, InputGroup } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPen, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from './ModalPerPyetje'
@@ -25,7 +25,10 @@ function FaqjaKryesoreAdmin() {
   const [data,setData] = useState('')
   const [updateServisType,setUpdateServisType] = useState()
   const { nderrimiID } = useAuthData()
-  
+  const [aprovoShitjenOnlineModal,setAprovoShitjenOnlineModal] = useState(false)
+  const [dataPerAprovim,setDataPerAprovim] = useState({kostoPostes:3,totaliIPranuar:0})
+  const [buttonLoading,setButtonLoading] = useState(false)
+
   useEffect(() => {
 
     const fetchData = async () => {
@@ -137,7 +140,7 @@ function FaqjaKryesoreAdmin() {
       }
       // If nderrimiID does not match, return acc unchanged
       return acc;
-    }, 0).toFixed(2);
+    }, 0);
   
   
   const totalPerPagese = calculateTotal(transaksionet, 'totaliperPagese');
@@ -154,7 +157,6 @@ function FaqjaKryesoreAdmin() {
   }
 
   const deleteServisin = async () => {
-    console.log(idPerAnulim)
     const result = await window.api.deleteServisi(idPerAnulim);
 
     if (result.success) {
@@ -167,6 +169,32 @@ function FaqjaKryesoreAdmin() {
         toast.error('Gabim gjate Anulimit: ' + result.error);
     }
 }
+  const handleAprovoShitjenOnline = async () => {
+  }
+
+  const handleDataPerAprovimChange = (e) => {
+
+    const {name , value} = e.target;
+
+    setDataPerAprovim({
+      ...dataPerAprovim,
+      [name]:value
+    })
+  }
+
+  useEffect(()=>{
+
+      const totaliPranuar = dataPerAprovim.totaliPerPagese - dataPerAprovim.kostoPostes
+      
+
+      setDataPerAprovim({
+        ...dataPerAprovim,
+        totaliIPranuar:totaliPranuar
+      })
+
+
+
+  },[dataPerAprovim.kostoPostes,dataPerAprovim.totaliIPranuar])
 
   return (
     <Container fluid className='pt-3'>
@@ -199,9 +227,9 @@ function FaqjaKryesoreAdmin() {
                     <td>{item.shifra}</td>
                     <td>{item.lloji}</td>
                     <td>{item.pershkrimi}</td>
-                    <td>{item.totaliperPagese.toFixed(2)} €</td>
-                    <td>{item.totaliIPageses.toFixed(2)} €</td>
-                    <td className={item.mbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{item.mbetjaPerPagese.toFixed(2)} €</td>
+                    <td>{item.totaliperPagese} €</td>
+                    <td>{item.totaliIPageses} €</td>
+                    <td className={item.mbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{item.mbetjaPerPagese} €</td>
                     <td>{item.komenti}</td>
                     <td>{item.dataTransaksionit.toLocaleTimeString()}</td>
                     <td>
@@ -260,8 +288,9 @@ function FaqjaKryesoreAdmin() {
                   <td>{item.totaliPerPagese}</td>
                   <td>{item.komenti}</td>
                   <td>
-                    <Button className='btn btn-primary' disabled><FontAwesomeIcon icon={faPen}/></Button>
-                    <Button className='btn bg-transparent border-0 text-danger' onClick={() => thirreModal('ShitjeOnline',item.shitjeID,'anuloPorosineOnline')}><FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} /></Button>
+                    <Button  variant='outline-primary'className='mx-1' disabled><FontAwesomeIcon icon={faPen}/></Button>
+                    <Button  variant='outline-danger' className='mx-1' onClick={() => thirreModal('ShitjeOnline',item.shitjeID,'anuloPorosineOnline')}><FontAwesomeIcon icon={faTrashCan} /></Button>
+                    <Button variant='outline-success' className='mx-1' onClick={() => {setDataPerAprovim(item);setAprovoShitjenOnlineModal(true)}}><FontAwesomeIcon icon={faCheck}/></Button>
                   </td>
                 </tr>
               ))}
@@ -269,7 +298,7 @@ function FaqjaKryesoreAdmin() {
             </table>
           </div>
         </div>
-
+              
         <div className='tabelaServiseve  col-xs-12 col-sm-12 col-md-6 col-lg-6 px-3'>
           <h3>Serviset Aktive:</h3>
           <div className="table-responsive tabeleMeMaxHeight">
@@ -317,6 +346,82 @@ function FaqjaKryesoreAdmin() {
         handleConfirm={handleConfirmModal}
       />
       <UpdateServise show={modalPerServisUpdate} handleClose={closeModalPerServisUpdate} updateType={updateServisType} data = {data} />
+      
+      <Modal show={aprovoShitjenOnlineModal} onHide={() => {buttonLoading ? null : setAprovoShitjenOnlineModal(false)}}>
+      <Modal.Header closeButton>
+        <Modal.Title>Aprovo Perfundimin e Shitjes Online</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+      {dataPerAprovim &&  <Form>
+              <Col className='d-flex flex-row justify-content-around'>
+                <Form.Group>
+                  <Form.Label>Shifra e Shitjes:</Form.Label>
+                  <Form.Control disabled value={dataPerAprovim.shifra} />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Nr Porosise:</Form.Label>
+                  <Form.Control disabled value={dataPerAprovim.nrPorosise} />
+                </Form.Group>
+              </Col>
+              <Col className='d-flex flex-row mt-3 justify-content-around'>
+                <Form.Group>
+                  <Form.Label>Subjekti:</Form.Label>
+                  <Form.Control disabled value={dataPerAprovim.subjekti} />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Totali i Shitjes:</Form.Label>
+                  <InputGroup >
+                    <Form.Control  disabled value={dataPerAprovim.totaliPerPagese} />
+                    <InputGroup.Text>€</InputGroup.Text>
+                  </InputGroup>
+                </Form.Group>
+              </Col>
+              <Col className='d-flex flex-row mt-3 justify-content-around'>
+                <Form.Group>
+                  <Form.Label>Kosto e Postes:</Form.Label>
+                  <InputGroup >
+                    <Form.Control min={0} type='number' name='kostoPostes' value={dataPerAprovim.kostoPostes} onChange={handleDataPerAprovimChange}/>
+                    <InputGroup.Text>€</InputGroup.Text>
+                  </InputGroup>
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Totali i Pranuar nga Posta:</Form.Label>
+                  <InputGroup >
+                    <Form.Control min={0} type='number' name='totaliIPranuar' value={dataPerAprovim.totaliIPranuar} onChange={handleDataPerAprovimChange}/>
+                    <InputGroup.Text>€</InputGroup.Text>
+                  </InputGroup>
+                </Form.Group>
+              </Col>
+       </Form>}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={() => {buttonLoading ? null : setAprovoShitjenOnlineModal(false)}} disabled={loading}>
+          Mbyll
+        </Button>
+        <Button
+          variant="success"
+          onClick={() => handleAprovoShitjenOnline()}
+          disabled={loading}
+        >
+          {buttonLoading ? (
+            <>
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />{' '}
+              Duke ruajtur...
+            </>
+          ) : (
+              'Aprovo'
+          )}
+        </Button>
+      </Modal.Footer>
+      <ToastContainer />
+    </Modal>
+
       <ToastContainer/>
     </div>
     }

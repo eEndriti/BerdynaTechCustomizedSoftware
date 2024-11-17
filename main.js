@@ -486,9 +486,7 @@ async function fetchTableKategoria() {
   } catch (err) {
     console.error('Error retrieving data:', err);
     return [];
-  } finally {
-    await sql.close();
-  }
+  } 
 }
 ipcMain.handle('fetchTableKategoria', async () => {
   const data = await fetchTableKategoria();
@@ -603,7 +601,7 @@ async function fetchTableProfitiDitor() {
       JOIN transaksioni t ON t.transaksioniID = p.transaksioniID
       LEFT JOIN shitje sh ON sh.transaksioniID = t.transaksioniID AND t.lloji = 'Shitje'
       LEFT JOIN servisimi s ON s.transaksioniID = t.transaksioniID AND t.lloji = 'Servisim'
-      WHERE (t.lloji = 'Shitje' OR t.lloji = 'Servisim') and t.dataTransaksionit = ${dataSot}
+      WHERE (t.lloji = 'Shitje' OR t.lloji = 'Servisim') and t.dataTransaksionit = ${dataSot} and p.statusi = 0
 
 
     `;
@@ -623,51 +621,55 @@ ipcMain.handle('fetchTableProfitiDitor', async () => {
 
  const shifra = '' // ketu incializohet shifra globale, pastaj thirret prej ciles tabele kemi nevoje.
 
- async function generateNextShifra(tabela, shtojca) {
+ async function generateNextShifra(tabela, shtojca, connection) {
   let latestShifraNumber = 999; // Default starting number
   let nextShifra;
   let exists = true;
 
   try {
-    // Connect to the database
-    const pool = await sql.connect(config);
-
-    while (exists) {
-      // Query the database for the latest 'shifra'
-      const result = await pool.request().query(`
-        SELECT TOP 1 shifra 
-        FROM ${tabela} 
-        WHERE shifra LIKE '${shtojca}-%' 
-        ORDER BY CAST(SUBSTRING(shifra, LEN('${shtojca}-') + 1, LEN(shifra)) AS INT) DESC
-      `);
-
-      if (result.recordset.length > 0) {
-        // Extract the number from the latest 'shifra'
-        latestShifraNumber = parseInt(result.recordset[0].shifra.replace(`${shtojca}-`, ''), 10);
+      // Check if the connection is closed, reconnect if necessary
+      if (!connection.connected) {
+          console.log('Reconnecting SQL...');
+          await connection.connect();
       }
 
-      // Increment the number
-      nextShifra = `${shtojca}-${latestShifraNumber + 1}`;
+      while (exists) {
+          const request = connection.request();
 
-      // Check if this 'shifra' already exists in the database
-      const checkResult = await pool.request().query(`
-        SELECT COUNT(*) as count 
-        FROM ${tabela} 
-        WHERE shifra = '${nextShifra}'
-      `);
+          // Query to get the latest 'shifra'
+          const result = await request.query(`
+              SELECT TOP 1 shifra 
+              FROM ${tabela} 
+              WHERE shifra LIKE '${shtojca}-%' 
+              ORDER BY CAST(SUBSTRING(shifra, LEN('${shtojca}-') + 1, LEN(shifra)) AS INT) DESC
+          `);
 
-      // If count is 0, the 'shifra' is unique
-      if (checkResult.recordset[0].count === 0) {
-        exists = false; // Exit the loop
-      } else {
-        latestShifraNumber += 1; // Increment to try the next number
+          if (result.recordset.length > 0) {
+              latestShifraNumber = parseInt(result.recordset[0].shifra.replace(`${shtojca}-`, ''), 10);
+          }
+
+          // Increment the number
+          nextShifra = `${shtojca}-${latestShifraNumber + 1}`;
+
+          // Check if this 'shifra' already exists
+          const checkRequest = connection.request();
+          const checkResult = await checkRequest.query(`
+              SELECT COUNT(*) as count 
+              FROM ${tabela} 
+              WHERE shifra = '${nextShifra}'
+          `);
+
+          if (checkResult.recordset[0].count === 0) {
+              exists = false;
+          } else {
+              latestShifraNumber += 1;
+          }
       }
-    }
 
-    return nextShifra;
+      return nextShifra;
   } catch (err) {
-    console.error('Error generating next shifra:', err);
-    throw err;
+      console.error('Error generating next shifra:', err);
+      throw err;
   }
 }
 
@@ -832,8 +834,9 @@ ipcMain.handle('insertShpenzimi', async (event, data) => {
     connection = await sql.connect(config);
 
     // Generate the next unique 'shifra' for transaksioni
-    const shifra = await generateNextShifra('shpenzimi', 'SHP');
+    const shifra = await generateNextShifra('shpenzimi', 'SHP',connection);
     // Insert into the 'transaksioni' table and get the inserted ID
+
 
     const insertTransaksioniQuery = `
       INSERT INTO transaksioni (
@@ -874,7 +877,7 @@ ipcMain.handle('insertShpenzimi', async (event, data) => {
       .input('transaksioniID', sql.Int, transaksioniID)
       .query(insertShpenzimi);
 
-      await ndryshoBalancin(1, data.shumaShpenzimit, '-');
+      await ndryshoBalancin(1, data.shumaShpenzimit, '-',connection);
 
     return { success: true };
   } catch (error) {
@@ -894,9 +897,11 @@ ipcMain.handle('kaloNgaStokuNeShpenzim', async (event, data) => {
     dataDheOra = await getDateTime(); // Await the result of getDateTime
     // Connect to the database
     connection = await sql.connect(config);
-
     // Generate the next unique 'shifra' for transaksioni
-    const shifra = await generateNextShifra('shpenzimi', 'SHP');
+    const shifra = await generateNextShifra('shpenzimi', 'SHP',connection);
+
+    
+
     // Insert into the 'transaksioni' table and get the inserted ID
 
     const insertTransaksioniQuery = `
@@ -986,11 +991,13 @@ ipcMain.handle('insertProduktin', async (event, data) => {
   let dataDheOra
   try {
     dataDheOra = await getDateTime(); // Await the result of getDateTime
-    // Connect to the database
     connection = await sql.connect(config);
 
+
     // Generate the next unique 'shifra' for transaksioni
-    const shifra = await generateNextShifra('produkti', 'P');
+    const shifra = await generateNextShifra('produkti', 'P',connection);
+
+     // Connect to the database
     // Insert into the 'transaksioni' table and get the inserted ID
 
    
@@ -1148,11 +1155,13 @@ ipcMain.handle('insertServisi', async (event, data) => {
   let dataDheOra
   try {
     dataDheOra = await getDateTime(); // Await the result of getDateTime
-    // Connect to the database
-    connection = await sql.connect(config);
+   // Connect to the database
+   connection = await sql.connect(config);
 
     // Generate the next unique 'shifra' for transaksioni
-    const shifra = await generateNextShifra('servisimi', 'S');
+    const shifra = await generateNextShifra('servisimi', 'S',connection);
+
+     
     // Insert into the 'transaksioni' table and get the inserted ID
 
    
@@ -1458,7 +1467,7 @@ ipcMain.handle('ndryshoServisin', async (event, data) => {
       .query(updateServisinQuery);
       
       await ndryshoBalancin
-(1,data.totaliIPageses,'+')
+(1,data.totaliIPageses,'+',connection)
 
       return { success: true };
 
@@ -1556,7 +1565,7 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
           @shifra, @lloji,@pershkrimi, @totaliPerPagese, @totaliIPageses, @mbetjaPerPagese, @dataTransaksionit, @perdoruesiID, @nderrimiID, @komenti
         )
       `;
-
+        console.log(data.mbetjaPerPagese,'mbetjaPerPagese')
       const transaksioniResult = await connection.request()
         .input('shifra', sql.VarChar, data.shifra)
         .input('lloji', sql.VarChar, 'Shitje')
@@ -1644,11 +1653,18 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
             .query(updateProduktiQuery);
       }
 
+      let statusi;
+      if (data.mbetjaPerPagese <= 0) {
+        statusi =  0;
+      } else {
+        statusi =  1;
+      }
 
       const updateProfitiShitjes = `
       UPDATE profiti
       SET 
-        shuma = @shuma
+        shuma = @shuma,
+        statusi = @statusi
       WHERE 
         transaksioniID = @transaksioniID
     `;
@@ -1656,6 +1672,7 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
     await connection.request()
       .input('shuma', sql.Decimal(18, 2), profitiShitjes) 
       .input('transaksioniID', sql.Int, data.transaksioniIDFillestar) 
+      .input('statusi', sql.Int, statusi) 
       .query(updateProfitiShitjes);
 
       const tp = newTp - oldTp // sa € osht shtu ose minusu pagesa 
@@ -1682,13 +1699,13 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
             if(data.menyraPagesesID != data.menyraPagesesIDFillestare){
 
               await ndryshoBalancin
-(data.menyraPagesesIDFillestare,data.totaliPagesesFillestare,'-')
+(data.menyraPagesesIDFillestare,data.totaliPagesesFillestare,'-',connection)
               await ndryshoBalancin
-(data.menyraPagesesID,data.totaliPageses,'+')
+(data.menyraPagesesID,data.totaliPageses,'+',connection)
     
             }else{
               await ndryshoBalancin
-(data.menyraPagesesID,tp,'+')
+(data.menyraPagesesID,tp,'+',connection)
             } }      
     return { success: true };
   } catch (error) {
@@ -1792,7 +1809,7 @@ ipcMain.handle('paguajBonuset', async (event, data) => {
             .query(insert);
     }
 
-      await ndryshoBalancin(data.menyraPagesesID,data.totalBonuset,'+')
+      await ndryshoBalancin(data.menyraPagesesID,data.totalBonuset,'+',connection)
 
       return { success: true };
     } catch (error) {
@@ -1805,10 +1822,8 @@ ipcMain.handle('paguajBonuset', async (event, data) => {
     }
   });
 
-  const ndryshoBalancin = async (menyraPagesesID, shuma, veprimi) => {
-    let connection;
+  const ndryshoBalancin = async (menyraPagesesID, shuma, veprimi,connection) => {
     try {
-      connection = await sql.connect(config);
   
       const updateBalanci = veprimi == '+' 
         ? `UPDATE balanci SET shuma = shuma + @shuma WHERE menyraPagesesID = @menyraPagesesID`
@@ -1852,7 +1867,7 @@ ipcMain.handle('paguajPagen', async (event, data) => {
 
       const shumaPerPagese = Number(data.paga) + Number(data.bonusi) - Number(data.zbritje)
       await ndryshoBalancin
-(data.menyraPagesesID,shumaPerPagese,'-')
+(data.menyraPagesesID,shumaPerPagese,'-',connection)
 
       return { success: true };
     } catch (error) {
@@ -1872,8 +1887,8 @@ ipcMain.handle('transferoMjetet', async (event, data) => {
 
       connection = await sql.connect(config);
       
-      await ndryshoBalancin(data.ngaOpsioni,data.shuma,'-')
-      await ndryshoBalancin(data.neOpsionin,data.shuma,'+')
+      await ndryshoBalancin(data.ngaOpsioni,data.shuma,'-',connection)
+      await ndryshoBalancin(data.neOpsionin,data.shuma,'+',connection)
 
       return { success: true };
     } catch (error) {
@@ -1895,7 +1910,8 @@ ipcMain.handle('insertBlerje', async (event, data) => {
 
     connection = await sql.connect(config);
 
-    const shifra = await generateNextShifra('blerje', 'B');
+    const shifra = await generateNextShifra('blerje', 'B',connection);
+
 
     const insertTransaksioniQuery = `
       INSERT INTO transaksioni (
@@ -1998,8 +2014,7 @@ ipcMain.handle('insertBlerje', async (event, data) => {
       .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
       .query(insertPagesatQuery)
 
-      await ndryshoBalancin
-(data.menyraPagesesID,data.totaliPageses,'-')
+      await ndryshoBalancin(data.menyraPagesesID,data.totaliPageses,'-',connection)
 
     return { success: true };
   } catch (error) {
@@ -2014,154 +2029,154 @@ ipcMain.handle('insertBlerje', async (event, data) => {
 
 ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
   let connection;
-  let dataDheOra
-
-  let transaksioniID = null
+  let dataDheOra;
+  let transaksioniID = null;
 
   try {
-    dataDheOra = await getDateTime(); 
+      dataDheOra = await getDateTime();
+      connection = await sql.connect(config); 
 
-    connection = await sql.connect(config);
+      const shifra = await generateNextShifra('shitje', 'SH', connection);
 
-    const shifra = await generateNextShifra('shitje', 'SH');
+      if (data.lloji == 'dyqan') {
+          const insertTransaksioniQuery = `
+              INSERT INTO transaksioni (
+                  shifra, lloji, totaliPerPagese, totaliIPageses, mbetjaPerPagese, dataTransaksionit, perdoruesiID, nderrimiID, komenti
+              ) OUTPUT INSERTED.transaksioniID VALUES (
+                  @shifra, @lloji, @totaliPerPagese, @totaliIPageses, @mbetjaPerPagese, @dataTransaksionit, @perdoruesiID, @nderrimiID, @komenti
+              )
+          `;
 
-    if(data.lloji == 'dyqan'){
-      const insertTransaksioniQuery = `
-      INSERT INTO transaksioni (
-        shifra, lloji, totaliPerPagese, totaliIPageses, mbetjaPerPagese, dataTransaksionit, perdoruesiID, nderrimiID, komenti
-      ) OUTPUT INSERTED.transaksioniID VALUES (
-        @shifra, @lloji, @totaliPerPagese, @totaliIPageses, @mbetjaPerPagese, @dataTransaksionit, @perdoruesiID, @nderrimiID, @komenti
-      )
-    `;
+          const transaksioniResult = await connection.request()
+              .input('shifra', sql.VarChar, shifra)
+              .input('lloji', sql.VarChar, 'Shitje')
+              .input('totaliPerPagese', sql.Decimal(18, 2), data.totaliPerPagese)
+              .input('totaliIPageses', sql.Decimal(18, 2), data.totaliPageses)
+              .input('mbetjaPerPagese', sql.Decimal(18, 2), data.mbetjaPerPagese)
+              .input('dataTransaksionit', sql.Date, dataDheOra)
+              .input('perdoruesiID', sql.Int, data.perdoruesiID)
+              .input('nderrimiID', sql.Int, data.nderrimiID)
+              .input('komenti', sql.VarChar, data.komenti)
+              .query(insertTransaksioniQuery);
 
-    const transaksioniResult = await connection.request()
-      .input('shifra', sql.VarChar, shifra)
-      .input('lloji', sql.VarChar, 'Shitje')
-      .input('totaliPerPagese', sql.Decimal(18, 2), data.totaliPerPagese)
-      .input('totaliIPageses', sql.Decimal(18, 2), data.totaliPageses)
-      .input('mbetjaPerPagese', sql.Decimal(18, 2), data.mbetjaPerPagese)
-      .input('dataTransaksionit', sql.Date, dataDheOra)
-      .input('perdoruesiID', sql.Int, data.perdoruesiID)
-      .input('nderrimiID', sql.Int, data.nderrimiID)
-      .input('komenti', sql.VarChar, data.komenti)
-      .query(insertTransaksioniQuery);
+          transaksioniID = transaksioniResult.recordset[0].transaksioniID;
+      }
 
-     transaksioniID = transaksioniResult.recordset[0].transaksioniID;
-    }
-
-    const insertShitjeQuery = `
-      INSERT INTO shitje (
-        shifra, lloji, komenti, totaliPerPagese, totaliPageses, mbetjaPerPagese, dataShitjes, nrPorosise, menyraPagesesID, perdoruesiID, transaksioniID, subjektiID,nderrimiID,kohaGarancionit
-      ) OUTPUT INSERTED.shitjeID VALUES (
-        @shifra, @lloji, @komenti, @totaliPerPagese, @totaliPageses, @mbetjaPerPagese, @dataShitjes, @nrPorosise, @menyraPagesesID, @perdoruesiID, @transaksioniID, @subjektiID,@nderrimiID,@kohaGarancionit
-      )
-    `;
-
-    const shitjeResult = await connection.request()
-      .input('shifra', sql.VarChar, shifra)
-      .input('lloji', sql.VarChar, data.lloji)
-      .input('komenti', sql.VarChar, data.komenti)
-      .input('totaliPerPagese', sql.Decimal(18, 2), data.totaliPerPagese)
-      .input('totaliPageses', sql.Decimal(18, 2), data.totaliPageses)
-      .input('mbetjaPerPagese', sql.Decimal(18, 2), data.mbetjaPerPagese)
-      .input('dataShitjes', sql.Date, dataDheOra)
-      .input('nrPorosise', sql.Int, data.nrPorosise)
-      .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
-      .input('perdoruesiID', sql.Int, data.perdoruesiID)
-      .input('transaksioniID', sql.Int, transaksioniID)
-      .input('subjektiID', sql.Int, data.subjektiID)
-      .input('nderrimiID', sql.Int, data.nderrimiID)
-      .input('kohaGarancionit', sql.Int, data.kohaGarancionit)
-      .query(insertShitjeQuery);
-
-    const shitjeID = shitjeResult.recordset[0].shitjeID;
-
-    // Now insert into the 'shitjeProdukti' table with the retrieved 'shitjeID'
-    const insertShitjeProduktiQuery = `
-    INSERT INTO shitjeProdukti (
-      shitjeID, produktiID, sasia, cmimiShitjesPerCope, totaliProduktit, komenti, profitiProduktit
-    ) VALUES (
-      @shitjeID, @produktiID, @sasia, @cmimiShitjesPerCope, @totaliProduktit, @komenti, @profitiProduktit
-    )
-    `;
-    
-    console.log('data',data)
-
-    let profitiShitjes = 0
-    for (const produkt of data.produktet) {
-    if (produkt.profiti > 0) {
-
-      await connection.request()
-        .input('shitjeID', sql.Int, shitjeID)
-        .input('produktiID', sql.Int, produkt.produktiID)
-        .input('sasia', sql.Int, produkt.sasiaShitjes)
-        .input('cmimiShitjesPerCope', sql.Decimal(18, 2), produkt.cmimiPerCope)
-        .input('totaliProduktit', sql.Decimal(18, 2), produkt.cmimiPerCope * produkt.sasiaShitjes)
-        .input('komenti', sql.VarChar, data.komenti)
-        .input('profitiProduktit', sql.Decimal(18, 2), produkt.profiti)
-        .query(insertShitjeProduktiQuery);
-
-        profitiShitjes = produkt.profiti + profitiShitjes
-
-      // Update the 'sasia' in 'produkti' table
-      const updateProduktiQuery = `
-        UPDATE produkti
-        SET sasia = sasia - @sasia
-        WHERE produktiID = @produktiID
+      // Insert into shitje
+      const insertShitjeQuery = `
+          INSERT INTO shitje (
+              shifra, lloji, komenti, totaliPerPagese, totaliPageses, mbetjaPerPagese, dataShitjes, nrPorosise, menyraPagesesID, perdoruesiID, transaksioniID, subjektiID,nderrimiID,kohaGarancionit
+          ) OUTPUT INSERTED.shitjeID VALUES (
+              @shifra, @lloji, @komenti, @totaliPerPagese, @totaliPageses, @mbetjaPerPagese, @dataShitjes, @nrPorosise, @menyraPagesesID, @perdoruesiID, @transaksioniID, @subjektiID,@nderrimiID,@kohaGarancionit
+          )
       `;
 
-      await connection.request()
-        .input('produktiID', sql.Int, produkt.produktiID)
-        .input('sasia', sql.Int, produkt.sasiaShitjes)
-        .query(updateProduktiQuery);
-    }
-    }
+      const shitjeResult = await connection.request()
+          .input('shifra', sql.VarChar, shifra)
+          .input('lloji', sql.VarChar, data.lloji)
+          .input('komenti', sql.VarChar, data.komenti)
+          .input('totaliPerPagese', sql.Decimal(18, 2), data.totaliPerPagese)
+          .input('totaliPageses', sql.Decimal(18, 2), data.totaliPageses)
+          .input('mbetjaPerPagese', sql.Decimal(18, 2), data.mbetjaPerPagese)
+          .input('dataShitjes', sql.Date, dataDheOra)
+          .input('nrPorosise', sql.Int, data.nrPorosise)
+          .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+          .input('perdoruesiID', sql.Int, data.perdoruesiID)
+          .input('transaksioniID', sql.Int, transaksioniID)
+          .input('subjektiID', sql.Int, data.subjektiID)
+          .input('nderrimiID', sql.Int, data.nderrimiID)
+          .input('kohaGarancionit', sql.Int, data.kohaGarancionit)
+          .query(insertShitjeQuery);
 
-    await insertProfiti(data,profitiShitjes,transaksioniID,dataDheOra)
+            const shitjeID = shitjeResult.recordset[0].shitjeID;
+
+          const insertShitjeProduktiQuery = `
+          INSERT INTO shitjeProdukti (
+            shitjeID, produktiID, sasia, cmimiShitjesPerCope, totaliProduktit, komenti, profitiProduktit
+          ) VALUES (
+            @shitjeID, @produktiID, @sasia, @cmimiShitjesPerCope, @totaliProduktit, @komenti, @profitiProduktit
+          )
+          `;
+    
+
+          let profitiShitjes = 0
+          for (const produkt of data.produktet) {
+          if (produkt.profiti > 0) {
+
+            await connection.request()
+              .input('shitjeID', sql.Int, shitjeID)
+              .input('produktiID', sql.Int, produkt.produktiID)
+              .input('sasia', sql.Int, produkt.sasiaShitjes)
+              .input('cmimiShitjesPerCope', sql.Decimal(18, 2), produkt.cmimiPerCope)
+              .input('totaliProduktit', sql.Decimal(18, 2), produkt.cmimiPerCope * produkt.sasiaShitjes)
+              .input('komenti', sql.VarChar, data.komenti)
+              .input('profitiProduktit', sql.Decimal(18, 2), produkt.profiti)
+              .query(insertShitjeProduktiQuery);
+
+              profitiShitjes = produkt.profiti + profitiShitjes
+
+            const updateProduktiQuery = `
+              UPDATE produkti
+              SET sasia = sasia - @sasia
+              WHERE produktiID = @produktiID
+            `;
+
+            await connection.request()
+              .input('produktiID', sql.Int, produkt.produktiID)
+              .input('sasia', sql.Int, produkt.sasiaShitjes)
+              .query(updateProduktiQuery);
+          }
+          }
+
+          let statusi;
+            if ( data.mbetjaPerPagese <= 0) {
+              statusi =  0;
+            } else {
+              statusi =  1;
+            }
+    
+
+          await insertProfiti(data,profitiShitjes,transaksioniID,dataDheOra,statusi,connection)
    
     
 
-    const insertPagesatQuery = `
-    insert into pagesa (
-      shumaPageses,dataPageses,shifra,transaksioniID,subjektiID,menyraPagesesID
-    ) values (
-      @shumaPageses,@dataPageses,@shifra,@transaksioniID,@subjektiID,@menyraPagesesID
-    )
-  `
+          const insertPagesatQuery = `
+          insert into pagesa (
+            shumaPageses,dataPageses,shifra,transaksioniID,subjektiID,menyraPagesesID
+          ) values (
+            @shumaPageses,@dataPageses,@shifra,@transaksioniID,@subjektiID,@menyraPagesesID
+          )
+        `
 
-    await connection.request()
-      .input('shumaPageses',sql.Decimal(10,2),data.totaliPageses)
-      .input('dataPageses',sql.Date, dataDheOra)
-      .input('shifra',sql.VarChar , shifra)
-      .input('transaksioniID',sql.Int , transaksioniID)
-      .input('subjektiID',sql.Int, data.subjektiID)
-      .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
-      .query(insertPagesatQuery)
+          await connection.request()
+            .input('shumaPageses',sql.Decimal(10,2),data.totaliPageses)
+            .input('dataPageses',sql.Date, dataDheOra)
+            .input('shifra',sql.VarChar , shifra)
+            .input('transaksioniID',sql.Int , transaksioniID)
+            .input('subjektiID',sql.Int, data.subjektiID)
+            .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+            .query(insertPagesatQuery)
 
-      await ndryshoBalancin
-(data.menyraPagesesID,data.totaliPageses,'+')
+            if(data.lloji == 'dyqan'){
+              await ndryshoBalancin(data.menyraPagesesID,data.totaliPageses,'+',connection)
+            }
 
     return { success: true };
   } catch (error) {
     console.error('Database error:', error);
     return { success: false, error: error.message };
-  } finally {
-    if (connection) {
-      await sql.close();
-    }
-  }
+  } 
 });
 
-const insertProfiti = async (data,profitiShitjes,transaksioniID,dataDheOra) => {
-  let connection
+const insertProfiti = async (data,profitiShitjes,transaksioniID,dataDheOra,statusi,connection) => {
+
   try {
-    connection = await sql.connect(config);
 
     const insertProfitiShitjes = `
     insert into profiti (
-      shuma,nderrimiID,dataProfitit,transaksioniID
+      shuma,nderrimiID,dataProfitit,transaksioniID,statusi
     ) values (
-      @shuma,@nderrimiID,@dataProfitit,@transaksioniID
+      @shuma,@nderrimiID,@dataProfitit,@transaksioniID,@statusi
     )
   `
   await connection.request()
@@ -2169,6 +2184,7 @@ const insertProfiti = async (data,profitiShitjes,transaksioniID,dataDheOra) => {
   .input('nderrimiID' , sql.Int, data.nderrimiID)
   .input('dataProfitit' , sql.Date, dataDheOra)
   .input('transaksioniID' , sql.Int, transaksioniID)
+  .input('statusi' , sql.Bit, statusi)
   .query(insertProfitiShitjes)
 
    await kalkuloBonuset()
@@ -2192,7 +2208,6 @@ const kalkuloBonuset = async () => {
       .query(getProfitQuery);
     
     const totaliProfititDitor = profitResult.recordset[0]?.totaliProfititDitor || 0;
-    console.log(totaliProfititDitor, 'totaliProfititDitor');
 
     const bonusiDitor = totaliProfititDitor >= 200 ? Math.floor((totaliProfititDitor - 200) / 100) * 5 + 10 : 0;
 
@@ -2224,11 +2239,7 @@ const kalkuloBonuset = async () => {
   } catch (error) {
     console.error('Error:', error);
     return { success: false, error };
-  } finally {
-    if (connection) {
-      await connection.close();
-    }
-  }
+  } 
 };
 
 
@@ -2384,7 +2395,7 @@ ipcMain.handle('anuloShitjen', async (event, data) => {
       for (const shmn of shumaMenyraPageses) {
 
         await ndryshoBalancin
-(shmn.menyraPagesesID,shmn.totaliPageses,'-')
+(shmn.menyraPagesesID,shmn.totaliPageses,'-',connection)
 
       }
       
@@ -2528,11 +2539,11 @@ ipcMain.handle('anuloBlerjen', async (event, data) => {
         const shumaMenyraPageses = getShumaMenyraPagesesResult.recordset
 
       await ndryshoBalancin
-(shmn.menyraPagesesID,shmn.totaliPageses,'+')
+(shmn.menyraPagesesID,shmn.totaliPageses,'+',connection)
 
       for (const shmn of shumaMenyraPageses) {
         await ndryshoBalancin
-(shmn.menyraPagesesID,shmn.totaliPageses,'+')
+(shmn.menyraPagesesID,shmn.totaliPageses,'+',connection)
 
       }
 
@@ -2570,7 +2581,7 @@ ipcMain.handle('anuloBonusin', async (event, data) => {
         .query(deleteQuery)
 
     console.log('dddddaaaaaaaaatttttttaaaaaa',data)
-      await ndryshoBalancin(data.menyraPagesesID,data.shumaPageses,'-')
+      await ndryshoBalancin(data.menyraPagesesID,data.shumaPageses,'-',connection)
 
         return { success: true };
   } catch (error) {
@@ -2654,7 +2665,7 @@ ipcMain.handle('anuloShpenzimin', async (event, data) => {
 
             for (const shmn of shuma) {
               await ndryshoBalancin
-(1,shmn.shumaShpenzimit,'+')
+(1,shmn.shumaShpenzimit,'+',connection)
             }
          }
 
@@ -2752,7 +2763,7 @@ ipcMain.handle('fshijePagen', async (event, idPerAnulim) => {
 
     console.log(oldMenyraPagesesID,oldBilanci,oldData)
 
-    await ndryshoBalancin (oldMenyraPagesesID,oldBilanci,'+')
+    await ndryshoBalancin (oldMenyraPagesesID,oldBilanci,'+',connection)
 
       const deleteQuery = `
         DELETE FROM paga 
@@ -2900,8 +2911,8 @@ ipcMain.handle('ndryshoPagen', async (event, data) => {
       const oldBalanci = oldData.paga + oldData.bonusi ;
       const newBalanci = Number(data.paga) +Number(data.bonusi)  - Number(data.zbritje)
 
-      await ndryshoBalancin(oldData.menyraPagesesID,oldBalanci,'+')
-      await ndryshoBalancin(data.menyraPagesesID,newBalanci,'-')
+      await ndryshoBalancin(oldData.menyraPagesesID,oldBalanci,'+',connection)
+      await ndryshoBalancin(data.menyraPagesesID,newBalanci,'-',connection)
 
       const update = `
         Update paga 
@@ -2990,7 +3001,7 @@ ipcMain.handle('ndryshoShpenzimin', async (event, data) => {
       let diferenca  = shumaFillestare - data.shumaShpenzimit
 
       await ndryshoBalancin
-(1,diferenca,'+')
+(1,diferenca,'+',connection)
 
     return { success: true };
 

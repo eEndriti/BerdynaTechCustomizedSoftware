@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Container, Spinner, Col, Row } from 'react-bootstrap';
+import { Container, Spinner, Col, Row,Form,Button } from 'react-bootstrap';
+import AnimatedSpinner from './AnimatedSpinner';
+import ChartComponent from './ChartComponent';
 
 export default function Evidenca() {
   const [loading, setLoading] = useState(true);
@@ -8,6 +10,16 @@ export default function Evidenca() {
   const [vleraBlerjevePaPaguar, setVleraBlerjevePaPaguar] = useState([]);
   const [produktiData, setProduktiData] = useState([]);
   const [error, setError] = useState(null);
+  const [startDate, setStartDate] = useState();
+  const [endDate, setEndDate] = useState();
+  const [totalQarkullimi,setTotalQarkullimi] = useState(0)
+  const [totalBlerje,setTotalBlerje] = useState(0)
+  const [totalShitje,setTotalShitje] = useState(0)
+  const [totalHyrje,setTotalHyrje] = useState(0)
+  const [totalServisime,setTotalServisime] = useState(0)
+  const [totalShpenzime,setTotalShpenzime] = useState(0)
+  const [loading2,setLoading2] = useState(false)
+  const [tregoGrafikun,setTregoGrafikun] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,12 +38,19 @@ export default function Evidenca() {
             FROM produkti p
           `)
         ]);
+        
 
         // Set state with fetched data
         setMenyratEPageses(menyratResponse);
         setVleraShitjevePaPaguar(shitjeResponse);
         setVleraBlerjevePaPaguar(blerjeResponse);
         setProduktiData(produktiResponse);
+        setStartDate(() => {
+          const today = new Date();
+          today.setDate(1); 
+          return today.toISOString().split('T')[0]; 
+        })
+        setEndDate(() => new Date().toISOString().split('T')[0])
         setLoading(false);
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -42,6 +61,63 @@ export default function Evidenca() {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (!startDate || !endDate) return;  
+  
+    const fetchData = async () => {
+      setLoading2(true);
+      try {
+        const query1 = `
+          SELECT SUM(b.totaliPageses) as totaliPagesesBlerje
+          FROM blerje b 
+          WHERE b.dataBlerjes BETWEEN '${startDate}' AND '${endDate}'
+        `;
+        const data1 = await window.api.fetchTableQuery(query1);
+
+        const query2 = `
+           select sum(s.totaliPageses) as totaliPagesesShitje from shitje s
+            where s.dataShitjes BETWEEN '${startDate}' AND '${endDate}'
+          `;
+        const data2 = await window.api.fetchTableQuery(query2);
+
+        const query3 = `
+          select sum(sh.shumaShpenzimit) as totaliPagesesShpenzim from shpenzimi sh
+          where sh.dataShpenzimit BETWEEN '${startDate}' AND '${endDate}'
+        `;
+        const data3 = await window.api.fetchTableQuery(query3);
+
+        const query4 = `
+          select ISNULL(SUM(s.totaliPageses), 0) as totaliPagesesServisim  from servisimi s
+          where statusi = 'perfunduar' and s.dataPerfundimit BETWEEN '${startDate}' AND '${endDate}'
+        `;
+        const data4 = await window.api.fetchTableQuery(query4);
+
+        const query5 = `
+           select sum(p.shuma) as totalHyrje from profiti p
+          where p.statusi = 0 AND p.dataProfitit BETWEEN '${startDate}' AND '${endDate}'
+        `;
+        const data5 = await window.api.fetchTableQuery(query5);
+        
+        setTotalBlerje(data1[0].totaliPagesesBlerje)
+        setTotalShitje(data2[0].totaliPagesesShitje)
+        setTotalShpenzime(data3[0].totaliPagesesShpenzim)
+        setTotalServisime(data4[0].totaliPagesesServisim)
+        setTotalHyrje(data5[0].totalHyrje)
+
+        const totalQarkullimi = (data1[0].totaliPagesesBlerje || 0) + (data2[0].totaliPagesesShitje || 0) + (data3[0].totaliPagesesShpenzim || 0) + (data4[0].totaliPagesesServisim || 0);
+        setTotalQarkullimi(totalQarkullimi);
+                
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading2(false);
+      }
+    };
+  
+    fetchData();
+  }, [startDate, endDate]);  
+  
 
   if (loading) {
     return (
@@ -77,14 +153,43 @@ export default function Evidenca() {
       </Row>
       <hr />
 
-      <Row>
-        <h4 className='text-center'>Evidenca Mujore: 'Qershor 1999'</h4>
-        <Col className='text-center d-flex flex-wrap justify-content-start align-items-center p-2 m-2'>
-            <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Qarkullimit : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[1]?.vleraEBlerjeve.toFixed(2) || 'N/A'} €</span></h5>
-            <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Qarkullimit : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[1]?.vleraEBlerjeve.toFixed(2) || 'N/A'} €</span></h5>
-            <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Qarkullimit : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[1]?.vleraEBlerjeve.toFixed(2) || 'N/A'} €</span></h5>
-            <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Qarkullimit : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[1]?.vleraEBlerjeve.toFixed(2) || 'N/A'} €</span></h5>
+      <Row className='d-flex flex-column'>
+          <Col className='d-flex flex-row justify-content-center '>
+            <h4 className='px-3 '>Evidenca brenda Periudhes :</h4>
+              <Col className='d-flex'>
+                <Form.Group className='mx-1'>
+                  <Form.Control
+                    type='date'
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                </Form.Group>
+                <Form.Group className='mx-1'>
+                  <Form.Control
+                    type='date'
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+              <Button variant='outline-primary' onClick={() => setTregoGrafikun(!tregoGrafikun)}>{tregoGrafikun ? 'Mbylle Grafikun' : 'Trego Grafikun'}</Button>
           </Col>
+         {loading2 ? <AnimatedSpinner/> : 
+            <Col>
+              {tregoGrafikun ?   
+              <ChartComponent totalShitje={totalShitje} totalBlerje={totalBlerje} totalShpenzime={totalShpenzime} totalServisime={totalServisime} totalHyrje={totalHyrje}/>     
+              :
+              <Col className='text-center d-flex flex-wrap justify-content-start align-items-center p-2 m-2 mt-4'>
+              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Qarkullimit : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{totalQarkullimi.toFixed(2)} €</span></h5>
+              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Shitjeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{totalShitje.toFixed(2)} €</span></h5>
+              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Hyrjeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{totalHyrje.toFixed(2)} €</span></h5>
+              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Blerjeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{totalBlerje.toFixed(2)} €</span></h5>
+              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Servisimeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{totalServisime.toFixed(2)} €</span></h5>
+              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Shpenzimeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{totalShpenzime.toFixed(2)} €</span></h5>
+            </Col>}
+            </Col>     
+
+        }
       </Row>
           <hr/><br/>
       <Row>

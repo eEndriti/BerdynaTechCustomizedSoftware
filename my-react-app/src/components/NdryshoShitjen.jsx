@@ -181,12 +181,16 @@ export default function NdryshoShitjen() {
 
       const handleTotaliPagesesChange = (e) => {
         const value = parseFloat(e.target.value) || 0;
+        console.log(mbetjaPerPagese,'mbetja')
         if (value <= totaliPerPagese) {
           setTotaliPageses(value);
         } else {
           toast.error('Shuma e paguar nuk mund të jetë më e madhe se totali!');
         }
       };
+      useEffect(() => {
+        setMbetjaPerPagese(totaliPerPagese - totaliPageses)
+      },[totaliPageses])
       
       const handleNrPorosiseChange = (event) => {
         setNrPorosise(event.target.value);

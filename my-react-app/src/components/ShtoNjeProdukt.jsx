@@ -7,6 +7,7 @@ import AnimatedSpinner from './AnimatedSpinner';
 
 const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
   const [kategorite, setKategorite] = useState([]);
+  const [aKa,setAKa] = useState(true)
   const [selectedKategoria, setSelectedKategoria] = useState(null);
   const [loading, setLoading] = useState(false);
   const [meFature, setMeFature] = useState(false);
@@ -25,11 +26,12 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
   useEffect(() => {
     
     window.api.fetchTableKategoria().then((data) => setKategorite(data));
-    if(produkti){
+    if(produkti && aKa){
       setMeFature(produkti.meFatureTeRregullt == 'po') 
       setProductDetails(produkti)
       console.log('prd',produkti)
       handleCategoryChange(produkti.kategoriaID)
+      setAKa(false)
     }
     
   }, [produkti]);

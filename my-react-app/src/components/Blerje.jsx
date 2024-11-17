@@ -1,5 +1,5 @@
 import { useState,useEffect } from "react";
-import { Container, Row,Col,Form, Button,Table,Spinner,InputGroup } from "react-bootstrap";
+import { Container, Row,Col,Form, Button,Table,Spinner,InputGroup, Tooltip } from "react-bootstrap";
 import KerkoSubjektin from './KerkoSubjektin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; 
@@ -297,7 +297,7 @@ export default function Blerje() {
         <Col className="d-flex flex-row justify-content-center align-items-center">
             <Form.Group>
               <Form.Label>Fature e Rregullt</Form.Label>
-              <Form.Check inline defaultChecked={meFatureTeRregullt} onChange={handleMeFatureTeRregullt} className="px-2"/>
+              <Form.Check inline defaultChecked={meFatureTeRregullt} onChange={handleMeFatureTeRregullt} className="px-2" disabled={products.length > 1}/>
             </Form.Group>
         </Col>
         <Col xs={12} md={6} className="d-flex justify-content-center">

@@ -51,8 +51,13 @@ export default function Shitje() {
 
       return acc + totali;
     }, 0);
-    setTotaliPerPagese(total);
-    setTotaliPageses(total)
+    if(llojiShitjes == 'dyqan'){
+      setTotaliPerPagese(total);
+      setTotaliPageses(total)
+    }else{
+      setTotaliPerPagese(total);
+      setTotaliPageses(0)
+    }
   }, [products]);
 
   const handleProductSelect = (product) => {
