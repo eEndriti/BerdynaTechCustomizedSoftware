@@ -45,7 +45,7 @@ async function getDateTime() {
     const data = await response.json();
     return data.datetime; // Returns the datetime in ISO 8601 format
   } catch (error) {
-    console.error('Failed to fetch datetime from online server:', error);
+    console.error('Failed to fetch datetime from online server:');
     // Fallback to local system time if the request fails
     return new Date().toISOString(); // Return the current local datetime in ISO format
   }
@@ -257,7 +257,7 @@ async function fetchTableShitje() {
     await sql.connect(config);
     const result = await sql.query`
         select sh.shitjeID,sh.shifra,sh.lloji,sh.komenti,sh.totaliPerPagese,sh.totaliPageses,
-        sh.mbetjaPerPagese,sh.dataShitjes,sh.nrPorosise,sh.menyraPagesesID,sh.perdoruesiID,
+        sh.mbetjaPerPagese,sh.dataShitjes,sh.menyraPagesesID,sh.perdoruesiID,
         sh.transaksioniID,sh.kohaGarancionit,s.emertimi as 'subjekti',sh.subjektiID,m.emertimi as 'menyraPageses',p.emri as 'perdoruesi',n.numriPercjelles,n.dataFillimit from shitje sh
         join subjekti s on s.subjektiID = sh.subjektiID
         join menyraPageses m on m.menyraPagesesID = sh.menyraPagesesID
@@ -274,6 +274,32 @@ async function fetchTableShitje() {
 }
 ipcMain.handle('fetchTableShitje', async () => {
   const data = await fetchTableShitje();
+  return data;
+});
+
+async function fetchTableShitjeOnline() {
+  try {
+    await sql.connect(config);
+    const result = await sql.query`
+        select sh.shitjeID,sh.shifra,sh.lloji,sh.komenti,sh.totaliPerPagese,sh.totaliPageses,
+        sh.mbetjaPerPagese,sh.dataShitjes,sh.menyraPagesesID,sh.perdoruesiID,
+        sh.transaksioniID,sh.kohaGarancionit,s.emertimi as 'subjekti',sh.subjektiID,m.emertimi as 'menyraPageses',p.emri as 'perdoruesi',n.numriPercjelles,n.dataFillimit,sho.nrPorosise,sho.profitiID,sho.statusi from shitje sh
+        join subjekti s on s.subjektiID = sh.subjektiID
+        join menyraPageses m on m.menyraPagesesID = sh.menyraPagesesID
+        join Perdoruesi p on p.perdoruesiID = sh.perdoruesiID
+        join nderrimi n on n.nderrimiID = sh.nderrimiID
+		    join shitjeOnline sho on sho.shitjeID = sh.shitjeID
+        `;
+    return result.recordset;
+  } catch (err) {
+    console.error('Error retrieving data:', err);
+    return [];
+  } finally {
+    await sql.close();
+  }
+}
+ipcMain.handle('fetchTableShitjeOnline', async () => {
+  const data = await fetchTableShitjeOnline();
   return data;
 });
 
@@ -1590,7 +1616,6 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
               totaliPageses = @totaliPageses,
               mbetjaPerPagese = @mbetjaPerPagese,
               dataShitjes = @dataShitjes,
-              nrPorosise = @nrPorosise,
               menyraPagesesID = @menyraPagesesID,
               subjektiID = @subjektiID,
               kohaGarancionit = @kohaGarancionit
@@ -1606,7 +1631,6 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
       .input('totaliPageses', sql.Decimal(18, 2), data.totaliPageses)
       .input('mbetjaPerPagese', sql.Decimal(18, 2), data.mbetjaPerPagese)
       .input('dataShitjes', sql.Date, data.dataShitjes)
-      .input('nrPorosise', sql.Int, data.nrPorosise)
       .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
       .input('subjektiID', sql.Int, data.subjektiID)
       .input('kohaGarancionit', sql.Int, data.kohaGarancionit)
@@ -1880,6 +1904,9 @@ ipcMain.handle('paguajPagen', async (event, data) => {
     }
   });
 
+
+
+
 ipcMain.handle('transferoMjetet', async (event, data) => {
     let connection;
     try {
@@ -2065,9 +2092,9 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
       // Insert into shitje
       const insertShitjeQuery = `
           INSERT INTO shitje (
-              shifra, lloji, komenti, totaliPerPagese, totaliPageses, mbetjaPerPagese, dataShitjes, nrPorosise, menyraPagesesID, perdoruesiID, transaksioniID, subjektiID,nderrimiID,kohaGarancionit
+              shifra, lloji, komenti, totaliPerPagese, totaliPageses, mbetjaPerPagese, dataShitjes, menyraPagesesID, perdoruesiID, transaksioniID, subjektiID,nderrimiID,kohaGarancionit
           ) OUTPUT INSERTED.shitjeID VALUES (
-              @shifra, @lloji, @komenti, @totaliPerPagese, @totaliPageses, @mbetjaPerPagese, @dataShitjes, @nrPorosise, @menyraPagesesID, @perdoruesiID, @transaksioniID, @subjektiID,@nderrimiID,@kohaGarancionit
+              @shifra, @lloji, @komenti, @totaliPerPagese, @totaliPageses, @mbetjaPerPagese, @dataShitjes, @menyraPagesesID, @perdoruesiID, @transaksioniID, @subjektiID,@nderrimiID,@kohaGarancionit
           )
       `;
 
@@ -2079,7 +2106,6 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
           .input('totaliPageses', sql.Decimal(18, 2), data.totaliPageses)
           .input('mbetjaPerPagese', sql.Decimal(18, 2), data.mbetjaPerPagese)
           .input('dataShitjes', sql.Date, dataDheOra)
-          .input('nrPorosise', sql.Int, data.nrPorosise)
           .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
           .input('perdoruesiID', sql.Int, data.perdoruesiID)
           .input('transaksioniID', sql.Int, transaksioniID)
@@ -2089,6 +2115,15 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
           .query(insertShitjeQuery);
 
             const shitjeID = shitjeResult.recordset[0].shitjeID;
+
+            const insertShitjeOnline = `
+            INSERT INTO shitjeOnline (
+                shitjeID,statusi,nrPorosise,profitiID
+            ) VALUES (
+                @shitjeID,@statusi,@nrPorosise,@profitiID               
+            )`
+
+            
 
           const insertShitjeProduktiQuery = `
           INSERT INTO shitjeProdukti (
@@ -2135,11 +2170,8 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
               statusi =  1;
             }
     
-
-          await insertProfiti(data,profitiShitjes,transaksioniID,dataDheOra,statusi,connection)
+          const profitiID = await insertProfiti(data,profitiShitjes,transaksioniID,dataDheOra,statusi,connection)
    
-    
-
           const insertPagesatQuery = `
           insert into pagesa (
             shumaPageses,dataPageses,shifra,transaksioniID,subjektiID,menyraPagesesID
@@ -2157,6 +2189,15 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
             .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
             .query(insertPagesatQuery)
 
+            if(data.lloji == 'online'){
+              await connection.request()
+              .input('shitjeID', sql.Int, shitjeID)
+              .input('statusi', sql.TinyInt, 1)
+              .input('nrPorosise', sql.VarChar, data.nrPorosise)
+              .input('profitiID', sql.Int, profitiID)
+              .query(insertShitjeOnline);
+            }
+
             if(data.lloji == 'dyqan'){
               await ndryshoBalancin(data.menyraPagesesID,data.totaliPageses,'+',connection)
             }
@@ -2168,31 +2209,146 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
   } 
 });
 
-const insertProfiti = async (data,profitiShitjes,transaksioniID,dataDheOra,statusi,connection) => {
+ipcMain.handle('perfundoShitjenOnline', async (event, data) => {
+  let connection;
+  let dataDheOra;
+  let transaksioniID = null;
 
   try {
+      dataDheOra = await getDateTime();
+      connection = await sql.connect(config); 
 
+
+          const insertTransaksioniQuery = `
+              INSERT INTO transaksioni (
+                  shifra, lloji, totaliPerPagese, totaliIPageses, mbetjaPerPagese, dataTransaksionit, perdoruesiID, nderrimiID, komenti
+              ) OUTPUT INSERTED.transaksioniID VALUES (
+                  @shifra, @lloji, @totaliPerPagese, @totaliIPageses, @mbetjaPerPagese, @dataTransaksionit, @perdoruesiID, @nderrimiID, @komenti
+              )
+          `;
+      console.log('nderrimiID',data.nderrimiID)
+
+          const transaksioniResult = await connection.request()
+              .input('shifra', sql.VarChar, data.shifra)
+              .input('lloji', sql.VarChar, 'Shitje')
+              .input('totaliPerPagese', sql.Decimal(18, 2), data.totaliIPranuar)
+              .input('totaliIPageses', sql.Decimal(18, 2), data.totaliIPranuar)
+              .input('mbetjaPerPagese', sql.Decimal(18, 2), 0)
+              .input('dataTransaksionit', sql.Date, dataDheOra)
+              .input('perdoruesiID', sql.Int, data.perdoruesiID)
+              .input('nderrimiID', sql.Int, data.nderrimiID)
+              .input('komenti', sql.VarChar, data.komenti)
+              .query(insertTransaksioniQuery);
+
+          transaksioniID = transaksioniResult.recordset[0].transaksioniID;
+
+      // Insert into shitje
+      const updateShitjeQuery = `
+          UPDATE shitje 
+            SET totaliPerPagese = @totaliPerPagese,
+                totaliPageses = @totaliPageses,       
+                mbetjaPerPagese = @mbetjaPerPagese,
+                transaksioniID = @transaksioniID
+            WHERE shitjeID = @shitjeID
+      `;
+
+      await connection.request()
+          .input('totaliPerPagese', sql.Decimal(18, 2), data.totaliIPranuar)
+          .input('totaliPageses', sql.Decimal(18, 2), data.totaliIPranuar)
+          .input('mbetjaPerPagese', sql.Decimal(18, 2), 0)
+          .input('transaksioniID', sql.Int, transaksioniID)
+          .input('shitjeID', sql.Int, data.shitjeID)
+          .query(updateShitjeQuery);
+
+            const updateShitjeOnline =`
+                UPDATE shitjeOnline
+                  SET statusi = @statusi,
+                      dataPranimit = @dataPranimit,       
+                      kostoPostes = @kostoPostes,
+                      totaliIPranimit = @totaliIPranimit
+                WHERE shitjeID = @shitjeID
+            `;
+
+            await connection.request()
+              .input('statusi', sql.TinyInt, 0)
+              .input('dataPranimit', sql.DateTime, dataDheOra)
+              .input('kostoPostes', sql.Decimal(18,2), data.kostoPostes)
+              .input('totaliIPranimit', sql.Decimal(18,2), data.totaliIPranuar)
+              .input('shitjeID', sql.Int, data.shitjeID)
+              .query(updateShitjeOnline);
+
+              const updateProfitiShitjes = `
+              UPDATE profiti
+              SET 
+                statusi = @statusi,
+                transaksioniID = @transaksioniID
+              WHERE 
+                profitiID = @profitiID
+            `;
+        
+            await connection.request()
+              .input('transaksioniID', sql.Int, transaksioniID) 
+              .input('statusi', sql.Int, 0) 
+              .input('profitiID', sql.Int, data.profitiID) 
+              .query(updateProfitiShitjes);
+       
+          const insertPagesatQuery = `
+          insert into pagesa (
+            shumaPageses,dataPageses,shifra,transaksioniID,subjektiID,menyraPagesesID
+          ) values (
+            @shumaPageses,@dataPageses,@shifra,@transaksioniID,@subjektiID,@menyraPagesesID
+          )
+        `
+
+          await connection.request()
+            .input('shumaPageses',sql.Decimal(10,2),data.totaliIPranuar)
+            .input('dataPageses',sql.Date, dataDheOra)
+            .input('shifra',sql.VarChar , data.shifra)
+            .input('transaksioniID',sql.Int , transaksioniID)
+            .input('subjektiID',sql.Int, data.subjektiID)
+            .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+            .query(insertPagesatQuery)
+
+          await ndryshoBalancin(data.menyraPagesesID,data.totaliIPranuar,'+',connection)
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  } 
+});
+
+const insertProfiti = async (data, profitiShitjes, transaksioniID, dataDheOra, statusi, connection) => {
+  try {
     const insertProfitiShitjes = `
-    insert into profiti (
-      shuma,nderrimiID,dataProfitit,transaksioniID,statusi
-    ) values (
-      @shuma,@nderrimiID,@dataProfitit,@transaksioniID,@statusi
-    )
-  `
-  await connection.request()
-  .input('shuma' , sql.Decimal(10,2), profitiShitjes)
-  .input('nderrimiID' , sql.Int, data.nderrimiID)
-  .input('dataProfitit' , sql.Date, dataDheOra)
-  .input('transaksioniID' , sql.Int, transaksioniID)
-  .input('statusi' , sql.Bit, statusi)
-  .query(insertProfitiShitjes)
+      INSERT INTO profiti (
+        shuma, nderrimiID, dataProfitit, transaksioniID, statusi
+      ) 
+      OUTPUT INSERTED.profitiID
+      VALUES (
+        @shuma, @nderrimiID, @dataProfitit, @transaksioniID, @statusi
+      )
+    `;
 
-   await kalkuloBonuset()
-  return {success: true}
-  }catch(error){
-    console.log(error)
+    const result = await connection.request()
+      .input('shuma', sql.Decimal(10, 2), profitiShitjes)
+      .input('nderrimiID', sql.Int, data.nderrimiID)
+      .input('dataProfitit', sql.Date, dataDheOra)
+      .input('transaksioniID', sql.Int, transaksioniID)
+      .input('statusi', sql.Bit, statusi)
+      .query(insertProfitiShitjes);
+
+    const profitiID = result.recordset[0].profitiID; // Extract the inserted ID
+
+    await kalkuloBonuset();
+
+    return profitiID; // Return the inserted ID
+  } catch (error) {
+    console.log(error);
+    return null; // Return null in case of an error
   }
-}
+};
+
 
 const kalkuloBonuset = async () => {
   let connection;
@@ -2352,6 +2508,8 @@ ipcMain.handle('anuloShitjen', async (event, data) => {
       // Hapi 3: i fshijme te dhenat nga tabelat  shitjeProdukti,profiti,pagesa, shitje, dhe transaksioni 
 
 
+     
+
       const deleteProfiti = `
       DELETE FROM profiti 
       WHERE  transaksioniID = @transaksioniID
@@ -2398,7 +2556,6 @@ ipcMain.handle('anuloShitjen', async (event, data) => {
 (shmn.menyraPagesesID,shmn.totaliPageses,'-',connection)
 
       }
-      
       await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteProfiti);
       await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deletePagesaQuery);
       await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShitjeProduktiQuery);

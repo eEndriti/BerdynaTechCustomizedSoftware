@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('api', {
     mbyllNderriminAktual: () => ipcRenderer.invoke('mbyllNderriminAktual'),
     fetchTableTransaksionet: () => ipcRenderer.invoke('fetchTableTransaksionet'),
     fetchTableShitje: () => ipcRenderer.invoke('fetchTableShitje'),
+    fetchTableShitjeOnline: () => ipcRenderer.invoke('fetchTableShitjeOnline'),
     fetchTableQuery: (query) => ipcRenderer.invoke('fetchTableQuery',query),
     fetchTableServisi: () => ipcRenderer.invoke('fetchTableServisi'),
     fetchTableSubjekti: (lloji) => ipcRenderer.invoke('fetchTableSubjekti', lloji),
@@ -64,6 +65,7 @@ contextBridge.exposeInMainWorld('api', {
     paguajBonuset: (data) => ipcRenderer.invoke('paguajBonuset', data),
     paguajPagen: (data) => ipcRenderer.invoke('paguajPagen', data),
     transferoMjetet: (data) => ipcRenderer.invoke('transferoMjetet', data),
+    perfundoShitjenOnline: (data) => ipcRenderer.invoke('perfundoShitjenOnline', data),
 
 
 

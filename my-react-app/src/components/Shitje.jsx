@@ -369,7 +369,7 @@ export default function Shitje() {
       <Col xs={12} md={6} className="d-flex justify-content-center align-items-end">
         <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleAnulo}>Anulo</Button>
         <Button variant="success" size="lg" className="mx-2 fs-1" 
-        disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || !(menyraPagesesID) || loading} 
+        disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || !(menyraPagesesID) || loading || (llojiShitjes == 'online' && nrPorosise.length < 1)} 
         onClick={handleRegjistro} >{loading ? (
           <>
             <Spinner

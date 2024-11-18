@@ -13,9 +13,9 @@ function FaqjaKryesoreAdmin() {
   const [loading,setLoading] = useState(true)
   const [transaksionet,setTransaksionet] = useState([])
   const [shitjet,setShitjet] = useState([])
+  const [shitjetOnline,setShitjetOnline] = useState([])
   const [serviset,setServiset] = useState([])
   const [transaksionetENderrimit,setTransaksionetENderrimit] = useState([])
-  const [porositeNePritje,setPorositeNePritje] = useState([])
   const [servisetAktive,setServisetAktive] = useState([])
   const [showModal,setShowModal] = useState(false)
   const [burimiThirrjes,setBurimiThirrjes] = useState('')
@@ -24,7 +24,7 @@ function FaqjaKryesoreAdmin() {
   const [modalPerServisUpdate,setModalPerServisUpdate] = useState()
   const [data,setData] = useState('')
   const [updateServisType,setUpdateServisType] = useState()
-  const { nderrimiID } = useAuthData()
+  const { nderrimiID,perdoruesiID } = useAuthData()
   const [aprovoShitjenOnlineModal,setAprovoShitjenOnlineModal] = useState(false)
   const [dataPerAprovim,setDataPerAprovim] = useState({kostoPostes:3,totaliIPranuar:0})
   const [buttonLoading,setButtonLoading] = useState(false)
@@ -32,24 +32,26 @@ function FaqjaKryesoreAdmin() {
   useEffect(() => {
 
     const fetchData = async () => {
-      const [transaksionetData, shitjetData, servisetData] = await Promise.all([
-        window.api.fetchTableTransaksionet(),
-        window.api.fetchTableShitje(),
-        window.api.fetchTableServisi(),
-      ]);
-  
-      setTransaksionet(transaksionetData);
-      setShitjet(shitjetData)
-      setServiset(servisetData)
-
-      const shitjetEFiltruara = shitjetData.filter(item => item.lloji === 'online');
-      setPorositeNePritje(shitjetEFiltruara);
-  
-      // Filter serviset
-      const servisetAktive = servisetData.filter(item => item.statusi === 'Aktiv');
-      setServisetAktive(servisetAktive);
-
-      setLoading(false)
+      try{
+        const [transaksionetData, shitjetData, servisetData,shitjetOnlineData] = await Promise.all([
+          window.api.fetchTableTransaksionet(),
+          window.api.fetchTableShitje(),
+          window.api.fetchTableServisi(),
+          window.api.fetchTableShitjeOnline(),
+        ]);
+    
+        setTransaksionet(transaksionetData);
+        setShitjet(shitjetData)
+        setServiset(servisetData)
+        setShitjetOnline(shitjetOnlineData.filter(item => item.statusi))
+    
+        const servisetAktive = servisetData.filter(item => item.statusi === 'Aktiv');
+        setServisetAktive(servisetAktive);
+      }catch(e){
+        console.log(e)
+      }finally{
+        setLoading(false)
+      }
     };
   
     fetchData();
@@ -126,26 +128,6 @@ function FaqjaKryesoreAdmin() {
     }
   }
   const handleCloseModal = () => setShowModal(false);
-
-  const calculateTotal = (transaksionet, field) => 
-    transaksionet.reduce((acc, transaksion) => {
-      if (transaksion.nderrimiID === nderrimiID) {
-        if (transaksion.lloji === 'Blerje') {
-          // Subtract the value from acc if 'Blerje'
-          return acc - transaksion[field];
-        } else {
-          // Add the value for other transaction types
-          return acc + transaksion[field];
-        }
-      }
-      // If nderrimiID does not match, return acc unchanged
-      return acc;
-    }, 0);
-  
-  
-  const totalPerPagese = calculateTotal(transaksionet, 'totaliperPagese');
-  const totaliIPaguar = calculateTotal(transaksionet, 'totaliIPageses');
-  const mbetjaPerPagese = calculateTotal(transaksionet, 'mbetjaPerPagese');
   
   const closeModalPerServisUpdate = () => setModalPerServisUpdate(false)
 
@@ -169,8 +151,24 @@ function FaqjaKryesoreAdmin() {
         toast.error('Gabim gjate Anulimit: ' + result.error);
     }
 }
-  const handleAprovoShitjenOnline = async () => {
+const handleAprovoShitjenOnline = async () => {
+  const updatedDataPerAprovim = {
+    ...dataPerAprovim,
+    perdoruesiID: perdoruesiID,
+    nderrimiID: nderrimiID
+  };
+
+  setButtonLoading(true);
+
+  try {
+    await window.api.perfundoShitjenOnline(updatedDataPerAprovim);
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setButtonLoading(false);
+    setAprovoShitjenOnlineModal(false);
   }
+};
 
   const handleDataPerAprovimChange = (e) => {
 
@@ -185,15 +183,10 @@ function FaqjaKryesoreAdmin() {
   useEffect(()=>{
 
       const totaliPranuar = dataPerAprovim.totaliPerPagese - dataPerAprovim.kostoPostes
-      
-
       setDataPerAprovim({
         ...dataPerAprovim,
         totaliIPranuar:totaliPranuar
       })
-
-
-
   },[dataPerAprovim.kostoPostes,dataPerAprovim.totaliIPranuar])
 
   return (
@@ -250,14 +243,6 @@ function FaqjaKryesoreAdmin() {
         </div>
       </div>
       <hr/>
-
-      <Row>
-        <Col className='text-center d-flex flex-wrap justify-content-center align-items-end mt-2 p-2 m-2'>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Totali per Pagese : <span className='fs-4 fw-bold mainTextColor p-2 d-inline'>{totalPerPagese} €</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Paguar : <span className='fs-4 fw-bold mainTextColor p-2 d-inline'>{totaliIPaguar} €</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Mbetja per Pagese : <span className='fs-4 fw-bold mainTextColor p-2 d-inline'>{mbetjaPerPagese} €</span></h5>
-        </Col>
-      </Row>
       
       <div className="Container fluid mt-5 d-flex flex-row align-items-top">
 
@@ -278,7 +263,7 @@ function FaqjaKryesoreAdmin() {
                 </tr>
               </thead>
               <tbody>
-              {porositeNePritje.map((item,index) => (
+                {shitjetOnline.map((item,index) => (
                 <tr key={index}>
                   <th scope="row">{index+1}</th>
                   <td>{item.shifra}</td>
@@ -352,7 +337,7 @@ function FaqjaKryesoreAdmin() {
         <Modal.Title>Aprovo Perfundimin e Shitjes Online</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-      {dataPerAprovim &&  <Form>
+        {dataPerAprovim &&  <Form>
               <Col className='d-flex flex-row justify-content-around'>
                 <Form.Group>
                   <Form.Label>Shifra e Shitjes:</Form.Label>

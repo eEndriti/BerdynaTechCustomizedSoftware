@@ -151,9 +151,10 @@ export default function KerkoProduktin({ show, onHide, onSelect, meFatureProp })
             prejardhja={"paRefresh"}
             handleClose={() => setShowShtoProduktinModal(false)}
           />
-          <ToastContainer />
         </Modal>
       )}
+                <ToastContainer />
+
     </>
   );
 }
