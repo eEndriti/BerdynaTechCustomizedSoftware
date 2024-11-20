@@ -142,6 +142,24 @@ ipcMain.handle('fetchTablePunonjesit', async () => {
   return data;
 });
 
+async function fetchTableNderrimi() {
+  try {
+    await sql.connect(config);
+    const result = await sql.query`SELECT * FROM nderrimi`;
+    return result.recordset;
+  } catch (err) {
+    console.error('Error retrieving data:', err);
+    return [];
+  } finally {
+    await sql.close();
+  }
+}
+
+ipcMain.handle('fetchTableNderrimi', async () => {
+  const data = await fetchTableNderrimi();
+  return data;
+});
+
 async function kontrolloNderriminAktual() {
   try {
     await sql.connect(config);
@@ -203,15 +221,21 @@ async function mbyllNderriminAktual() {
       UPDATE nderrimi
       SET dataMbarimit = ${currentDate}, iHapur = 0
       WHERE iHapur = 1`;
+
+    // Return success
+    return { success: true };
   } catch (err) {
     console.error('Error closing current shift:', err);
+    // Return failure with error message
+    return { success: false, error: err.message };
   } finally {
     await sql.close();
   }
 }
 
 ipcMain.handle('mbyllNderriminAktual', async () => {
-  await mbyllNderriminAktual();
+  const result = await mbyllNderriminAktual();
+  return result; // Ensure the result is returned to the renderer process
 });
 
 
@@ -258,11 +282,12 @@ async function fetchTableShitje() {
     const result = await sql.query`
         select sh.shitjeID,sh.shifra,sh.lloji,sh.komenti,sh.totaliPerPagese,sh.totaliPageses,
         sh.mbetjaPerPagese,sh.dataShitjes,sh.menyraPagesesID,sh.perdoruesiID,
-        sh.transaksioniID,sh.kohaGarancionit,s.emertimi as 'subjekti',sh.subjektiID,m.emertimi as 'menyraPageses',p.emri as 'perdoruesi',n.numriPercjelles,n.dataFillimit from shitje sh
+        sh.transaksioniID,sh.kohaGarancionit,s.emertimi as 'subjekti',sh.subjektiID,m.emertimi as 'menyraPageses',p.emri as 'perdoruesi',n.numriPercjelles,n.dataFillimit,sho.nrPorosise,sho.statusi from shitje sh
         join subjekti s on s.subjektiID = sh.subjektiID
         join menyraPageses m on m.menyraPagesesID = sh.menyraPagesesID
         join Perdoruesi p on p.perdoruesiID = sh.perdoruesiID
         join nderrimi n on n.nderrimiID = sh.nderrimiID
+        join shitjeOnline sho on sho.shitjeID  = sh.shitjeID
         `;
     return result.recordset;
   } catch (err) {

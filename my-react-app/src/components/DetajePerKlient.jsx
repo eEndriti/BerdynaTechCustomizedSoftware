@@ -3,6 +3,7 @@ import { Container, Row, Col, Form, Spinner, Button, OverlayTrigger, Tooltip } f
 import { useParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronRight,faE,faEye } from '@fortawesome/free-solid-svg-icons';
+import { formatCurrency } from '../useAuthData';
 
 export default function DetajePerKlient() {
     const { subjektiID, lloji } = useParams();
@@ -140,7 +141,7 @@ export default function DetajePerKlient() {
                 <OverlayTrigger placement="right" 
                     overlay={
                         <Tooltip id="tooltip-right">
-                            Totali i Fitimit nga ky Klient eshte : {profiti} €
+                            Totali i Fitimit nga ky Klient eshte : {formatCurrency(profiti)} 
                         </Tooltip>
                     }
                 >
@@ -202,10 +203,10 @@ export default function DetajePerKlient() {
                                                 <tr key={index}>
                                                     <th scope="row">{lloji == 'klient' ? shitjet.length - index :blerjet.length - index}</th>
                                                     <td>{item.shifra}</td>
-                                                    <td>{item.totaliPerPagese} €</td>
-                                                    <td>{item.totaliPageses} €</td>
+                                                    <td>{formatCurrency(item.totaliPerPagese)}</td>
+                                                    <td>{formatCurrency(item.totaliPageses)}</td>
                                                     <td className={item.mbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>
-                                                        {item.mbetjaPerPagese} €
+                                                        {formatCurrency(item.mbetjaPerPagese)}
                                                     </td>
                                                     {lloji == 'klient' ?  
                                                     <td>{new Date(item.dataShitjes).toLocaleDateString()}</td>
@@ -238,11 +239,11 @@ export default function DetajePerKlient() {
             <Row>
                     <hr/>
 
-            <Col>
+            <Col className='d-flex flex-column align-items-center'>
                     <div className='text-center'>
                         <h5>Pagesat e {lloji == 'klient' ? 'Shitjes' : 'Blerjes'} me Shifer: <span className='fs-3 fw-bold'>{activeShifra}</span></h5>
                     </div>
-                    <div className="Container fluid my-3">
+                    <div className="w-50 my-3">
                         <div className="table-responsive tableHeight50">
                             <table className="table table-sm table-striped border table-hover text-center">
                                 <thead className="table-secondary">
@@ -251,7 +252,6 @@ export default function DetajePerKlient() {
                                         <th scope="col">Vlera e Pageses</th>
                                         <th scope="col">Data e Pageses</th>
                                         <th scope="col">Menyra e Pageses</th>
-                                        <th scope="col">Opsionet</th>
                                     </tr>
                                 </thead>
                                 <tbody className="border-dark">
@@ -262,12 +262,10 @@ export default function DetajePerKlient() {
                                     .map((item, index,filteredPagesat) => (
                                         <tr key={index}>
                                         <th scope="row">{filteredPagesat.length - index}</th>
-                                        <td className="fw-bold">{item.shumaPageses} €</td>
+                                        <td className="fw-bold">{formatCurrency(item.shumaPageses)}</td>
                                         <td>{new Date(item.dataPageses).toLocaleDateString()}</td>
                                         <td>{item.menyraPageses}</td>
-                                        <td>
-                                           ahhhhhhhh
-                                        </td>
+                                       
                                         </tr>
                                     ))}
 
@@ -284,9 +282,9 @@ export default function DetajePerKlient() {
     
         <Row >
             <Col className='d-flex flex-row m-5 pt-5 justify-content-center'>
-                <Button variant='info' className='p-3 m-3 w-25 rounded fs-4'>Totali Per Pagese : <span className='fs-2'>{subjekti[0].totalTotaliPerPagese.toFixed(2)} €</span></Button> 
-               <Button variant='success' className='p-3 m-3 w-25 rounded fs-4'>Totali i Paguar :<span className='fs-2'>{subjekti[0].totalTotaliPageses.toFixed(2)} €</span></Button>                     
-               <Button variant='danger' className='p-3 m-3 w-25 rounded fs-4'>Mbetja per Pagese :<span className='fs-2'>{subjekti[0].totalMbetjaPerPagese.toFixed(2)} €</span></Button> 
+                <Button variant='info' className='p-3 m-3 w-25 rounded fs-4'>Totali Per Pagese : <span className='fs-2'>{formatCurrency(subjekti[0].totalTotaliPerPagese)} </span></Button> 
+               <Button variant='success' className='p-3 m-3 w-25 rounded fs-4'>Totali i Paguar :<span className='fs-2'>{formatCurrency(subjekti[0].totalTotaliPageses)}</span></Button>                     
+               <Button variant='danger' className='p-3 m-3 w-25 rounded fs-4'>Mbetja per Pagese :<span className='fs-2'>{formatCurrency(subjekti[0].totalMbetjaPerPagese)}</span></Button> 
             </Col>                                           
         </Row>
 

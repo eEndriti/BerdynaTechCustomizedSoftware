@@ -8,6 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ShtoNjeProdukt from './ShtoNjeProdukt';
 import { useNavigate } from 'react-router-dom';
 import AnimatedSpinner from './AnimatedSpinner';
+import { formatCurrency } from '../useAuthData';
 
 export default function Produktet() {
   const navigate = useNavigate();
@@ -187,8 +188,8 @@ export default function Produktet() {
                   <td>{item.emertimi}</td>
                   <td>{item.pershkrimi}</td>
                   <td>{item.sasia}</td>
-                  <td>{item.cmimiBlerjes} €</td>
-                  <td>{item.cmimiShitjes} €</td>
+                  <td>{formatCurrency(item.cmimiBlerjes)}</td>
+                  <td>{formatCurrency(item.cmimiShitjes)}</td>
                   <td>{item.komenti}</td>
                   <td>{item.meFatureTeRregullt}</td>
                   <td>{item.emertimiKategorise}</td>

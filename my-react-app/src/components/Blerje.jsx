@@ -7,7 +7,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import KerkoProduktin from "./KerkoProduktin";
 import { useNavigate } from "react-router-dom";
-import useAuthData from "../useAuthData";
+import useAuthData,{formatCurrency} from "../useAuthData";
 
 export default function Blerje() {
 
@@ -241,9 +241,9 @@ export default function Blerje() {
               <tbody>
                 {products.map((product, index) => {
                   const sasiaBlerjes = parseFloat(product.sasiaBlerjes) || 0;
-                  const totali = (product.cmimiBlerjes * sasiaBlerjes).toFixed(2);
+                  const totali = (product.cmimiBlerjes * sasiaBlerjes);
                   const tvsh = parseFloat(product.tvsh) || 0; 
-                  const tvshEProduktit = ((totali * tvsh) / 100).toFixed(2);
+                  const tvshEProduktit = ((totali * tvsh) / 100);
               
                   return (
                     <tr key={index}>
@@ -255,7 +255,7 @@ export default function Blerje() {
                       </td>
                       <td>{product.emertimi}</td>
                       <td>{product.pershkrimi}</td>
-                      {product.cmimiBlerjes == null ? <td></td> : <td>{product.cmimiBlerjes} €</td>}
+                      {product.cmimiBlerjes == null ? <td></td> : <td>{formatCurrency(product.cmimiBlerjes)}</td>}
                       <td>{product.sasia}</td>
                       <td>
                         <Form.Control className="bg-light border-0" type="number" min={0} value={product.sasiaBlerjes}
@@ -263,11 +263,11 @@ export default function Blerje() {
                           }}
                         />
                       </td>
-                      {isNaN(totali) ? <td></td> : <td>{totali} €</td>}
+                      {isNaN(totali) ? <td></td> : <td>{formatCurrency(totali)}</td>}
                       {meFatureTeRregullt ? (
                         <>
                           {tvsh == 0 ? <td></td> : <td>{tvsh} %</td>}
-                          {isNaN(tvshEProduktit) ? <td></td> : <td>{tvshEProduktit} €</td>} 
+                          {isNaN(tvshEProduktit) ? <td></td> : <td>{formatCurrency(tvshEProduktit)}</td>} 
                         </>
                       ) : null}
                       <td>{product.komenti}</td>

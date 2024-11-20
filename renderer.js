@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('api', {
 
     fetchTablePerdoruesi: () => ipcRenderer.invoke('fetchTablePerdoruesi'),
     fetchTablePunonjesit: () => ipcRenderer.invoke('fetchTablePunonjesit'),
+    fetchTableNderrimi: () => ipcRenderer.invoke('fetchTableNderrimi'),
     kontrolloNderriminAktual: () => ipcRenderer.invoke('kontrolloNderriminAktual'),
     filloNderriminERi: (perdoruesiID, avans) => ipcRenderer.invoke('filloNderriminERi', perdoruesiID, avans),
     mbyllNderriminAktual: () => ipcRenderer.invoke('mbyllNderriminAktual'),

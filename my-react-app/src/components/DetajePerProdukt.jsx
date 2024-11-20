@@ -4,6 +4,7 @@ import { Container, Row, Col, Form } from 'react-bootstrap';
 import AnimatedSpinner from './AnimatedSpinner';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserSecret } from '@fortawesome/free-solid-svg-icons';
+import { formatCurrency } from "../useAuthData";
 
 export default function DetajePerProdukt() {
   const { produktiID } = useParams();
@@ -107,11 +108,11 @@ export default function DetajePerProdukt() {
               {produkti ? <Col className="border-top border-dark border px-2 py-3 d-flex flex-row flex-wrap justify-content-between">
                 <h5 className="m-2">Shifra: <span className="fs-5 fw-bold float-center">{produkti? produkti[0].shifra : ''}</span></h5>
                 <h5 className="m-2">Emertimi: <span className="fs-5 fw-bold float-center">{produkti[0].emertimi}</span></h5>
-                <h5 className="m-2">Cmimi i Blerjes: <span className="fs-5 fw-bold float-center">{produkti[0].cmimiBlerjes.toFixed(2)}€</span></h5>
-                <h5 className="m-2">Cmimi i Shitjes: <span className="fs-5 fw-bold float-center">{produkti[0].cmimiShitjes.toFixed(2)}€</span></h5>
+                <h5 className="m-2">Cmimi i Blerjes: <span className="fs-5 fw-bold float-center">{formatCurrency(produkti[0].cmimiBlerjes)}</span></h5>
+                <h5 className="m-2">Cmimi i Shitjes: <span className="fs-5 fw-bold float-center">{formatCurrency(produkti[0].cmimiShitjes)}</span></h5>
                 <h5 className="m-2">Sasia Aktuale: <span className="fs-5 fw-bold float-center">{produkti[0].sasia}</span></h5>
                 <h5 className="m-2">Sasia e Shitur: <span className="fs-5 fw-bold float-center">{sasiaShitur}</span></h5>
-                {showProfiti &&                 <h5 className="m-2">Profiti nga ky Produkt: <span className="fs-5 fw-bold float-center">{profiti.toFixed(2)} €</span></h5>
+                {showProfiti &&                 <h5 className="m-2">Profiti nga ky Produkt: <span className="fs-5 fw-bold float-center">{formatCurrency(profiti)}</span></h5>
                 }
               </Col>:''}
             </Row>
@@ -177,8 +178,8 @@ export default function DetajePerProdukt() {
                             <td>{item.lloji}</td>
                             <td>{item.subjekti}</td>
                             <td>{item.sasia}</td>
-                            <td>{item.cmimiPerCope.toFixed(2)} €</td>
-                            <td>{totali.toFixed(2) || ''} €</td>
+                            <td>{formatCurrency(item.cmimiPerCope)}</td>
+                            <td>{formatCurrency(totali)|| ''} </td>
                           </tr>
                         );
                       })

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Container, Col, Row } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import AnimatedSpinner from './AnimatedSpinner';
+import { formatCurrency } from '../useAuthData';
 
 export default function DetajePerShitjeBlerje({ shifraPerDetaje, IDPerDetaje,lloji }) {
   const [loading, setLoading] = useState(true);
@@ -86,11 +87,11 @@ export default function DetajePerShitjeBlerje({ shifraPerDetaje, IDPerDetaje,llo
                           <td>{item.shifraProduktit}</td>
                           <td>{item.emertimi}</td>
                           <td>{item.pershkrimi}</td>
-                          <td>{item.cmimiPerCope} €</td>
+                          <td>{formatCurrency(item.cmimiPerCope)}</td>
                           <td>{item.sasia}</td>
                           {shifraPerDetaje.toLowerCase().startsWith('sh') ? (
                             <>
-                                <td>{item.totaliProduktit} €</td>
+                                <td>{formatCurrency(item.totaliProduktit)}</td>
                                 <td>{item.komenti}</td>
                                 <td
                                 onMouseEnter={() => setTregoProfitinDetaje(true)}
@@ -101,7 +102,7 @@ export default function DetajePerShitjeBlerje({ shifraPerDetaje, IDPerDetaje,llo
                             </>
                           ) : <>
                                 <td>{item.sasiaAktuale}</td>
-                                <td>{item.totaliProduktit} €</td>
+                                <td>{formatCurrency(item.totaliProduktit)}</td>
                             </>}
                         </tr>
                       ))}

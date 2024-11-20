@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
 import DetajePerShitjeBlerje from './DetajePerShitjeBlerje';
 import AnimatedSpinner from './AnimatedSpinner';
+import { formatCurrency } from '../useAuthData';
 
 export default function Blerjet() {
     const [blerjet, setBlerjet] = useState([]);
@@ -168,11 +169,11 @@ export default function Blerjet() {
                                                     <th scope="row">{filteredBlerjet.length - index}</th>
                                                     <td>{item.shifra}</td>
                                                     <td>{item.klienti}</td>
-                                                    <td>{item.totaliPerPagese} €</td>
-                                                    <td>{item.totaliPageses} €</td>
-                                                    <td className={item.mbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{item.mbetjaPerPagese.toFixed(2)} €</td>
+                                                    <td>{formatCurrency(item.totaliPerPagese)} </td>
+                                                    <td>{formatCurrency(item.totaliPageses)} </td>
+                                                    <td className={item.mbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{formatCurrency(item.mbetjaPerPagese)}</td>
                                                     <td>{item.perdoruesi}</td>
-                                                    <td>{item.numriPercjelles + '-' + new Date(item.dataNderrimit).toLocaleDateString()}</td>
+                                                    <td>{item.numriPercjelles + '-' + new Date(item.dataBlerjes).toLocaleDateString()}</td>
                                                     <td>{new Date(item.dataFatures).toLocaleDateString()}</td>
                                                     <td>{item.fatureERregullt === 'true' ? 'Po' : 'Jo'}</td>
                                                     <td>{item.nrFatures}</td>
