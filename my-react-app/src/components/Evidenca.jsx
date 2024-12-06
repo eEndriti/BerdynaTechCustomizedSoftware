@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Container, Spinner, Col, Row,Form,Button } from 'react-bootstrap';
 import AnimatedSpinner from './AnimatedSpinner';
 import ChartComponent from './ChartComponent';
+import { formatCurrency } from '../useAuthData';
 
 export default function Evidenca() {
   const [loading, setLoading] = useState(true);
@@ -146,7 +147,7 @@ export default function Evidenca() {
           {menyratEPageses.map((menyra, index) => (
             <Col key={menyra.menyraPagesesID} className={`m-2 p-3 text-center rounded ${bgColors[index % bgColors.length]}`}>
               <h3>{menyra.emertimi}</h3>
-              <h1>{menyra.shuma.toFixed(2)} €</h1>
+              <h1>{formatCurrency(menyra.shuma)}</h1>
             </Col>
           ))}
         </Col>
@@ -180,12 +181,12 @@ export default function Evidenca() {
               <ChartComponent totalShitje={totalShitje} totalBlerje={totalBlerje} totalShpenzime={totalShpenzime} totalServisime={totalServisime} totalHyrje={totalHyrje}/>     
               :
               <Col className='text-center d-flex flex-wrap justify-content-start align-items-center p-2 m-2 mt-4'>
-              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Qarkullimit : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{totalQarkullimi.toFixed(2)} €</span></h5>
-              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Shitjeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{totalShitje.toFixed(2)} €</span></h5>
-              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Hyrjeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{totalHyrje.toFixed(2)} €</span></h5>
-              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Blerjeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{totalBlerje.toFixed(2)} €</span></h5>
-              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Servisimeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{totalServisime.toFixed(2)} €</span></h5>
-              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Shpenzimeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{totalShpenzime.toFixed(2)} €</span></h5>
+              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Qarkullimit : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(totalQarkullimi)}</span></h5>
+              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Shitjeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(totalShitje)}</span></h5>
+              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Hyrjeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(totalHyrje)}</span></h5>
+              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Blerjeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(totalBlerje)}</span></h5>
+              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Servisimeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(totalServisime)}</span></h5>
+              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Shpenzimeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(totalShpenzime)}</span></h5>
             </Col>}
             </Col>     
 
@@ -195,16 +196,16 @@ export default function Evidenca() {
       <Row>
       <h4 className='text-center'>Evidenca e Pergjithshme:</h4>
         <Col className='text-center d-flex flex-wrap justify-content-start align-items-center p-2 m-2'>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Vlera e Stokit ne Blerje : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[0]?.vleraEBlerjeve.toFixed(2) || 'N/A'} €</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Vlera e Stokit ne Shitje : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[0]?.VleraShitjeve.toFixed(2) || 'N/A'} €</span></h5>
+          <h5 className='mx-5 mt-2 border rounded p-3'>Vlera e Stokit ne Blerje : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(produktiData[0]?.vleraEBlerjeve) || 'N/A'}</span></h5>
+          <h5 className='mx-5 mt-2 border rounded p-3'>Vlera e Stokit ne Shitje : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(produktiData[0]?.VleraShitjeve) || 'N/A'}</span></h5>
           <h5 className='mx-5 mt-2 border rounded p-3'>Nr. i Produkteve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[0]?.nrProdukteve || 'N/A'}</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Vlera e Shitjeve te Pa Paguara : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{vleraShitjevePaPaguar[0]?.vleraShitjevePaPaguar.toFixed(2) || 'N/A'} €</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Vlera e Blerjeve te Pa Paguara : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{vleraBlerjevePaPaguar[0]?.vleraBlerjevePaPaguar.toFixed(2) || 'N/A'} €</span></h5>
+          <h5 className='mx-5 mt-2 border rounded p-3'>Vlera e Shitjeve te Pa Paguara : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(vleraShitjevePaPaguar[0]?.vleraShitjevePaPaguar) || 'N/A'}</span></h5>
+          <h5 className='mx-5 mt-2 border rounded p-3'>Vlera e Blerjeve te Pa Paguara : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(vleraBlerjevePaPaguar[0]?.vleraBlerjevePaPaguar) || 'N/A'}</span></h5>
           <h5 className='mx-5 mt-2 border rounded p-3'>Nr. i Produkteve me Fature : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[0]?.meFatureTeRregulltCount || 'N/A'}</span></h5>
           <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Sasise : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[0]?.sasiaTotale || 'N/A'}</span></h5>
           
           
-          <h5 className='mx-5 mt-2 border rounded p-3'>Kalkulimi Perfundimtar : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{vleraShitjevePaPaguar[0]?.vleraShitjevePaPaguar.toFixed(2) || 'N/A'} €</span></h5>
+          <h5 className='mx-5 mt-2 border rounded p-3'>Kalkulimi Perfundimtar : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(vleraShitjevePaPaguar[0]?.vleraShitjevePaPaguar) || 'N/A'}</span></h5>
         </Col>
       </Row> 
       <hr />

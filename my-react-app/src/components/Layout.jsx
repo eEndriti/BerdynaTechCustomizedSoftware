@@ -6,7 +6,7 @@ import '../assets/css/Layout.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faExchangeAlt, faCoins, faGift } from '@fortawesome/free-solid-svg-icons';
 import AnimatedSpinner from './AnimatedSpinner'
-import useAuthData from '../useAuthData';
+import useAuthData, { formatCurrency } from '../useAuthData';
 
 function Layout() {
   const location = useLocation(); // Hook to get the current location object
@@ -69,7 +69,7 @@ function Layout() {
             <Col xs={12} md={8} className='d-flex justify-content-between'>
               <div className='d-flex align-items-center'>
                 <FontAwesomeIcon icon={faCoins} className='me-2 text-warning fs-5' />
-                <span className='me-4'>Avans: <strong>{avansi} €</strong></span>
+                <span className='me-4'>Avans: <strong>{formatCurrency(avansi)}</strong></span>
   
                 <FontAwesomeIcon icon={faExchangeAlt} className='me-2 text-success fs-5' />
                 <span className='me-4'>Nderrimi: <strong>{numriPercjelles}-{formatDate(dataFillimit)}</strong></span>
@@ -77,7 +77,7 @@ function Layout() {
                 <Col className='mt-2'>
                   <Col className='d-flex flex-row pb-2'>
                     <FontAwesomeIcon icon={faGift} className='me-2 text-info fs-5' />
-                    <span>Bonuse: <strong>{perBonuse} €</strong> <span className='d-inline mx-4 text-secondary'>{totalShumaPerBonuse} €</span></span>
+                    <span>Bonuse: <strong>{formatCurrency(perBonuse)}</strong> <span className='d-inline mx-4 text-secondary'>{formatCurrency(totalShumaPerBonuse)}</span></span>
                   </Col>
                   <Col className='w-50'><ProgressBar animated variant={getPerBonuseFillBar() > 199 ? 'success' : 'info'} now={getPerBonuseFillBar()} style={{height:'7px'}}/></Col>
                 </Col>

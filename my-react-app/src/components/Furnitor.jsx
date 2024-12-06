@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
 import { useNavigate } from 'react-router-dom';
 import ShtoNdryshoSubjektin from './ShtoNdryshoSubjektin';
+import { formatCurrency } from '../useAuthData';
 export default function Furnitor() {
 
     const navigate = useNavigate()
@@ -149,9 +150,9 @@ export default function Furnitor() {
                                             <th scope="row">{filteredFurnitoret.length - index}</th>
                                             <td>{item.emertimi}</td>
                                             <td>{item.kontakti}</td>
-                                            <td>{item.totalTotaliPerPagese} €</td>
-                                            <td>{item.totalTotaliPageses} €</td>
-                                            <td className={item.totalMbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{item.totalMbetjaPerPagese} €</td>
+                                            <td>{formatCurrency(item.totalTotaliPerPagese)}</td>
+                                            <td>{formatCurrency(item.totalTotaliPageses)}</td>
+                                            <td className={item.totalMbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{formatCurrency(item.totalMbetjaPerPagese)}</td>
                                             <td className="text-center">
                                                 <Button variant="info" className="m-1 fw-bold" onClick={() => handleDetaje(item.subjektiID)}>
                                                     Detaje...

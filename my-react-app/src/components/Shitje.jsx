@@ -10,6 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ShtoNjeProdukt from "./ShtoNjeProdukt";
 import AnimatedSpinner from "./AnimatedSpinner";
 import useAuthData from "../useAuthData";
+import { PrintoGarancion } from "./PrintoGarancion";
 
 export default function Shitje() {
   const navigate = useNavigate();  
@@ -125,6 +126,7 @@ export default function Shitje() {
     }
   
     setLoading(true);  
+    
     const data = {
       lloji: llojiShitjes,
       komenti: komentiShitjes,
@@ -137,21 +139,30 @@ export default function Shitje() {
       subjektiID: selectedSubjekti.subjektiID,
       nderrimiID,
       kohaGarancionit:aKaGarancion ? kohaGarancionit:0,
-      produktet: products.map(product => ({
+      produktet:products.slice(0, products.length - 1).map((product,index) => ({
+        nr:index+1,
+        shifraProduktit: product.shifra,
+        emertimiProduktit: product.emertimi,
+        pershkrimiProduktit: product.pershkrimi,
         produktiID: product.produktiID,
         sasiaShitjes: product.sasiaShitjes,
         cmimiPerCope: product.cmimiShitjes,
-        profiti:product.profiti
-      }))
+        profiti: product.profiti,
+        vleraTotaleProduktit: product.cmimiShitjes * product.sasiaShitjes
+      }))      
     };
   
     try {
       const result = await window.api.insertTransaksioniAndShitje(data);
+
       if (result.success) {
         toast.success('Shitja u Regjistrua me Sukses!', {
           position: "top-center",  
           autoClose: 1500
         }); 
+        if(aKaGarancion){
+          PrintoGarancion(data)
+        }
       } else {
         toast.error('Gabim gjate regjistrimit: ' + result.error);
       }

@@ -9,7 +9,7 @@ import KerkoProduktin from './KerkoProduktin'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje'
-import useAuthData from '../useAuthData'
+import useAuthData, { formatCurrency } from '../useAuthData'
 
 export default function NdryshoShitjen() {
     const { shitjeID } = useParams()
@@ -39,24 +39,31 @@ export default function NdryshoShitjen() {
     const [inputDisabled,setInputDisabled] = useState(false)
     const {nderrimiID, perdoruesiID} = useAuthData()
     const [shitjeProdukti,setShitjeProdukti] = useState()
+    const [llojiFillestarIShitjes,setLlojiFillestarIShitjes] = useState()
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const receivedData = await window.api.fetchTableQuery( ` select sh.shitjeID,sh.shifra,sh.lloji,sh.komenti,sh.totaliPerPagese,sh.totaliPageses,
-                    sh.mbetjaPerPagese,sh.dataShitjes,sh.nrPorosise,sh.menyraPagesesID,sh.perdoruesiID,
-                    sh.transaksioniID,sh.kohaGarancionit,s.emertimi as 'subjekti',sh.subjektiID,m.emertimi as 'menyraPageses',p.emri as 'perdoruesi',n.numriPercjelles,n.dataFillimit from shitje sh
-                    join subjekti s on s.subjektiID = sh.subjektiID
-                    join menyraPageses m on m.menyraPagesesID = sh.menyraPagesesID
-                    join Perdoruesi p on p.perdoruesiID = sh.perdoruesiID
-                    join nderrimi n on n.nderrimiID = sh.nderrimiID
-                    where sh.shitjeID = ${shitjeID}
+                const receivedData = await window.api.fetchTableQuery( ` SELECT sh.shitjeID, sh.shifra, sh.lloji, sh.komenti, sh.totaliPerPagese, sh.totaliPageses,
+                            sh.mbetjaPerPagese, sh.dataShitjes, sh.menyraPagesesID, sh.perdoruesiID,
+                            sh.transaksioniID, sh.kohaGarancionit, sho.nrPorosise, sho.statusi, pr.profitiID,
+                            s.emertimi AS 'subjekti', sh.subjektiID, m.emertimi AS 'menyraPageses',
+                            p.emri AS 'perdoruesi', n.numriPercjelles, n.dataFillimit
+                        FROM shitje sh
+                        JOIN subjekti s ON s.subjektiID = sh.subjektiID
+                        JOIN menyraPageses m ON m.menyraPagesesID = sh.menyraPagesesID
+                        JOIN Perdoruesi p ON p.perdoruesiID = sh.perdoruesiID
+                        JOIN nderrimi n ON n.nderrimiID = sh.nderrimiID
+                        join profiti pr on pr.transaksioniID = sh.transaksioniID
+                        LEFT JOIN shitjeOnline sho ON sho.shitjeID = sh.shitjeID
+                        WHERE sh.shitjeID = ${shitjeID}
                     `);
                 setShitje(receivedData);
 
                 const shitjeProdukti = await window.api.fetchTableQuery( ` select * from shitjeProdukti
                     where shitjeID = ${shitjeID}
                     `);
+                    console.log(receivedData)
                 setShitjeProdukti(shitjeProdukti);
             } catch (error) {
                 toast.error('Error fetching data:', error);
@@ -93,12 +100,14 @@ export default function NdryshoShitjen() {
                         setAKaGarancion(true)
                         setKohaGarancionit(shitje[0].kohaGarancionit)
                     }
-                    setTotaliPerPagese(shitje[0].totaliPerPagese.toFixed(2))
-                    setTotaliPageses(shitje[0].totaliPageses.toFixed(2))
-                    setTotaliPagesesFillestare(shitje[0].totaliPageses.toFixed(2))
-                    setTotaliPerPageseFillestare(shitje[0].totaliPerPagese.toFixed(2))
+                    setTotaliPerPagese(shitje[0].totaliPerPagese)
+                    setTotaliPageses(shitje[0].totaliPageses)
+                    setTotaliPagesesFillestare(shitje[0].totaliPageses)
+                    setTotaliPerPageseFillestare(shitje[0].totaliPerPagese)
                     setMbetjaPerPagese(shitje[0].mbetjaPerPagese)
                     setMenyraPagesesID(shitje[0].menyraPagesesID)
+                    setNrPorosise(shitje[0].nrPorosise)
+                    setLlojiFillestarIShitjes(shitje[0].lloji)
                 } catch (error) {
                     toast.error('Error fetching data:', error);
                 }
@@ -188,13 +197,11 @@ export default function NdryshoShitjen() {
           toast.error('Shuma e paguar nuk mund të jetë më e madhe se totali!');
         }
       };
+
       useEffect(() => {
         setMbetjaPerPagese(totaliPerPagese - totaliPageses)
       },[totaliPageses])
       
-      const handleNrPorosiseChange = (event) => {
-        setNrPorosise(event.target.value);
-      };
 
       const handleMenyraPagesesID = (menyraPagesesID) => {
         setMenyraPagesesID(menyraPagesesID);
@@ -233,6 +240,8 @@ export default function NdryshoShitjen() {
           subjektiID: selectedSubjekti.subjektiID,
           nderrimiID,
           dataShitjes,
+          llojiFillestarIShitjes,
+          profitiID:shitje[0].profitiID,
           kohaGarancionit:aKaGarancion ? kohaGarancionit:0,
           produktet: products.map(product => ({
             produktiID: product.produktiID,
@@ -300,22 +309,22 @@ export default function NdryshoShitjen() {
                     </Form>}
                 </Col>
                 <Col className="d-flex flex-row justify-content-center">
-                <Button disabled={inputDisabled}
-                    variant={llojiShitjes === "dyqan" ? "primary" : "outline-primary"}
-                    size="md"
-                    className="mx-1 w-25"
-                    onClick={() => setLlojiShitjes('dyqan')}
-                >
-                    Shitje ne Dyqan
-                </Button>
-                <Button disabled={inputDisabled}
-                    variant={llojiShitjes === "online" ? "primary" : "outline-primary"}
-                    size="md"
-                    className="mx-1 w-25"
-                    onClick={() => setLlojiShitjes('online')}
-                >
-                    Shitje Online
-                </Button>
+                    <Button disabled={true}
+                        variant={llojiShitjes === "dyqan" ? "primary" : "outline-primary"}
+                        size="md"
+                        className="mx-1 w-25"
+                        onClick={() => setLlojiShitjes('dyqan')}
+                    >
+                        Shitje ne Dyqan
+                    </Button>
+                    <Button disabled={true}
+                        variant={llojiShitjes === "online" ? "primary" : "outline-primary"}
+                        size="md"
+                        className="mx-1 w-25"
+                        onClick={() => setLlojiShitjes('online')}
+                    >
+                        Shitje Online
+                    </Button>
                 </Col>
                 <Col>
                     <Form>
@@ -347,7 +356,7 @@ export default function NdryshoShitjen() {
                         {products.map((product, index) => {
                         const cmimiPerCope = parseFloat(product.cmimiPerCope) || 0;
                         const sasiaShitjes = parseFloat(product.sasiaShitjes) || 0;
-                        const totali = (cmimiPerCope * sasiaShitjes).toFixed(2);
+                        const totali = (cmimiPerCope * sasiaShitjes);
 
                         return (
                             <tr key={index}>
@@ -388,7 +397,7 @@ export default function NdryshoShitjen() {
                                 }}
                                 />
                             </td>
-                            <td>{totali}</td>
+                            <td>{formatCurrency(totali)}</td>
                             <td>
                                 <Form.Control className="bg-light border-0" disabled={inputDisabled}
                                 type="text"
@@ -495,8 +504,8 @@ export default function NdryshoShitjen() {
                         <Col xs={6}>
                             <InputGroup>
                             <Form.Control
-                                type="number"
-                                value={totaliPerPagese}
+                                type="text"
+                                value={formatCurrency(totaliPerPagese,true)}
                                 readOnly
                             />
                             <InputGroup.Text>€</InputGroup.Text>
@@ -524,8 +533,8 @@ export default function NdryshoShitjen() {
                         <Col xs={6}>
                             <InputGroup >
                             <Form.Control
-                                type="number"
-                                value={totaliPerPagese - totaliPageses}
+                                type="text"
+                                value={formatCurrency(totaliPerPagese - totaliPageses,true)}
                                 readOnly
                             />
                             <InputGroup.Text>€</InputGroup.Text>
@@ -537,14 +546,10 @@ export default function NdryshoShitjen() {
                         <Form.Label column xs={6} className="text-end">Nr. Porosise:</Form.Label>
                         <Col xs={6}>
                         <Form.Control disabled={inputDisabled}
-                        type="text"  // Use "text" instead of "number"
-                        maxLength={8}  // Set maxLength to 8
-                        onChange={(e) => {
-                            const value = e.target.value;
-                            if (/^\d*$/.test(value) && value.length <= 8) {
-                            handleNrPorosiseChange(e);
-                            }
-                        }}
+                            type="text"  // Use "text" instead of "number"
+                            maxLength={8}  // Set maxLength to 8
+                            defaultValue={nrPorosise}
+                            onChange={(e) => setNrPorosise(e.target.value)}
                         />
                         </Col>
                     </Form.Group>

@@ -81,7 +81,9 @@ contextBridge.exposeInMainWorld('api', {
     ndryshoOpsionPagese: (data) => ipcRenderer.invoke('ndryshoOpsionPagese', data),
     ndryshoPagen: (data) => ipcRenderer.invoke('ndryshoPagen', data),
     ndryshoProduktin: (data) => ipcRenderer.invoke('ndryshoProduktin', data),
-    ndryshoSubjektin: (data) => ipcRenderer.invoke('ndryshoSubjektin', data)
+    ndryshoSubjektin: (data) => ipcRenderer.invoke('ndryshoSubjektin', data),
 
+    savePDF: (data) => ipcRenderer.send('savePDF', data  ),
+    openFile: (filePath) => ipcRenderer.send('openFile', filePath)
 
-});
+     })

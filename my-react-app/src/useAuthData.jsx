@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 
-export const formatCurrency = (value) => {
-  if (value == null || isNaN(value)) return '0.00 €';
+export const formatCurrency = (value,kushti) => {
+  if (value == null || isNaN(value)) return `0.00 ${!kushti ? '€':''}`;
 
   const formattedValue = new Intl.NumberFormat('en-GB', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
 
-  return `${formattedValue} €`;
+  return `${formattedValue} ${!kushti ? '€':''}`;
 };
 
 

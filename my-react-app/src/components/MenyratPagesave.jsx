@@ -5,6 +5,7 @@ import { faPen, faTrashCan,faExchangeAlt } from '@fortawesome/free-solid-svg-ico
 import { toast, ToastContainer } from 'react-toastify';
 import AnimatedSpinner from './AnimatedSpinner';
 import ModalPerPyetje from './ModalPerPyetje'
+import { formatCurrency } from '../useAuthData';
 
 export default function MenyratPagesave() {
     const [loading,setLoading] = useState(true)
@@ -182,7 +183,7 @@ export default function MenyratPagesave() {
                     <>
                         <th scope="row">{menyratPagesave.length - index}</th>
                         <td>{item.emertimi}</td>
-                        <td>{item.shuma.toFixed(2)} €</td>
+                        <td>{formatCurrency(item.shuma)}</td>
                         <td>
                             <Button variant="outline-primary" className="me-2" onClick={() => {setPerNdryshim(true); setData(item);setModal(true)}}>
                                 <FontAwesomeIcon icon={faPen} /> Ndrysho

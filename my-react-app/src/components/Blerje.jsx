@@ -103,7 +103,7 @@ export default function Blerje() {
     setTotaliPageses(parseFloat(e.target.value) || 0);
   };
 
-  const mbetjaPerPagese = (totaliPerPagese - totaliPageses).toFixed(2);
+  const mbetjaPerPagese = (totaliPerPagese - totaliPageses);
 
   const handleMenyraPagesesID = (menyraPagesesID) => {
     setMenyraPagesesID(menyraPagesesID);
@@ -334,8 +334,8 @@ export default function Blerje() {
                 <Col xs={6}>
                   <InputGroup >
                     <Form.Control
-                      type="number"
-                      value={totaliTvsh.toFixed(2)}
+                      type="text"
+                      value={formatCurrency(totaliTvsh,true)}
                       readOnly
                     />
                     <InputGroup.Text>€</InputGroup.Text>
@@ -348,8 +348,8 @@ export default function Blerje() {
                 <Col xs={6}>
                   <InputGroup >
                     <Form.Control
-                      type="number"
-                      value={totaliPerPagese.toFixed(2)}
+                      type="text"
+                      value={formatCurrency(totaliPerPagese,true)}
                       readOnly
                     />
                     <InputGroup.Text>€</InputGroup.Text>
@@ -375,8 +375,8 @@ export default function Blerje() {
                 <Col xs={6}>
                   <InputGroup >
                     <Form.Control
-                      type="number"
-                      value={mbetjaPerPagese}
+                      type="text"
+                      value={formatCurrency(mbetjaPerPagese,true)}
                       readOnly
                     />
                    <InputGroup.Text>€</InputGroup.Text>

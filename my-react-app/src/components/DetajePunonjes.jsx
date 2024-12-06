@@ -8,6 +8,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje'
 import MenyratPagesesExport from './MenyratPagesesExport';
+import { formatCurrency } from '../useAuthData';
 
 export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     const [loading, setLoading] = useState(true);
@@ -406,9 +407,9 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                                 <tr key={index}>
                                                     <td>{pagat.length -index}</td>
                                                     <td>{formatLongDateToAlbanian(paga.dataPageses)}</td>
-                                                    <td>{paga.paga} €</td>
-                                                    <td>{paga.bonusi} €</td>
-                                                    <td>{paga.zbritje} €</td>
+                                                    <td>{formatCurrency(paga.paga)}</td>
+                                                    <td>{formatCurrency(paga.bonusi)}</td>
+                                                    <td>{formatCurrency(paga.zbritje)}</td>
                                                     <td>{paga.menyraPageses}</td>
                                                     <td>
                                                         <Button variant="outline-primary" className='mx-1' disabled = {!isWithin45Days(paga.dataPageses)} onClick={() => {setSelectedMenyraPageses(null);setPageseRroge(false);emptyActiveSalary();setActiveSalary(paga);setNdryshoModal(true)}}>
@@ -505,7 +506,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                             {bonusetNeDetaje.slice().reverse().map((bonus, index) => (
                                                 <tr key={index}>
                                                     <td>{index+1}</td>
-                                                    <td>{bonus.shuma} €</td>
+                                                    <td>{formatCurrency(bonus.shuma)}</td>
                                                     <td>{formatLongDateToAlbanian(bonus.dataPageses)}</td>
                                                     <td>{bonus.emertimi}</td>
                                                     <td>                                                       
@@ -602,7 +603,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                                     <tr key={index}>
                                                         <td>{index + 1}</td>
                                                         <td>{formatLongDateToAlbanian(item.dataBonuseve)}</td>
-                                                        <td >{item.shuma} €</td>
+                                                        <td >{formatCurrency(item.shuma)}</td>
                                                         
                                                     </tr>
                                                 );
@@ -619,7 +620,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                         <InputGroup>
                                             <Form.Control
                                                 type="text"
-                                                value={totalBonuset.toFixed(2)}
+                                                value={formatCurrency(totalBonuset,true)}
                                                 className="form-control fs-5  bg-light text-end "
                                                 disabled
                                                 readOnly
@@ -700,7 +701,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                               <Form.Label>Paga</Form.Label>
                                               <InputGroup>
                                               <Form.Control
-                                                  type="number"
+                                                  type="text"
                                                   name="paga"
                                                   min={1}
                                                   value={activeSalary.paga}

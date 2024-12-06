@@ -7,7 +7,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UpdateServise from './UpdateServise';
 import AnimatedSpinner from './AnimatedSpinner';
-import useAuthData from '../useAuthData';
+import useAuthData, { formatCurrency } from '../useAuthData';
 
 function FaqjaKryesoreAdmin() {
   const [loading,setLoading] = useState(true)
@@ -189,6 +189,8 @@ const handleAprovoShitjenOnline = async () => {
       })
   },[dataPerAprovim.kostoPostes,dataPerAprovim.totaliIPranuar])
 
+  
+
   return (
     <Container fluid className='pt-3'>
       {loading ? <AnimatedSpinner /> : 
@@ -220,9 +222,9 @@ const handleAprovoShitjenOnline = async () => {
                     <td>{item.shifra}</td>
                     <td>{item.lloji}</td>
                     <td>{item.pershkrimi}</td>
-                    <td>{item.totaliperPagese} €</td>
-                    <td>{item.totaliIPageses} €</td>
-                    <td className={item.mbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{item.mbetjaPerPagese} €</td>
+                    <td>{formatCurrency(item.totaliperPagese)}</td>
+                    <td>{formatCurrency(item.totaliIPageses)}</td>
+                    <td className={item.mbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{formatCurrency(item.mbetjaPerPagese)}</td>
                     <td>{item.komenti}</td>
                     <td>{item.dataTransaksionit.toLocaleTimeString()}</td>
                     <td>
@@ -356,7 +358,7 @@ const handleAprovoShitjenOnline = async () => {
                 <Form.Group>
                   <Form.Label>Totali i Shitjes:</Form.Label>
                   <InputGroup >
-                    <Form.Control  disabled value={dataPerAprovim.totaliPerPagese} />
+                    <Form.Control  disabled value={formatCurrency(dataPerAprovim.totaliPerPagese,true)} />
                     <InputGroup.Text>€</InputGroup.Text>
                   </InputGroup>
                 </Form.Group>

@@ -1,7 +1,8 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain,dialog,shell } = require('electron');
 const path = require('path');
 const sql = require('mssql');
 const bcrypt = require('bcrypt');
+const fs = require('fs')
 
 // MSSQL connection configuration
 const config = {
@@ -282,12 +283,13 @@ async function fetchTableShitje() {
     const result = await sql.query`
         select sh.shitjeID,sh.shifra,sh.lloji,sh.komenti,sh.totaliPerPagese,sh.totaliPageses,
         sh.mbetjaPerPagese,sh.dataShitjes,sh.menyraPagesesID,sh.perdoruesiID,
-        sh.transaksioniID,sh.kohaGarancionit,s.emertimi as 'subjekti',sh.subjektiID,m.emertimi as 'menyraPageses',p.emri as 'perdoruesi',n.numriPercjelles,n.dataFillimit,sho.nrPorosise,sho.statusi from shitje sh
+        sh.transaksioniID,sh.kohaGarancionit,s.emertimi as 'subjekti',sh.subjektiID,m.emertimi as 'menyraPageses',p.emri as 'perdoruesi',n.numriPercjelles,n.dataFillimit,sho.nrPorosise,sho.statusi,pr.profitiID from shitje sh
         join subjekti s on s.subjektiID = sh.subjektiID
         join menyraPageses m on m.menyraPagesesID = sh.menyraPagesesID
         join Perdoruesi p on p.perdoruesiID = sh.perdoruesiID
         join nderrimi n on n.nderrimiID = sh.nderrimiID
-        join shitjeOnline sho on sho.shitjeID  = sh.shitjeID
+		    join profiti pr on pr.transaksioniID = sh.transaksioniID
+        left join shitjeOnline sho on sho.shitjeID  = sh.shitjeID
         `;
     return result.recordset;
   } catch (err) {
@@ -1609,7 +1611,7 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
 
 
 
-        const insertTransaksioniQuery = `
+        const transaksioniQuery = `
         INSERT INTO transaksioni (
           shifra, lloji, pershkrimi,totaliPerPagese, totaliIPageses, mbetjaPerPagese, dataTransaksionit, perdoruesiID, nderrimiID, komenti
         ) OUTPUT INSERTED.transaksioniID VALUES (
@@ -1628,7 +1630,7 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
         .input('perdoruesiID', sql.Int, data.perdoruesiID)
         .input('nderrimiID', sql.Int, data.nderrimiID)
         .input('komenti', sql.VarChar, data.komenti)
-        .query(insertTransaksioniQuery);
+        .query(transaksioniQuery);
 
       transaksioniID = transaksioniResult.recordset[0].transaksioniID;
 
@@ -1663,6 +1665,38 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
       .query(updateShitjeQuery);
 
       const shitjeID = shitjeResult.recordset[0].shitjeID;
+
+     /* let shitjeOnlineQuery ;
+
+      if(data.llojiFillestarIShitjes == 'online' && data.llojiShitjes == 'dyqan'){
+          shitjeOnlineQuery = `
+            delete from shitjeOnline
+            where shitjeID  = @shitjeID
+          `
+      }else if(data.llojiFillestarIShitjes == 'dyqan' && data.llojiShitjes == 'online'){
+          shitjeOnlineQuery = `
+          Insert into shitjeOnline (
+            shitjeID,statusi,nrPorosise,profitiID
+          ) VALUES (
+            @shitjeID,@statusi,@dataPranimit,@kostoPostes,@totaliPranimit,@nrPorosise,@profitiID
+          )
+        `
+      }else if(data.llojiFillestarIShitjes == 'online' && data.llojiShitjes == 'online'){
+        shitjeOnlineQuery = `
+        UPDATE shitjeOnline
+              Set
+                  nrPorosise = @nrPorosise
+                  where shitjeID = @shitjeID
+        `
+      }
+
+      await connection.request()
+      .input('shitjeID', sql.Int, data.shitjeID)
+      .input('statusi', sql.TinyInt, 0)
+      .input('nrPorosise', sql.Int, data.totaliPerPagese)
+      .input('profitiID', sql.Int, data.profitiID)
+      .query(shitjeOnlineQuery); 
+*/
       let profitiShitjes = 0
 
       await anuloShitjeProdukti(data);
@@ -3303,6 +3337,10 @@ ipcMain.handle('ndryshoPunonjes', async (event, data) => {
   }
 });
 
+ipcMain.on('savePDF', (event, { pdfBase64, folderPath, fileName }) => { const filePath = path.join(folderPath, fileName); const buffer = Buffer.from(pdfBase64, 'base64'); fs.writeFile(filePath, buffer, (error) => { if (error) { console.error('Failed to save PDF:', error); } else { console.log('PDF saved successfully to', filePath); } }); });
+
+
+ipcMain.on('openFile', (event, filePath) => { shell.openPath(filePath) .then(() => console.log('File opened successfully')) .catch((error) => console.error('Failed to open file:', error)); });
 
 
 const createWindow = () => {
@@ -3311,7 +3349,7 @@ const createWindow = () => {
     webPreferences: {
       preload: path.join(__dirname, 'renderer.js'), // Ensure the correct path to preload.js
       contextIsolation: true,  // Enable context isolation for security
-      nodeIntegration: false,  // Disable nodeIntegration for security
+      nodeIntegration: true,  // Disable nodeIntegration for security
     }
   });
   win.maximize()

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Modal, Table, Form, Card, Badge, Container,Row,Col,Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock, faPlus, faCheck, faBan, faHistory,faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { formatCurrency } from '../useAuthData';
 
 
 export default function Nderrimet() {
@@ -105,7 +106,7 @@ export default function Nderrimet() {
                             <strong>Filloi me:</strong> {new Date(nderrimiAktiv.dataFillimit).toLocaleString()}
                         </p>   
                         <p>
-                            <strong>Avansi:</strong> {nderrimiAktiv.avansi} € 
+                            <strong>Avansi:</strong> {formatCurrency(nderrimiAktiv.avansi)}
                         </p>                 
                         <Button variant="danger" onClick={() => setShowMbyllNderriminModal(true)}>
                             <FontAwesomeIcon icon={faBan} className="me-2" />

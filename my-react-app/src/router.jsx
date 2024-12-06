@@ -14,7 +14,6 @@ import Klient from './components/Klient';
 import Blerjet from './components/Blerjet';
 import Shitjet from './components/Shitjet';
 import DetajePerKlient from './components/DetajePerKlient';
-import Nderrimet from './components/Nderrimet';
 import Evidenca from './components/Evidenca';
 import Transaksionet from './components/Transaksionet';
 import Serviset from './components/Serviset';
@@ -93,10 +92,7 @@ const router = createBrowserRouter([
         path: '/detajePerSubjekt/:lloji/:subjektiID',
         element: <DetajePerKlient />,
       },
-      {
-        path: '/nderrimet',
-        element: <Nderrimet />,
-      },
+      
       {
         path: '/evidenca',
         element: <Evidenca />,

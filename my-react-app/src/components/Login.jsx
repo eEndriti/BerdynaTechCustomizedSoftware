@@ -143,7 +143,7 @@ export default function Login() {
         <AnimatedSpinner />
       ) : (
         <Container>
-          <Row className='mt-5 pt-5'>
+          <Row className='mt-5 pt-5 d-flex justify-content-center '>
             <Form className="col-md-6 shadow-lg p-4 rounded bg-light">
               <h3 className="text-center text-primary mb-4">Kyqu</h3>
 
