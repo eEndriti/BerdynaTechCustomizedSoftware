@@ -137,6 +137,8 @@ export default function Shitje() {
       menyraPagesesID: menyraPagesesID,
       perdoruesiID: perdoruesiID,
       subjektiID: selectedSubjekti.subjektiID,
+      emertimiSubjektit:selectedSubjekti.emertimi,
+      kontaktiSubjektit:selectedSubjekti.kontakti,
       nderrimiID,
       kohaGarancionit:aKaGarancion ? kohaGarancionit:0,
       produktet:products.slice(0, products.length - 1).map((product,index) => ({
@@ -148,20 +150,22 @@ export default function Shitje() {
         sasiaShitjes: product.sasiaShitjes,
         cmimiPerCope: product.cmimiShitjes,
         profiti: product.profiti,
-        vleraTotaleProduktit: product.cmimiShitjes * product.sasiaShitjes
+        vleraTotaleProduktit: product.cmimiShitjes * product.sasiaShitjes,
+        komentiProduktit:product.komenti
       }))      
     };
   
     try {
       const result = await window.api.insertTransaksioniAndShitje(data);
-
+      console.log(result)
       if (result.success) {
         toast.success('Shitja u Regjistrua me Sukses!', {
           position: "top-center",  
           autoClose: 1500
         }); 
         if(aKaGarancion){
-          PrintoGarancion(data)
+          const shifra = result.shifra
+          PrintoGarancion(data,shifra)
         }
       } else {
         toast.error('Gabim gjate regjistrimit: ' + result.error);

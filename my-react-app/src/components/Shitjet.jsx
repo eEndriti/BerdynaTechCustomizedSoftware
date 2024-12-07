@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan, faPen,faChevronDown,faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan, faPen,faChevronDown,faChevronRight,faFilePdf } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
@@ -115,7 +115,11 @@ const kontrolloStatusinGarancionit = (koha, dataShitjes) => {
     }
 };
 
-
+const hapePdf = async (shifra) =>{
+    const folderPath = 'C:\\Users\\BerdynaTech\\Documents\\btechPDFtest'
+    const filePath = folderPath + '\\Garancioni ' + shifra +'.pdf'
+    await window.api.openFile(filePath );
+}
 
     return (
         <Container fluid className="pt-5">
@@ -217,12 +221,15 @@ const kontrolloStatusinGarancionit = (koha, dataShitjes) => {
                                                         <Button variant="danger" className='mx-2' onClick={() => thirreModalPerPyetje(item.shitjeID,item.transaksioniID,item.lloji)}>
                                                             <FontAwesomeIcon  icon={faTrashCan} />
                                                         </Button>
-                                                        <Button variant='transparent' className='btn-outline-light mx-2'  onClick={() => shfaqProduktetEShitjes(item.shitjeID,item.shifra)} 
+                                                        <Button variant='transparent' className='btn btn-info mx-2'  onClick={() => shfaqProduktetEShitjes(item.shitjeID,item.shifra)} 
                                                                  >
                                                         <FontAwesomeIcon 
                                                                 className={` ${IDPerDetaje === item.shitjeID ? 'text-primary fs-4 fw-bold' : 'text-secondary fw-bold'}`}
                                                                 icon={IDPerDetaje === item.shitjeID ? faChevronDown : faChevronRight}
                                                             />
+                                                        </Button>
+                                                        <Button variant="" className='mx-2 btn btn-link' onClick={() => hapePdf(item.shifra)} disabled = {item.kohaGarancionit < 1}>
+                                                            <FontAwesomeIcon  icon={faFilePdf} />
                                                         </Button>
                                                     </td>
                                                 </tr>

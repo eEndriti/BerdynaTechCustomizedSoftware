@@ -2261,7 +2261,7 @@ ipcMain.handle('insert-transaksioni-and-shitje', async (event, data) => {
               await ndryshoBalancin(data.menyraPagesesID,data.totaliPageses,'+',connection)
             }
 
-    return { success: true };
+    return { success: true,shifra:shifra };
   } catch (error) {
     console.error('Database error:', error);
     return { success: false, error: error.message };

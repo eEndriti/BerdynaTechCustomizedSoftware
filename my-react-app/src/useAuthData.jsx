@@ -24,6 +24,7 @@ const useAuthData = () => {
     const avansi = formatCurrency(Cookies.get('avansi')); 
     const numriPercjelles = Cookies.get('numriPercjelles');
     const dataFillimit = Cookies.get('dataFillimit');
+    const folderPathGarancionet = 'C:\\Users\\BerdynaTech\\Documents\\btechPDFtest'
 
     setAuthData({
       perdoruesiID,
@@ -33,6 +34,7 @@ const useAuthData = () => {
       avansi,
       numriPercjelles,
       dataFillimit,
+      folderPathGarancionet,
     });
   }, []);
 
