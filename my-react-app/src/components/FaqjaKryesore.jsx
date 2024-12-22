@@ -1,5 +1,5 @@
 import { useState,useEffect } from 'react'
-import { Container,Button,Row,Col,Modal,Form, Spinner, InputGroup } from 'react-bootstrap'
+import { Container,Button,Row,Col,Modal,Form, Spinner, InputGroup,Table } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPen, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from './ModalPerPyetje'
@@ -192,141 +192,193 @@ const handleAprovoShitjenOnline = async () => {
   
 
   return (
-    <Container fluid className='pt-3'>
-      {loading ? <AnimatedSpinner /> : 
-      <div>
-      <div className="Container fluid my-3 tabelaTransaksioneve ">
-        <h3>Transaksionet e Nderrimit:</h3>
-        <div className="table-responsive tabeleMeMaxHeight">
-          <table className="table table-sm table-striped border table-hover">
-            <thead className="table-secondary">
-              <tr className='fs-5 '>
-                <th scope="col">Nr</th>
-                <th scope="col">Shifra</th>
-                <th scope="col">Lloji</th>
-                <th scope="col">Pershkrimi</th>
-                <th scope="col">Totali Per Pagese</th>
-                <th scope="col">Totali Pageses</th>
-                <th scope="col">Mbetja Per Pagese</th>
-                <th scope="col">Komenti</th>
-                <th scope="col">Koha</th>
-                <th scope="col">Opsionet</th>
-              </tr>
-            </thead>
-            <tbody>
-            {transaksionetENderrimit.slice().reverse().map((item, index) => (
-              <tr key={index}>
-                {item.transaksioniID != 0 ? (
-                  <>
-                    <th scope="row">{transaksionetENderrimit.length - index}</th>
-                    <td>{item.shifra}</td>
-                    <td>{item.lloji}</td>
-                    <td>{item.pershkrimi}</td>
-                    <td>{formatCurrency(item.totaliperPagese)}</td>
-                    <td>{formatCurrency(item.totaliIPageses)}</td>
-                    <td className={item.mbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{formatCurrency(item.mbetjaPerPagese)}</td>
-                    <td>{item.komenti}</td>
-                    <td>{item.dataTransaksionit.toLocaleTimeString()}</td>
-                    <td>
-                      <Button className='btn btn-primary' disabled onClick={() => ndryshoTransaksionin(item.lloji, item.transaksioniID)}>
-                        <FontAwesomeIcon icon={faPen}/>
-                      </Button>
-                      <Button className='btn bg-transparent border-0 text-danger' onClick={() => thirreModal(item.lloji, item.transaksioniID, 'anuloTransaksionin')}>
-                        <FontAwesomeIcon className="fs-4 mt-1" icon={faTrashCan} />
-                      </Button>
-                    </td>
-                  </>
-                ) : null}
-              </tr>
-            ))}
-
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <hr/>
-      
-      <div className="Container fluid mt-5 d-flex flex-row align-items-top">
-
-        <div className='tabelaPorosive col-xs-12 col-sm-12 col-md-6 col-lg-6'>
-          <h3>Porosite ne Pritje:</h3>
-          <div className="table-responsive tabeleMeMaxHeight">
-            <table className="table table-sm table-striped border table-hover">
-              <thead className="table-secondary">
-                <tr className='fs-5'>
-                  <th scope="col">Nr</th>
-                  <th scope="col">Shifra</th>
-                  <th scope="col">NrPorosise</th>
-                  <th scope="col">Data</th>
-                  <th scope="col">Subjekti</th>
-                  <th scope="col">Totali</th>
-                  <th scope="col">Komenti</th>
-                  <th scope="col">Opsionet</th>
-                </tr>
-              </thead>
-              <tbody>
-                {shitjetOnline.map((item,index) => (
-                <tr key={index}>
-                  <th scope="row">{index+1}</th>
-                  <td>{item.shifra}</td>
-                  <td>{item.nrPorosise}</td>
-                  <td>{item.dataShitjes ? new Date(item.dataShitjes).toLocaleDateString() : ''}</td>
-                  <td>{item.subjekti}</td>
-                  <td>{item.totaliPerPagese}</td>
-                  <td>{item.komenti}</td>
-                  <td>
-                    <Button  variant='outline-primary'className='mx-1' disabled><FontAwesomeIcon icon={faPen}/></Button>
-                    <Button  variant='outline-danger' className='mx-1' onClick={() => thirreModal('ShitjeOnline',item.shitjeID,'anuloPorosineOnline')}><FontAwesomeIcon icon={faTrashCan} /></Button>
-                    <Button variant='outline-success' className='mx-1' onClick={() => {setDataPerAprovim(item);setAprovoShitjenOnlineModal(true)}}><FontAwesomeIcon icon={faCheck}/></Button>
-                  </td>
-                </tr>
-              ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-              
-        <div className='tabelaServiseve  col-xs-12 col-sm-12 col-md-6 col-lg-6 px-3'>
-          <h3>Serviset Aktive:</h3>
-          <div className="table-responsive tabeleMeMaxHeight">
-            <table className="table table-sm table-striped border table-hover">
-              <thead className="table-secondary">
-                <tr className='fs-5'>
-                  <th scope="col">Nr</th>
-                  <th scope="col">Klienti</th>
-                  <th scope="col">Kontakti</th>
-                  <th scope="col">Komenti</th>
-                  <th scope="col">Pajisjet Percjellese</th>
-                  <th scope="col">Opsionet</th>
-                </tr>
-              </thead>
-              <tbody>
-              {servisetAktive.map((item,index) => (
-                <tr key={index}>
-                  <th scope="row">{index+1}</th>
-                  <td>{item.subjekti}</td>
-                  <td>{item.kontakti}</td>
-                  <td>{item.komenti}</td>
-                  <td>{item.pajisjetPercjellese}</td>
-                  <td>
-                        <Button className='btn btn-primary' onClick={() => ndryshoServisin(item,'ndrysho')}>
+    <Container fluid className="pt-3 modern-container">
+      {loading ? (
+        <AnimatedSpinner />
+      ) : (
+        <div>
+          {/* Transactions Section */}
+          <section className="section-container mb-4">
+            <h3 className="section-title">Transaksionet e Nderrimit</h3>
+            <div className="table-container">
+              <Table responsive striped bordered hover size="sm" className="custom-table">
+                <thead className="table-header">
+                  <tr>
+                    <th>Nr</th>
+                    <th>Shifra</th>
+                    <th>Lloji</th>
+                    <th>Pershkrimi</th>
+                    <th>Totali Per Pagese</th>
+                    <th>Totali Pageses</th>
+                    <th>Mbetja Per Pagese</th>
+                    <th>Komenti</th>
+                    <th>Koha</th>
+                    <th>Opsionet</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transaksionetENderrimit.slice().reverse().map((item, index) => (
+                    item.transaksioniID !== 0 && (
+                      <tr key={index}>
+                        <td>{transaksionetENderrimit.length - index}</td>
+                        <td>{item.shifra}</td>
+                        <td>{item.lloji}</td>
+                        <td>{item.pershkrimi}</td>
+                        <td>{formatCurrency(item.totaliperPagese)}</td>
+                        <td>{formatCurrency(item.totaliIPageses)}</td>
+                        <td
+                          className={
+                            item.mbetjaPerPagese > 0
+                              ? 'text-danger fw-bold'
+                              : 'text-success fw-bold'
+                          }
+                        >
+                          {formatCurrency(item.mbetjaPerPagese)}
+                        </td>
+                        <td>{item.komenti}</td>
+                        <td>{item.dataTransaksionit.toLocaleTimeString()}</td>
+                        <td>
+                          <Button
+                            className="action-btn btn-primary"
+                            disabled
+                            onClick={() => ndryshoTransaksionin(item.lloji, item.transaksioniID)}
+                          >
                             <FontAwesomeIcon icon={faPen} />
-                        </Button>
-                        <Button className='btn bg-danger m-1 border-danger' onClick={() => thirreModal('',item.servisimiID,'anuloServisin')}>
-                            <FontAwesomeIcon  icon={faTrashCan} />
-                        </Button>
-                         <Button className='btn btn-success ' onClick={() => ndryshoServisin(item,'perfundo')}>
-                            <FontAwesomeIcon  icon={faCheck} />
-                        </Button>
-                  </td>
-                </tr>
-              ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                          </Button>
+                          <Button
+                            className="action-btn btn-danger"
+                            onClick={() =>
+                              thirreModal(item.lloji, item.transaksioniID, 'anuloTransaksionin')
+                            }
+                          >
+                            <FontAwesomeIcon icon={faTrashCan} />
+                          </Button>
+                        </td>
+                      </tr>
+                    )
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+          </section>
 
-      </div>
+          <div className="d-flex flex-wrap">
+            {/* Orders Section */}
+            <section className="section-container col-lg-6 px-2 mb-4">
+              <h3 className="section-title">Porosite ne Pritje</h3>
+              <div className="table-container">
+                <Table responsive striped bordered hover size="sm" className="custom-table">
+                  <thead className="table-header">
+                    <tr>
+                      <th>Nr</th>
+                      <th>Shifra</th>
+                      <th>NrPorosise</th>
+                      <th>Data</th>
+                      <th>Subjekti</th>
+                      <th>Totali</th>
+                      <th>Komenti</th>
+                      <th>Opsionet</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shitjetOnline.map((item, index) => (
+                      <tr key={index}>
+                        <td>{index + 1}</td>
+                        <td>{item.shifra}</td>
+                        <td>{item.nrPorosise}</td>
+                        <td>
+                          {item.dataShitjes
+                            ? new Date(item.dataShitjes).toLocaleDateString()
+                            : ''}
+                        </td>
+                        <td>{item.subjekti}</td>
+                        <td>{item.totaliPerPagese}</td>
+                        <td>{item.komenti}</td>
+                        <td>
+                          <Button
+                            variant="outline-primary"
+                            className="action-btn mx-1"
+                            disabled
+                          >
+                            <FontAwesomeIcon icon={faPen} />
+                          </Button>
+                          <Button
+                            variant="outline-danger"
+                            className="action-btn mx-1"
+                            onClick={() =>
+                              thirreModal('ShitjeOnline', item.shitjeID, 'anuloPorosineOnline')
+                            }
+                          >
+                            <FontAwesomeIcon icon={faTrashCan} />
+                          </Button>
+                          <Button
+                            variant="outline-success"
+                            className="action-btn mx-1"
+                            onClick={() => {
+                              setDataPerAprovim(item);
+                              setAprovoShitjenOnlineModal(true);
+                            }}
+                          >
+                            <FontAwesomeIcon icon={faCheck} />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            </section>
+
+            {/* Services Section */}
+            <section className="section-container col-lg-6 px-2 mb-4">
+              <h3 className="section-title">Serviset Aktive</h3>
+              <div className="table-container">
+                <Table responsive striped bordered hover size="sm" className="custom-table">
+                  <thead className="table-header">
+                    <tr>
+                      <th>Nr</th>
+                      <th>Klienti</th>
+                      <th>Kontakti</th>
+                      <th>Komenti</th>
+                      <th>Pajisjet Percjellese</th>
+                      <th>Opsionet</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {servisetAktive.map((item, index) => (
+                      <tr key={index}>
+                        <td>{index + 1}</td>
+                        <td>{item.subjekti}</td>
+                        <td>{item.kontakti}</td>
+                        <td>{item.komenti}</td>
+                        <td>{item.pajisjetPercjellese}</td>
+                        <td>
+                          <Button
+                            className="action-btn btn-primary"
+                            onClick={() => ndryshoServisin(item, 'ndrysho')}
+                          >
+                            <FontAwesomeIcon icon={faPen} />
+                          </Button>
+                          <Button
+                            className="action-btn btn-danger mx-1"
+                            onClick={() => thirreModal('', item.servisimiID, 'anuloServisin')}
+                          >
+                            <FontAwesomeIcon icon={faTrashCan} />
+                          </Button>
+                          <Button
+                            className="action-btn btn-success"
+                            onClick={() => ndryshoServisin(item, 'perfundo')}
+                          >
+                            <FontAwesomeIcon icon={faCheck} />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            </section>
+          </div>
       <ModalPerPyetje
         show={showModal}
         handleClose={handleCloseModal}
@@ -410,9 +462,12 @@ const handleAprovoShitjenOnline = async () => {
     </Modal>
 
       <ToastContainer/>
+   
+    
     </div>
-    }
+     )}
     </Container>
+
   )
 }
 

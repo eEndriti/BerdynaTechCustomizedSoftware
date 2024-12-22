@@ -21,10 +21,14 @@ export default function Serviset() {
     const [aKaÇante,setAKaÇante] = useState(false)
     const [aKaGarancion,setAKaGarancion] = useState(false)
     const [shifraGarancionit,setShifraGarancionit] = useState('')
-    const [idPerAnulim,setIdPerAnulim] = useState()
     const [modalPerPyetje,setModalPerPyetje] = useState(false)
-    const [filterDataPranimit, setFilterDataPranimit] = useState('');
-    const [filterShifra, setFilterShifra] = useState('');
+    const [filterDataStart, setFilterDataStart] = useState(() => {
+        const today = new Date();
+        today.setDate(1); 
+        return today.toISOString().split('T')[0]; 
+      });
+      const [filterDataEnd, setFilterDataEnd] = useState(new Date().toISOString().split('T')[0]);
+      const [filterShifra, setFilterShifra] = useState('');
     const [filterSubjekti, setFilterSubjekti] = useState('');
     const [filterKontakti, setFilterKontakti] = useState('');
     const [filterStatusi, setFilterStatusi] = useState('Aktiv');
@@ -32,51 +36,55 @@ export default function Serviset() {
     const [data,setData] = useState({})
     const [updateType,setUpdateType] = useState()
     const {nderrimiID} = useAuthData()
+    const [dataPerAnulim,setDataPerAnulim] = useState({idPerAnulim:0 ,shifra:"",statusi:"",totaliPerPagese:0,totaliPageses:0})
+    
 
     useEffect(() => {
         window.api.fetchTableServisi().then(receivedData => {
           setServiset(receivedData);
-          setFilteredServiset(receivedData.filter(item => item.statusi === 'Aktiv')); // Default filtering to 'Aktiv'
+          setFilteredServiset(receivedData.filter(item => item.statusi === filterStatusi)); // Default filtering to 'Aktiv'
           setLoading(false);
         });
 
     }, []);
 
     useEffect(() => {
-        // Filtering logic that applies on change
-        let filteredData = serviset;
-
-        if (filterDataPranimit) {
-            filteredData = filteredData.filter(item =>
-                new Date(item.dataPranimit).toISOString().split('T')[0] === filterDataPranimit
-            );
-        }
-
-        if (filterShifra) {
-            filteredData = filteredData.filter(item =>
-                item.shifra.includes(filterShifra)
-            );
-        }
-
-        if (filterSubjekti) {
-            filteredData = filteredData.filter(item =>
-                item.subjekti.toLowerCase().includes(filterSubjekti.toLowerCase())
-            );
-        }
-
-        if (filterKontakti) {
-            filteredData = filteredData.filter(item =>
-                item.kontakti.toLowerCase().includes(filterKontakti.toLowerCase())
-            );
-        }
-
-        filteredData = filteredData.filter(item =>
-            item.statusi === filterStatusi
-        );
-
-        setFilteredServiset(filteredData);
-    }, [filterDataPranimit, filterShifra, filterSubjekti, filterKontakti, filterStatusi, serviset]);
-
+        const applyFilters = () => {
+            let filtered = [...serviset];
+    
+            // Apply each filter conditionally
+            if (filterStatusi) {
+                filtered = filtered.filter(item => item.statusi === filterStatusi);
+            }
+            if (filterShifra) {
+                filtered = filtered.filter(item => item.shifra.toLowerCase().includes(filterShifra));
+            }
+            if (filterSubjekti) {
+                filtered = filtered.filter(item => item.subjekti.toLowerCase().includes(filterSubjekti.toLowerCase()));
+            }
+            if (filterKontakti) {
+                filtered = filtered.filter(item => item.kontakti.includes(filterKontakti));
+            }
+            if (filterDataStart && filterDataEnd) {
+                
+                filtered = filtered.filter(item => {
+                    const startDate = new Date(filterDataStart).setHours(0, 0, 0, 0);  
+                    const endDate = new Date(filterDataEnd).setHours(23, 59, 59, 999);  
+                    const dataPranimit = new Date(item.dataPranimit).setHours(0, 0, 0, 0);
+                    
+                    return dataPranimit >= startDate && dataPranimit <= endDate;
+                    
+                });
+              }
+              
+    
+            setFilteredServiset(filtered);
+        };
+    
+        applyFilters();
+    }, [serviset, filterShifra, filterSubjekti, filterKontakti, filterStatusi, filterDataStart,filterDataEnd]);
+    
+    
     
     const handleSelectSubjekti = (result) => {
         setSelectedSubjekti({
@@ -103,6 +111,7 @@ export default function Serviset() {
             toast.warning('Selektoni subjektin per te vazhduar!')
         }
     }
+
     const handleShtoServisin = async () => {
         let pajisjetPercjellese = ''
 
@@ -138,19 +147,32 @@ export default function Serviset() {
                     setLoading(false);
                   }
     }
-    const thirreModal = (idPerAnulim) => {
-        setIdPerAnulim(idPerAnulim)
+
+    const thirreModal = (item) => {
+        setDataPerAnulim({
+            idPerAnulim:item.servisimiID,
+            shifra:item.shifra,
+            statusi:item.statusi,
+            transaksioniID:item.transaksioniID,
+            totaliPerPagese:item.totaliPerPagese,
+            totaliPageses:item.totaliPageses,
+            menyraPagesesID:item.menyraPagesesID
+        })
         setModalPerPyetje(true)
     }
+
     const confirmModal = () => {
         deleteServisin()
     }
+
     const closeModalPerPyetje = () => {
         setModalPerPyetje(false)
     }
-    const deleteServisin = async () => {
 
-        const result = await window.api.deleteServisi(idPerAnulim);
+    const deleteServisin = async () => {
+        try{
+            
+        const result = await window.api.deleteServisi(dataPerAnulim);
 
         if (result.success) {
             toast.success(`Servisi u Anulua me Sukses !`, {
@@ -160,6 +182,9 @@ export default function Serviset() {
             });
         } else {
             toast.error('Gabim gjate Anulimit: ' + result.error);
+        }
+        }catch(e){
+            console.log(e)
         }
     }
     
@@ -258,13 +283,18 @@ export default function Serviset() {
                     <Row>
                         <Col>
                             <Form.Group>
-                                <Form.Label>Data Pranimit</Form.Label>
+                                <Form.Label>Periudha Kohore</Form.Label>
+                                <Form.Control className='mb-1'
+                                    type="date"
+                                    value={filterDataStart}
+                                    onChange={(e) => setFilterDataStart(e.target.value)}
+                                />
                                 <Form.Control
                                     type="date"
-                                    value={filterDataPranimit}
-                                    onChange={(e) => setFilterDataPranimit(e.target.value)}
+                                    value={filterDataEnd}
+                                    onChange={(e) => setFilterDataEnd(e.target.value)}
                                 />
-                            </Form.Group>
+                            </Form.Group>                          
                         </Col>
                         <Col>
                             <Form.Group>
@@ -314,8 +344,8 @@ export default function Serviset() {
                 </Form>
             </Row>
         <Row className='mt-5'>
-            <div className="table-responsive tabeleMeMaxHeight">
-            <Table className="table table-sm table-striped border table-hover">
+            <div className="table-responsive tableHeight50 mb-5">
+            <Table className="table table-sm table-striped border table-hover ">
                 <thead className="table-secondary">
                 <tr className='fs-5 '>
                     <th scope="col">Nr</th>
@@ -359,19 +389,21 @@ export default function Serviset() {
                         <td className={item.statusi == 'Perfunduar' ? 'text-success fw-bold' : 'fw-bold text-danger'}>{item.statusi}</td>
                         <td>{item.shifraGarancionit}</td>
                         <td>
-                        {item.statusi == 'Aktiv' ?
-                       <>
-                        <Button className='btn btn-primary' onClick={() => handleShowUpdateModal(item,item.statusi)}>
-                            <FontAwesomeIcon icon={faPen} />
-                        </Button>
-                        <Button className='btn bg-danger m-1 border-danger' onClick={() => thirreModal(item.servisimiID)}>
-                            <FontAwesomeIcon  icon={faTrashCan} />
-                        </Button>
-                         <Button className='btn btn-success ' onClick={() => handleShowUpdateModal(item,'perfundo')}>
-                            <FontAwesomeIcon  icon={faCheck} />
-                        </Button></>: null}
+                                    <Button className='btn btn-primary ' onClick={() => handleShowUpdateModal(item,item.statusi)}>
+                                        <FontAwesomeIcon icon={faPen} />
+                                    </Button>
+                                    <Button className='btn bg-danger m-1 border-danger' onClick={() => thirreModal(item)}>
+                                        <FontAwesomeIcon  icon={faTrashCan} />
+                                    </Button>
+                            {item.statusi == 'Aktiv' ?
+                                <>
+                                   
+                                    <Button className='btn btn-success ' onClick={() => handleShowUpdateModal(item,'perfundo')}>
+                                        <FontAwesomeIcon  icon={faCheck} />
+                                    </Button>
+                                </>: null}
                         </td>
-                    </>
+                        </>
                     ) : null}
                 </tr>
                 ))}

@@ -55,6 +55,7 @@ export default function Punonjesit() {
             [name]: value
         });
     };
+    
     const emptyDataPerPunonjes = () => {
       setDataPerPunonjes({
         emri:'',

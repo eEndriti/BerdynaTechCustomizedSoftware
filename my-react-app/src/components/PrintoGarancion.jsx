@@ -58,7 +58,7 @@ export const PrintoGarancion = (data,shifra) => {
     doc.text("Në garancion përfshihet mbulesa e plotë përpos nëse produkti është:", 11, 54);
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
+    doc.setFontSize(10);
     doc.text(`• I dëmtuar nga shkarkesat e ndryshme elektrike te cilat qojne në demtime dhe mosfunksionim.`, 15, 65);
     doc.text(`• Dëmtimet fizike te cilat vijnë si pasojë e moskujdesit te klientit si psh(Dëmtimet nga përplasjet,
             hudhja e lëngjeve apo ujit,goditje,ndrydhjet etj.)`, 15, 72);

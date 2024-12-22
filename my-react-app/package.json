@@ -23,6 +23,7 @@
     "datepicker": "^0.0.0",
     "fabric": "^6.5.1",
     "js-cookie": "^3.0.5",
+    "jsbarcode": "^3.11.6",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "pdf-lib": "^1.17.1",
@@ -37,6 +38,7 @@
     "react-pdf": "^9.1.1",
     "react-router-dom": "^6.26.2",
     "react-spinners": "^0.14.1",
+    "react-to-print": "^3.0.2",
     "react-toastify": "^10.0.5"
   },
   "devDependencies": {

@@ -21,6 +21,7 @@ import DetajePerProdukt from './components/DetajePerProdukt';
 import NdryshoShitjen from './components/NdryshoShitjen';
 import Cookies from 'js-cookie'
 import Administrimi from './components/Administrimi';
+import PrintoLabell from './components/PrintoLabell';
 
 
 const isAuthenticated = () => {
@@ -100,6 +101,10 @@ const router = createBrowserRouter([
       {
         path: '/transaksionet',
         element: <Transaksionet />,
+      },
+      {
+        path: '/printoLabell',
+        element: <PrintoLabell/>,
       },
       {
         path: '/administrimi',

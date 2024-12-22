@@ -20,12 +20,49 @@ export default function Klient() {
     const [data,setData] = useState({inputEmertimi:'',inputKontakti:'',ndrysho:false,idPerNdryshim:null,lloji:'klient'})
 
     useEffect(() => {
-        window.api.fetchTableSubjekti('klient').then((receivedData) => {
-            const filteredData = receivedData.filter(item => item.lloji == 'klient');
+        const fetchData = async () => {
+          try {
+            setLoading(true);
+      
+            const [klientData, servisimiData] = await Promise.all([
+              window.api.fetchTableSubjekti('klient'),
+              window.api.fetchTableQuery(`
+                SELECT s.subjektiID, s.lloji, s.emertimi, s.kontakti,
+                       COALESCE(SUM(sh.totaliPerPagese), 0) AS totalTotaliPerPagese,
+                       COALESCE(SUM(sh.totaliPageses), 0) AS totalTotaliPageses,
+                       COALESCE(SUM(sh.mbetjaPageses), 0) AS totalMbetjaPerPagese
+                FROM subjekti s
+                LEFT JOIN servisimi sh ON s.subjektiID = sh.subjektiID
+                GROUP BY s.subjektiID, s.emertimi, s.kontakti, s.lloji
+              `)
+            ]);
+      
+            const combinedData = [...klientData, ...servisimiData];
+      
+            const aggregatedData = combinedData.reduce((acc, item) => {
+              const existing = acc.find(i => i.subjektiID === item.subjektiID);
+              if (existing) {
+                existing.totalTotaliPerPagese += item.totalTotaliPerPagese;
+                existing.totalTotaliPageses += item.totalTotaliPageses;
+                existing.totalMbetjaPerPagese += item.totalMbetjaPerPagese;
+              } else {
+                acc.push({ ...item });
+              }
+              return acc;
+            }, []);
+      
+            const filteredData = aggregatedData.filter(item => item.lloji === 'klient');
             setKlientet(filteredData);
+            console.log('Aggregated Data:', aggregatedData);
+          } catch (error) {
+            console.error('Error fetching data:', error);
+          } finally {
             setLoading(false);
-        });
-    }, []);
+          }
+        };
+      
+        fetchData();
+      }, []);
     
 
     const handleSearchChange = (e) => setSearchTerm(e.target.value);
@@ -146,7 +183,7 @@ export default function Klient() {
                                 </thead>
                                 <tbody className="border-dark">
                                     {filteredKlientet.slice().reverse().map((item, index) => (
-                                        <tr key={index}>
+                                        <tr key={index}>{console.log(item)}
                                             <th scope="row">{filteredKlientet.length - index}</th>
                                             <td>{item.emertimi}</td>
                                             <td>{item.kontakti}</td>

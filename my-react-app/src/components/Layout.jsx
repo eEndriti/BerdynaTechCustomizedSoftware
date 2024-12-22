@@ -129,7 +129,7 @@ function Layout() {
                 <NavLink exact to='/furnitor' className='nav-link' activeClassName='active'>
                   Furnitor
                 </NavLink>
-                <NavLink to='/nderrimet' className='nav-link' activeClassName='active'>
+                <NavLink to='/printoLabell' className='nav-link' activeClassName='active'>
                   Nderrimet
                 </NavLink>
                 <NavLink to='/evidenca' className='nav-link' activeClassName='active'>
