@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan, faPen,faChevronRight,faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan, faPen,faChevronRight,faChevronDown,faEuroSign } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
 import DetajePerShitjeBlerje from './DetajePerShitjeBlerje';
 import AnimatedSpinner from './AnimatedSpinner';
 import { formatCurrency } from '../useAuthData';
+import ShtoPagese from './ShtoPagese';
 
 export default function Blerjet() {
     const [blerjet, setBlerjet] = useState([]);
@@ -21,6 +22,8 @@ export default function Blerjet() {
     const [idPerAnulim, setIdPerAnulim] = useState();
     const [IDPerDetaje,setIDPerDetaje] = useState()
     const [shifraPerDetaje,setShifraPerDetaje] = useState()
+    const [dataPerShtoPagese,setDataPerShtoPagese] = useState()
+    const [showShtoPagese,setShowShtoPagese] = useState(false)
 
     useEffect(() => {
         window.api.fetchTableBlerje().then((receivedData) => {
@@ -85,6 +88,17 @@ export default function Blerjet() {
             setIDPerDetaje(ID)
        }
 }   
+
+const hapeShtoPagese = (item) =>{
+    setDataPerShtoPagese({
+        ...item,
+        llojiDokumentit:'blerje',
+        IDDokumentit:item.blerjeID,
+        subjekti:item.klienti
+    })
+    console.log('prejblej',dataPerShtoPagese)
+    setShowShtoPagese(true)
+}
     return (
         <Container fluid>
             <h4 className="text-center fw-bold pt-4">Të Gjitha Blerjet:</h4>
@@ -192,6 +206,9 @@ export default function Blerjet() {
                                                                 icon={IDPerDetaje === item.blerjeID ? faChevronDown : faChevronRight}
                                                             />
                                                         </Button>
+                                                        <Button variant="" className=' btn btn-outline-success ' onClick={() => hapeShtoPagese(item)} disabled={item.mbetjaPerPagese == 0 }>
+                                                            <FontAwesomeIcon  icon={faEuroSign} />
+                                                        </Button>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -209,6 +226,8 @@ export default function Blerjet() {
 
             <ToastContainer />
             <ModalPerPyetje show={showModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />
+            <ShtoPagese show={showShtoPagese} handleClose={() => setShowShtoPagese(false)} data={dataPerShtoPagese} />
+
         </Container>
     );
 }

@@ -100,11 +100,11 @@ function Layout() {
         <Container fluid className='p-0 pt-5'>
           <Row className='g-0'>
             {/* Sidebar */}
-            <Col xs={12} sm={3} md={2} className='bg-sidebar sidebar'>
+            <Col xs={12} sm={3} md={2} className='bg-sidebar sidebar '>
               <div className='logo d-flex justify-content-center mt-4 w-75'>
                 <img className='w-50' src={logo} alt="logo" />
               </div>
-              <div className='sidebar-content d-flex flex-column '>
+              <div className='sidebar-content d-flex flex-column'>
                 <NavLink exact to='/faqjaKryesore' className='nav-link' activeClassName='active'>
                   Kryefaqja
                 </NavLink>

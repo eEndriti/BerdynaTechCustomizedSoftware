@@ -517,13 +517,13 @@ export default function NdryshoShitjen() {
                         <Form.Label column xs={6} className="text-end">Totali Pageses:</Form.Label>
                         <Col xs={6}>
                             <InputGroup>
-                                <Form.Control disabled={inputDisabled}
+                                <Form.Control disabled={true}
                                 type="number"
                                 value={totaliPageses}
                                 onChange={handleTotaliPagesesChange}
                                 min={0}
                                 />
-                                <InputGroup.Text style={{cursor:'pointer'}} onClick={() => {totaliPageses > 0 ? setTotaliPageses(0)  : setTotaliPageses(totaliPerPagese)}}>€</InputGroup.Text>
+                                <InputGroup.Text style={{cursor:'pointer'}}  onClick={() => {totaliPageses > 0 ? setTotaliPageses(0)  : setTotaliPageses(totaliPerPagese)}}>€</InputGroup.Text>
 
                             </InputGroup>
                         </Col>

@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan, faPen,faChevronDown,faChevronRight,faFilePdf } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan, faPen,faChevronDown,faChevronRight,faFilePdf,faEdit,faEuroSign,faClipboard,faMoneyBillTransfer,faMoneyCheck,faSyncAlt } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
 import AnimatedSpinner from './AnimatedSpinner'
 import DetajePerShitjeBlerje from './DetajePerShitjeBlerje';
 import { useNavigate } from 'react-router-dom';
+import ShtoPagese from './ShtoPagese';
 
 export default function Shitjet() {
     const navigate = useNavigate()
@@ -24,7 +25,8 @@ export default function Shitjet() {
     const [IDPerDetaje,setIDPerDetaje] = useState()
     const [llojiShitjes,setLlojiShitjes] = useState()
     const [shifraPerDetaje,setShifraPerDetaje] = useState()
-    
+    const [dataPerShtoPagese,setDataPerShtoPagese] = useState()
+    const [showShtoPagese,setShowShtoPagese] = useState(false)
     useEffect(() => {
         window.api.fetchTableShitje().then((receivedData) => {
             setShitjet(receivedData);
@@ -121,6 +123,15 @@ const hapePdf = async (shifra) =>{
     await window.api.openFile(filePath );
 }
 
+const hapeShtoPagese = (item) =>{
+    setDataPerShtoPagese({
+        ...item,
+        llojiDokumentit:'shitje',
+        IDDokumentit:item.shitjeID
+    })
+    setShowShtoPagese(true)
+}
+
     return (
         <Container fluid className="pt-5">
             <h4 className="text-center fw-bold">Të Gjitha Shitjet:</h4>
@@ -214,23 +225,28 @@ const hapePdf = async (shifra) =>{
                                                     <td>{item.perdoruesi}</td>
                                                     <td>{item.nrPorosise}</td>
                                                     <td>{item.kohaGarancionit > 1 ? <>{item.kohaGarancionit} Muaj / {kontrolloStatusinGarancionit(item.kohaGarancionit,item.dataShitjes)}</>:'Pa Garancion'}</td>
-                                                    <td className="text-center d-flex flex-row mb-0 p-2">
+                                                    <td >
+                                                       <Col className="d-flex flex-wrap-flex-row justify-content-center align-items-center mt-1">
                                                         <Button variant="primary" onClick={() => navigate(`/ndryshoShitjen/${item.shitjeID}`)}>
-                                                            <FontAwesomeIcon  icon={faPen} />
-                                                        </Button>
-                                                        <Button variant="danger" className='mx-2' onClick={() => thirreModalPerPyetje(item.shitjeID,item.transaksioniID,item.lloji)}>
-                                                            <FontAwesomeIcon  icon={faTrashCan} />
-                                                        </Button>
-                                                        <Button variant='transparent' className='btn btn-info mx-2'  onClick={() => shfaqProduktetEShitjes(item.shitjeID,item.shifra)} 
-                                                                 >
-                                                        <FontAwesomeIcon 
-                                                                className={` ${IDPerDetaje === item.shitjeID ? 'text-primary fs-4 fw-bold' : 'text-secondary fw-bold'}`}
-                                                                icon={IDPerDetaje === item.shitjeID ? faChevronDown : faChevronRight}
-                                                            />
-                                                        </Button>
-                                                        <Button variant="" className='mx-2 btn btn-link' onClick={() => hapePdf(item.shifra)} disabled = {item.kohaGarancionit < 1}>
-                                                            <FontAwesomeIcon  icon={faFilePdf} />
-                                                        </Button>
+                                                                <FontAwesomeIcon  icon={faEdit} />
+                                                            </Button>
+                                                            <Button variant="danger" className='mx-2' onClick={() => thirreModalPerPyetje(item.shitjeID,item.transaksioniID,item.lloji)}>
+                                                                <FontAwesomeIcon  icon={faTrashCan} />
+                                                            </Button>
+                                                            <Button variant='transparent' className='btn btn-info mx-2'  onClick={() => shfaqProduktetEShitjes(item.shitjeID,item.shifra)} 
+                                                                    >
+                                                            <FontAwesomeIcon 
+                                                                    className={` ${IDPerDetaje === item.shitjeID ? 'text-primary fs-4 fw-bold' : 'text-secondary fw-bold'}`}
+                                                                    icon={IDPerDetaje === item.shitjeID ? faChevronDown : faChevronRight}
+                                                                />
+                                                            </Button>
+                                                            <Button variant="" className='mx-2 btn btn-link' onClick={() => hapePdf(item.shifra)} disabled = {item.kohaGarancionit < 1}>
+                                                                <FontAwesomeIcon  icon={faFilePdf} />
+                                                            </Button>
+                                                            <Button variant="" className=' btn btn-outline-success ' onClick={() => hapeShtoPagese(item)} disabled={item.mbetjaPerPagese == 0 || item.lloji == 'online'}>
+                                                                <FontAwesomeIcon  icon={faEuroSign} />
+                                                            </Button>
+                                                       </Col>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -249,6 +265,7 @@ const hapePdf = async (shifra) =>{
 
             <ToastContainer />
             <ModalPerPyetje show={showModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />
+            <ShtoPagese show={showShtoPagese} handleClose={() => setShowShtoPagese(false)} data={dataPerShtoPagese} />
         </Container>
     );
 }

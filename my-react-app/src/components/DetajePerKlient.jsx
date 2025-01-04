@@ -265,6 +265,7 @@ export default function DetajePerKlient() {
                                         <th scope="col">Vlera e Pageses</th>
                                         <th scope="col">Data e Pageses</th>
                                         <th scope="col">Menyra e Pageses</th>
+                                        <th scope="col">Opsionet</th>
                                     </tr>
                                 </thead>
                                 <tbody className="border-dark">
@@ -278,7 +279,9 @@ export default function DetajePerKlient() {
                                         <td className="fw-bold">{formatCurrency(item.shumaPageses)}</td>
                                         <td>{new Date(item.dataPageses).toLocaleDateString()}</td>
                                         <td>{item.menyraPageses}</td>
-                                       
+                                        <td>
+                                            
+                                        </td>
                                         </tr>
                                     ))}
 

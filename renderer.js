@@ -67,6 +67,7 @@ contextBridge.exposeInMainWorld('api', {
     paguajPagen: (data) => ipcRenderer.invoke('paguajPagen', data),
     transferoMjetet: (data) => ipcRenderer.invoke('transferoMjetet', data),
     perfundoShitjenOnline: (data) => ipcRenderer.invoke('perfundoShitjenOnline', data),
+    shtoPagese: (data) => ipcRenderer.invoke('shtoPagese', data),
 
 
 
@@ -76,6 +77,7 @@ contextBridge.exposeInMainWorld('api', {
     ndryshoPunonjes: (data) => ipcRenderer.invoke('ndryshoPunonjes', data),
     ndryshoKategorine: (data) => ipcRenderer.invoke('ndryshoKategorine', data),
     ndryshoServisin: (data) => ipcRenderer.invoke('ndryshoServisin', data),
+    ndryshoServisinPerfunduar: (data) => ipcRenderer.invoke('ndryshoServisinPerfunduar', data),
     ndryshoShitje: (data) => ipcRenderer.invoke('ndryshoShitje', data),
     ndryshoPerdorues: (data) => ipcRenderer.invoke('ndryshoPerdorues', data),
     ndryshoOpsionPagese: (data) => ipcRenderer.invoke('ndryshoOpsionPagese', data),

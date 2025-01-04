@@ -200,7 +200,7 @@ const handleAprovoShitjenOnline = async () => {
           {/* Transactions Section */}
           <section className="section-container mb-4">
             <h3 className="section-title">Transaksionet e Nderrimit</h3>
-            <div className="table-container">
+            <div className="table-container tableHeight50">
               <Table responsive striped bordered hover size="sm" className="custom-table">
                 <thead className="table-header">
                   <tr>
@@ -216,14 +216,14 @@ const handleAprovoShitjenOnline = async () => {
                     <th>Opsionet</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className='text-nowrap'>
                   {transaksionetENderrimit.slice().reverse().map((item, index) => (
                     item.transaksioniID !== 0 && (
                       <tr key={index}>
                         <td>{transaksionetENderrimit.length - index}</td>
                         <td>{item.shifra}</td>
                         <td>{item.lloji}</td>
-                        <td>{item.pershkrimi}</td>
+                        <td className='text-wrap'>{item.pershkrimi}</td>
                         <td>{formatCurrency(item.totaliperPagese)}</td>
                         <td>{formatCurrency(item.totaliIPageses)}</td>
                         <td

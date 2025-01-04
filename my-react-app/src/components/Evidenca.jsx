@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Container, Spinner, Col, Row,Form,Button } from 'react-bootstrap';
+import { Container, Spinner, Col, Row,Form,Button,Card } from 'react-bootstrap';
 import AnimatedSpinner from './AnimatedSpinner';
 import ChartComponent from './ChartComponent';
 import { formatCurrency } from '../useAuthData';
@@ -70,14 +70,14 @@ export default function Evidenca() {
       setLoading2(true);
       try {
         const query1 = `
-          SELECT SUM(b.totaliPageses) as totaliPagesesBlerje
+          SELECT SUM(b.totaliPerPagese) as totaliPagesesBlerje
           FROM blerje b 
           WHERE b.dataBlerjes BETWEEN '${startDate}' AND '${endDate}'
         `;
         const data1 = await window.api.fetchTableQuery(query1);
 
         const query2 = `
-           select sum(s.totaliPageses) as totaliPagesesShitje from shitje s
+           select sum(s.totaliPerPagese) as totaliPagesesShitje from shitje s
             where s.dataShitjes BETWEEN '${startDate}' AND '${endDate}'
           `;
         const data2 = await window.api.fetchTableQuery(query2);
@@ -180,34 +180,61 @@ export default function Evidenca() {
               {tregoGrafikun ?   
               <ChartComponent totalShitje={totalShitje} totalBlerje={totalBlerje} totalShpenzime={totalShpenzime} totalServisime={totalServisime} totalHyrje={totalHyrje}/>     
               :
-              <Col className='text-center d-flex flex-wrap justify-content-start align-items-center p-2 m-2 mt-4'>
-              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Qarkullimit : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(totalQarkullimi)}</span></h5>
-              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Shitjeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(totalShitje)}</span></h5>
-              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Hyrjeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(totalHyrje)}</span></h5>
-              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Blerjeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(totalBlerje)}</span></h5>
-              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Servisimeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(totalServisime)}</span></h5>
-              <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Shpenzimeve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(totalShpenzime)}</span></h5>
-            </Col>}
+              <Col className="d-flex flex-wrap justify-content-start align-items-center gap-3 p-3">
+                {[
+                  { label: 'Totali i Qarkullimit', value: totalQarkullimi },
+                  { label: 'Totali i Shitjeve', value: totalShitje },
+                  { label: 'Totali i Hyrjeve', value: totalHyrje },
+                  { label: 'Totali i Blerjeve', value: totalBlerje },
+                  { label: 'Totali i Servisimeve', value: totalServisime },
+                  { label: 'Totali i Shpenzimeve', value: totalShpenzime },
+                ].map((item, index) => (
+                  <Card
+                    key={index}
+                    className="shadow-sm p-3 d-flex flex-column align-items-center text-center bg-light border border-0 rounded"
+                    style={{ minWidth: '200px', flex: '1 1 calc(33.333% - 1rem)' }}
+                  >
+                    <Card.Body>
+                      <h5 className="text-secondary">{item.label}</h5>
+                      <span className="fs-4 fw-bold text-dark">{formatCurrency(item.value)}</span>
+                    </Card.Body>
+                  </Card>
+                ))}
+              </Col>}
             </Col>     
 
         }
       </Row>
           <hr/><br/>
-      <Row>
-      <h4 className='text-center'>Evidenca e Pergjithshme:</h4>
-        <Col className='text-center d-flex flex-wrap justify-content-start align-items-center p-2 m-2'>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Vlera e Stokit ne Blerje : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(produktiData[0]?.vleraEBlerjeve) || 'N/A'}</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Vlera e Stokit ne Shitje : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(produktiData[0]?.VleraShitjeve) || 'N/A'}</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Nr. i Produkteve : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[0]?.nrProdukteve || 'N/A'}</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Vlera e Shitjeve te Pa Paguara : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(vleraShitjevePaPaguar[0]?.vleraShitjevePaPaguar) || 'N/A'}</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Vlera e Blerjeve te Pa Paguara : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(vleraBlerjevePaPaguar[0]?.vleraBlerjevePaPaguar) || 'N/A'}</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Nr. i Produkteve me Fature : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[0]?.meFatureTeRregulltCount || 'N/A'}</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Sasise : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{produktiData[0]?.sasiaTotale || 'N/A'}</span></h5>
-          
-          
-          <h5 className='mx-5 mt-2 border rounded p-3'>Kalkulimi Perfundimtar : <span className='fs-4 fw-bold text-dark p-2 d-inline'>{formatCurrency(vleraShitjevePaPaguar[0]?.vleraShitjevePaPaguar) || 'N/A'}</span></h5>
-        </Col>
-      </Row> 
+          <Row>
+            <h4 className="text-center mb-4">Evidenca e Pergjithshme:</h4>
+            <Col className="d-flex flex-wrap justify-content-start align-items-center gap-3 p-3">
+              {[
+                { label: 'Vlera e Stokit ne Blerje', value: produktiData[0]?.vleraEBlerjeve, isCurrency: true },
+                { label: 'Vlera e Stokit ne Shitje', value: produktiData[0]?.VleraShitjeve, isCurrency: true },
+                { label: 'Nr. i Produkteve', value: produktiData[0]?.nrProdukteve, isCurrency: false },
+                { label: 'Vlera e Shitjeve te Pa Paguara', value: vleraShitjevePaPaguar[0]?.vleraShitjevePaPaguar, isCurrency: true },
+                { label: 'Vlera e Blerjeve te Pa Paguara', value: vleraBlerjevePaPaguar[0]?.vleraBlerjevePaPaguar, isCurrency: true },
+                { label: 'Nr. i Produkteve me Fature', value: produktiData[0]?.meFatureTeRregulltCount, isCurrency: false },
+                { label: 'Totali i Sasise', value: produktiData[0]?.sasiaTotale, isCurrency: false },
+                { label: 'Kalkulimi Perfundimtar', value: '', isCurrency: false },
+              ].map((item, index) => (
+                <Card
+                  key={index}
+                  className="shadow-sm p-3 d-flex flex-column align-items-center text-center bg-light border-0 rounded"
+                  style={{ minWidth: '200px', flex: '1 1 calc(33.333% - 1rem)' }}
+                >
+                  <Card.Body>
+                    <h5 className="text-secondary">{item.label}</h5>
+                    <span className="fs-4 fw-bold text-dark">
+                      {item.isCurrency ? formatCurrency(item.value) : item.value || 'N/A'}
+                    </span>
+                  </Card.Body>
+                </Card>
+              ))}
+            </Col>
+          </Row>
+
       <hr />
     </Container>
   );

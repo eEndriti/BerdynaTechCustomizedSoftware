@@ -2,12 +2,14 @@ import { useState,useEffect } from 'react'
 import { Container,Row,Col,Button,Table,Form,Spinner } from 'react-bootstrap'
 import KerkoSubjektin from './KerkoSubjektin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faPen, faTrashCan } from '@fortawesome/free-solid-svg-icons'; 
+import { faCheck, faPen, faTrashCan,faCheckCircle, faTimesCircle,faEuroSign } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from './ModalPerPyetje'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UpdateServise from './UpdateServise'
 import useAuthData from '../useAuthData';
+import NdryshoServisinPerfunduar from './NdryshoServisinPerfunduar';
+import ShtoPagese from './ShtoPagese';
 
 export default function Serviset() {
     const [loading,setLoading] = useState(true)
@@ -27,8 +29,8 @@ export default function Serviset() {
         today.setDate(1); 
         return today.toISOString().split('T')[0]; 
       });
-      const [filterDataEnd, setFilterDataEnd] = useState(new Date().toISOString().split('T')[0]);
-      const [filterShifra, setFilterShifra] = useState('');
+    const [filterDataEnd, setFilterDataEnd] = useState(new Date().toISOString().split('T')[0]);
+    const [filterShifra, setFilterShifra] = useState('');
     const [filterSubjekti, setFilterSubjekti] = useState('');
     const [filterKontakti, setFilterKontakti] = useState('');
     const [filterStatusi, setFilterStatusi] = useState('Aktiv');
@@ -37,16 +39,25 @@ export default function Serviset() {
     const [updateType,setUpdateType] = useState()
     const {nderrimiID} = useAuthData()
     const [dataPerAnulim,setDataPerAnulim] = useState({idPerAnulim:0 ,shifra:"",statusi:"",totaliPerPagese:0,totaliPageses:0})
-    
+    const [ndryshoServisinPerfunduar,setNdryshoServisinPerfunduar] = useState(false)
+    const [dataPerShtoPagese,setDataPerShtoPagese] = useState()
+    const [showShtoPagese,setShowShtoPagese] = useState(false)
 
     useEffect(() => {
-        window.api.fetchTableServisi().then(receivedData => {
-          setServiset(receivedData);
-          setFilteredServiset(receivedData.filter(item => item.statusi === filterStatusi)); // Default filtering to 'Aktiv'
-          setLoading(false);
-        });
-
-    }, []);
+        const fetchData = async () => {
+          try {
+            const receivedData = await window.api.fetchTableServisi();
+            setServiset(receivedData);
+            setFilteredServiset(receivedData.filter(item => item.statusi === filterStatusi));
+          } catch (error) {
+            console.error('Error fetching data:', error);
+          } finally {
+            setLoading(false); 
+          }
+        };
+    
+        fetchData();
+      }, []);
 
     useEffect(() => {
         const applyFilters = () => {
@@ -191,10 +202,32 @@ export default function Serviset() {
     const handleShowUpdateModal = (data,type) => {
         setData(data)
         setUpdateType(type)
+        if(type == 'Perfunduar'){
+            setUpdateType('perfundo')
+            setData({
+                ...data,
+                ndryshoServisinPerfunduar:true
+            })
+        }
         setModalPerUpdate(true)
+    }
+    const handleNdryshoServisinPerfunduar = (data) => {
+        setData(data)
+        setNdryshoServisinPerfunduar(true)
     }
     const closeModalPerUpdate = () => {
         setModalPerUpdate(false)
+    }
+
+    const hapeShtoPagese = (item) =>{
+        setDataPerShtoPagese({
+            ...item,
+            llojiDokumentit:'servisimi',
+            IDDokumentit:item.servisimiID,
+            mbetjaPerPagese:item.mbetjaPageses
+        })
+        console.log('prejblej',dataPerShtoPagese)
+        setShowShtoPagese(true)
     }
   return (
     <Container fluid className='mt-5'>
@@ -331,13 +364,24 @@ export default function Serviset() {
                         </Col>
                         <Col>
                             <Form.Group>
-                                <Form.Label>Statusi</Form.Label>
-                                <Form.Check
-                                    type="switch"
-                                    label={filterStatusi === 'Aktiv' ? 'Aktiv' : 'Perfunduar'}
-                                    checked={filterStatusi === 'Aktiv'}
-                                    onChange={() => setFilterStatusi(filterStatusi === 'Aktiv' ? 'Perfunduar' : 'Aktiv')}
-                                />
+                               <Form.Label>Statusi</Form.Label>
+                                                                     <div
+                                                                        onClick={() => setFilterStatusi(filterStatusi === 'Aktiv' ? 'Perfunduar' : 'Aktiv')} style={{
+                                                                         display: 'flex',
+                                                                         alignItems: 'center',
+                                                                         cursor: 'pointer',
+                                                                         backgroundColor: filterStatusi === 'Aktiv'  ? '#24AD5D' : '#d9534f',
+                                                                         color: '#fff',
+                                                                         padding: '8px 20px',
+                                                                         borderRadius: '25px',
+                                                                         fontWeight: '500',
+                                                                         fontSize: '0.9rem',
+                                                                         transition: 'background-color 0.3s',
+                                                                         gap: '10px', }}
+                                                                     >
+                                                                       <FontAwesomeIcon icon={filterStatusi ? faCheckCircle : faTimesCircle} />
+                                                                       <span>{filterStatusi === 'Aktiv' ? 'Aktiv' : 'Perfunduar'}</span>
+                                                                     </div>
                             </Form.Group>
                         </Col>
                     </Row>
@@ -378,7 +422,7 @@ export default function Serviset() {
                         {filterStatusi != 'Aktiv' ? 
                         <>
                         <td>{item.totaliPerPagese == null ? null : item.totaliPerPagese.toFixed(2)}€</td>
-                        <td>{item.mbetjaPageses == null ? null : item.mbetjaPageses.toFixed(2)}€</td>
+                        <td className={item.mbetjaPageses > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{item.mbetjaPageses == null ? null : item.mbetjaPageses.toFixed(2)}€</td>
                         </>:null}
                         <td>{item.dataPranimit.toLocaleDateString()}<br/>{item.dataPranimit.toLocaleTimeString()}</td>
                         {filterStatusi != 'Aktiv' ? 
@@ -389,19 +433,31 @@ export default function Serviset() {
                         <td className={item.statusi == 'Perfunduar' ? 'text-success fw-bold' : 'fw-bold text-danger'}>{item.statusi}</td>
                         <td>{item.shifraGarancionit}</td>
                         <td>
-                                    <Button className='btn btn-primary ' onClick={() => handleShowUpdateModal(item,item.statusi)}>
+
+                        {item.statusi == 'Perfunduar' ?
+                                <>
+                                   <Button className='btn btn-primary mx-1' onClick={() => handleNdryshoServisinPerfunduar(item)}>
                                         <FontAwesomeIcon icon={faPen} />
                                     </Button>
-                                    <Button className='btn bg-danger m-1 border-danger' onClick={() => thirreModal(item)}>
-                                        <FontAwesomeIcon  icon={faTrashCan} />
+                                     <Button variant="" className=' btn btn-outline-success ' onClick={() => hapeShtoPagese(item)} disabled={item.mbetjaPageses == 0 }>
+                                        <FontAwesomeIcon  icon={faEuroSign} />
                                     </Button>
+                                </>: null}
+
+                               
+                                   
                             {item.statusi == 'Aktiv' ?
                                 <>
-                                   
+                                   <Button className='btn btn-primary mx-1' onClick={() => handleShowUpdateModal(item,item.statusi)}>
+                                        <FontAwesomeIcon icon={faPen} />
+                                    </Button>
                                     <Button className='btn btn-success ' onClick={() => handleShowUpdateModal(item,'perfundo')}>
                                         <FontAwesomeIcon  icon={faCheck} />
                                     </Button>
                                 </>: null}
+                                <Button className='btn bg-danger m-1 border-danger' onClick={() => thirreModal(item)}>
+                                        <FontAwesomeIcon  icon={faTrashCan} />
+                                    </Button>
                         </td>
                         </>
                     ) : null}
@@ -415,6 +471,9 @@ export default function Serviset() {
         <ToastContainer />
         <ModalPerPyetje show={modalPerPyetje} handleClose={closeModalPerPyetje} handleConfirm={confirmModal} />
         <UpdateServise show={modalPerUpdate} handleClose={closeModalPerUpdate} updateType={updateType} data = {data} />
+        <NdryshoServisinPerfunduar show={ndryshoServisinPerfunduar} handleClose={() => setNdryshoServisinPerfunduar(false)} data={data}/>
+        <ShtoPagese show={showShtoPagese} handleClose={() => setShowShtoPagese(false)} data={dataPerShtoPagese} />
+
     </Container>
   )
   

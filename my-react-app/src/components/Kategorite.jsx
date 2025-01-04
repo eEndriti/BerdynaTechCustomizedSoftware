@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Form, Button, Spinner, Modal } from 'react-bootstrap';
+import {
+  Container,
+  Row,
+  Col,
+  Form,
+  Button,
+  Spinner,
+  Modal,
+  Card,
+  Badge,
+  Table,
+} from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import { ClipLoader } from 'react-spinners';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan, faPen } from '@fortawesome/free-solid-svg-icons';
 import 'react-toastify/dist/ReactToastify.css';
 import 'animate.css';
-import ModalPerPyetje from './ModalPerPyetje'
+import ModalPerPyetje from './ModalPerPyetje';
 
 export default function Kategorite() {
   const [kategorite, setKategorite] = useState([]);
@@ -17,8 +28,9 @@ export default function Kategorite() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalPerPyetje,setModalPerPyetje] = useState(false)
-  const [idPerAnulim,setIdPerAnulim] = useState()
+  const [modalPerPyetje, setModalPerPyetje] = useState(false);
+  const [idPerAnulim, setIdPerAnulim] = useState();
+
   useEffect(() => {
     window.api.fetchTableKategoria().then((receivedData) => {
       setKategorite(receivedData);
@@ -59,16 +71,17 @@ export default function Kategorite() {
     setSelectedCategory(category);
     setShowModal(true);
   };
-  const thirreModalPerPyetje = (id) =>{
-    setIdPerAnulim(id)
-    setModalPerPyetje(true)
-  }
+
+  const thirreModalPerPyetje = (id) => {
+    setIdPerAnulim(id);
+    setModalPerPyetje(true);
+  };
+
   const handleConfirmModal = () => {
-    handleDeleteCategory()
-  };  
+    handleDeleteCategory();
+  };
 
   const handleDeleteCategory = async () => {
-
     const result = await window.api.deleteKategoria(idPerAnulim);
 
     if (result.success) {
@@ -82,9 +95,9 @@ export default function Kategorite() {
     }
   };
 
-  const handleCloseModalPerPyetje = () =>{
-    setModalPerPyetje(false)
-  }
+  const handleCloseModalPerPyetje = () => {
+    setModalPerPyetje(false);
+  };
 
   const handleUpdateCategory = async () => {
     const km = selectedCategory.komponenta == 'true' ? 'true' : 'false';
@@ -93,7 +106,7 @@ export default function Kategorite() {
       kategoriaID: selectedCategory.kategoriaID,
       emertimi: selectedCategory.emertimi,
       tvsh: selectedCategory.tvsh,
-      komponenta: km
+      komponenta: km,
     };
     const result = await window.api.ndryshoKategorine(data);
 
@@ -110,96 +123,121 @@ export default function Kategorite() {
   };
 
   return (
-    <Container fluid className='mt-5'>
-        <h3 className='text-center'>Kategorite:</h3>
-        <hr/>
+    <Container fluid className="mt-5">
+      <h3 className="text-center fw-bold text-primary">Kategorite</h3>
+      <hr />
       <Row>
-        <Col lg={3} className="d-flex flex-column justify-content-start bg-light border py-3">
-          <h3 className="text-center">Shto nje Kategori</h3>
-          <div className="d-flex flex-column align-items-center justify-content-center">
-            <Form.Group className="m-3">
-              <Form.Label>Emertimi:</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Emertimi i Kategorise..."
-                onChange={(e) => setEmertimiPerTeShtuar(e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mx-2 mb-3">
-              <Form.Label>TVSH</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="TVSH e Kategorise..."
-                min={0}
-                onChange={(e) => setTvshPerTeShtuar(e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mx-2 mb-3">
-              <Form.Label>Pajisje Procesuese?</Form.Label>
-              <Form.Check
-                inline
-                className="px-3"
-                onChange={handleCheckKomponenta}
-                defaultChecked={komponenta}
-              />
-            </Form.Group>
-          </div>
-          <Button
-            variant="success w-100 mt-3"
-            onClick={shtoKategorine}
-            disabled={!emertimiPerTeShtuar || !tvshPerTeShtuar || submitLoading}
-          >
-            {submitLoading ? <Spinner animation="border" size="sm" /> : 'Regjistro'}
-          </Button>
+        <Col lg={3} className="bg-light border rounded p-4">
+          <Card className="shadow">
+            <Card.Body>
+              <Card.Title className="text-center">Shto nje Kategori</Card.Title>
+              <Form>
+                <Form.Group className="mb-3">
+                  <Form.Label>Emertimi</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Emertimi i Kategorise..."
+                    onChange={(e) => setEmertimiPerTeShtuar(e.target.value)}
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>TVSH</Form.Label>
+                  <Form.Control
+                    type="number"
+                    placeholder="TVSH e Kategorise..."
+                    min={0}
+                    onChange={(e) => setTvshPerTeShtuar(e.target.value)}
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Pajisje Procesuese?</Form.Label>
+                  <Form.Check
+                    inline
+                    onChange={handleCheckKomponenta}
+                    defaultChecked={komponenta}
+                  />
+                </Form.Group>
+                <Button
+                  variant="success"
+                  className="w-100"
+                  onClick={shtoKategorine}
+                  disabled={!emertimiPerTeShtuar || !tvshPerTeShtuar || submitLoading}
+                >
+                  {submitLoading ? <Spinner animation="border" size="sm" /> : 'Regjistro'}
+                </Button>
+              </Form>
+            </Card.Body>
+          </Card>
         </Col>
 
-        <Col className="d-flex flex-column mx-5 ">
-          <h4 className="px-3">Kategorite :</h4>
-          {loading ? (
-            <div className="d-flex justify-content-center mt-5">
-              <ClipLoader color="#36D7B7" loading={loading} size={50} />
-            </div>
-          ) : kategorite.length > 0 ? (
-            <div className="tabelaKategorive">
-              <div className="table-responsive tabeleMeMaxHeight">
-                <table className="table table-sm table-striped text-center">
+        <Col lg={9} className="mt-3 mt-lg-0">
+          <Card className="shadow">
+            <Card.Body>
+              <Card.Title className="text-center">Lista e Kategorive</Card.Title>
+              {loading ? (
+                <div className="d-flex justify-content-center py-5">
+                  <ClipLoader color="#36D7B7" loading={loading} size={50} />
+                </div>
+              ) : kategorite.length > 0 ? (
+                <Table responsive striped bordered hover className="text-center">
                   <thead className="table-light">
-                    <tr className="fs-5">
+                    <tr>
                       <th>Nr</th>
                       <th>Emertimi</th>
                       <th>TVSH</th>
                       <th>Pajisje Procesuese</th>
-                      <th>Sasia e Produkteve</th>
+                      <th>Sasia</th>
                       <th>Opsionet</th>
                     </tr>
                   </thead>
                   <tbody>
                     {kategorite.map((item, index) => (
                       <tr key={index}>
-                        <th>{index + 1}</th>
+                        <td>{index + 1}</td>
                         <td>{item.emertimi}</td>
-                        <td>{item.tvsh}%</td>
-                        <td>{item.komponenta === 'true' ? 'Po' : 'Jo'}</td>
+                        <td>
+                          <Badge bg="info">{item.tvsh}%</Badge>
+                        </td>
+                        <td>
+                          {item.komponenta === 'true' ? (
+                            <Badge bg="success">Po</Badge>
+                          ) : (
+                            <Badge bg="danger">Jo</Badge>
+                          )}
+                        </td>
                         <td>{item.total_sasia || '0'}</td>
                         <td>
-                          <Button variant="primary" className="m-1" onClick={() => handleEditCategory(item)}>
-                            <FontAwesomeIcon icon={faPen}  />
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            className="me-2"
+                            onClick={() => handleEditCategory(item)}
+                          >
+                            <FontAwesomeIcon icon={faPen} />
                           </Button>
-                         {item.total_sasia < 1 ?  <Button variant="danger" className='m-1' onClick={() => thirreModalPerPyetje(item.kategoriaID)}>
-                            <FontAwesomeIcon icon={faTrashCan} />
-                          </Button> : <></>}
+                          {item.total_sasia < 1 && (
+                            <Button
+                              variant="outline-danger"
+                              size="sm"
+                              onClick={() => thirreModalPerPyetje(item.kategoriaID)}
+                            >
+                              <FontAwesomeIcon icon={faTrashCan} />
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              </div>
-            </div>
-          ) : (
-            <h5 className="text-center mt-5 text-danger">Nuk Egzistojne Kategori te Regjistruara...</h5>
-          )}
+                </Table>
+              ) : (
+                <h5 className="text-center text-danger">Nuk ekzistojne kategori te regjistruara...</h5>
+              )}
+            </Card.Body>
+          </Card>
         </Col>
       </Row>
+
+      
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>

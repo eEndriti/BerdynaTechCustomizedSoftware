@@ -3,18 +3,15 @@ import { Modal, Button, Form,Spinner, Toast,InputGroup,Row,Col,Table } from 'rea
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import useAuthData, { formatCurrency } from '../useAuthData';
+import MenyratPagesesExport from './MenyratPagesesExport';
 import KerkoProduktin from './KerkoProduktin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import AnimatedSpinner from './AnimatedSpinner';
 
-function UpdateServise({ show, handleClose, updateType, data = {} }) {
+function NdryshoServisinPerfunduar({ show, handleClose,data = {}}) {
+
     const [loading, setLoading] = useState(false);
-    const [aKaData, setAKaData] = useState(false);
-    const [aKaAdapter, setKaAdapter] = useState(false);
-    const [aKaÇante, setAKaÇante] = useState(false);
-    const [aKaGarancion, setAKaGarancion] = useState(false);
-    const [shifraGarancionit, setShifraGarancionit] = useState();
     const [komenti, setKomenti] = useState();
     const [totaliPerPagese, setTotaliPerPagese] = useState(0);
     const [totaliIPageses, setTotaliIPageses] = useState(0);
@@ -24,60 +21,94 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
     const [products, setProducts] = useState([{}]);
     const [showModalKerkoProduktin,setShowModalKerkoProduktin] = useState(false)
     const [selectedRow, setSelectedRow] = useState(null);
+    const [dataFillestare,setDataFillestare] = useState([])
     const [menyratPageses, setMenyratPageses] = useState([]);
+    const [totaliPerPageseFillestare,setTotaliPerPageseFillestare] = useState()
+    const [totaliPagesesFillestare,setTotaliPagesesFillestare] = useState()
+    const [menyraPagesesIDFillestare,setMenyraPagesesIDFillestare] = useState()
+    const [transaksioniIDFillestare,setTransaksioniIDFillestare] = useState()
 
-    useEffect(() => {
-            
-            if (data?.pajisjetPercjellese) {
-                setKaAdapter(data.pajisjetPercjellese.includes('Adapter'));
-                setAKaData(data.pajisjetPercjellese.includes('Data'));
-                setAKaÇante(data.pajisjetPercjellese.includes('Çante'));
-            }
-            if (data?.shifraGarancionit) {
-                setAKaGarancion(true);
-            } else {
-                setAKaGarancion(false);
-            }
-            setKomenti(data?.komenti);
-            setShifraGarancionit(data?.shifraGarancionit);
-        
-        window.api.fetchTableMenyratPageses().then(receivedData => {
-            setMenyratPageses(receivedData);
-            setLoading(false);
-          });
+    useEffect(() => {     
+        setProducts([{}]);   
+            fetchDataFillestare();
+            console.log('data',data)
     }, [data]);
     
+    const fetchDataFillestare = async () => {
+        try {
+            setLoading(true);
+            const queryResponse = await window.api.fetchTableQuery(`
+                SELECT * FROM Servisimi WHERE servisimiID = ${data?.servisimiID}
+            `);
+
+             await  window.api.fetchTableMenyratPageses().then(receivedData => {
+                setMenyratPageses(receivedData);
+              });
+
+            const queryProduktetResponse = await window.api.fetchTableQuery(`
+                 select  p.shifra,p.emertimi,p.pershkrimi,p.sasia,p.cmimiBlerjes,p.cmimiShitjes,p.dataKrijimit,p.komenti,p.meFatureTeRregullt,p.cpu,p.ram,p.gpu,p.disku,k.emertimi as 'emertimiKategorise',k.tvsh,k.kategoriaID,
+                sp.produktiID,sp.sasia as 'sasiaShitjes',sp.cmimiShitjesPerCope as 'cmimiPerCope',sp.profitiProduktit from produkti p
+                join servisProdukti sp on sp.produktiID = p.produktiID
+                join kategoria k on k.kategoriaID = p.kategoriaID
+                where servisimiID = ${data?.servisimiID}
+            `);
+          
+            setDataFillestare(prevData => ({
+                ...prevData,
+                ...queryResponse[0],
+                produktet: queryProduktetResponse 
+            }));
+    
+            setProducts(prevProducts => [...queryProduktetResponse, ...prevProducts]);
+            console.log('a',queryResponse[0])
+            updateMenyraPageses(queryResponse[0]?.menyraPagesesID);
+            setTotaliPerPageseFillestare(queryResponse[0]?.totaliPerPagese)
+            setTotaliPagesesFillestare(queryResponse[0]?.totaliPageses)
+            setMenyraPagesesIDFillestare(queryResponse[0]?.menyraPagesesID)
+            setMenyraPagesesID(queryResponse[0]?.menyraPagesesID)
+            setTransaksioniIDFillestare(queryResponse[0]?.transaksioniID)
+            setTotaliPerPagese(queryResponse[0]?.totaliPerPagese);
+            setTotaliIPageses(queryResponse[0]?.totaliPageses);
+            setMbetjaPerPagese(queryResponse[0]?.mbetjaPerPagese);
+            setKomenti(data?.komenti);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+            console.log(dataFillestare)
+        }
+    };
+
+ 
+    const updateMenyraPageses = (menyraPageses) => {
+        setMenyraPagesesID(menyraPageses);
+      };
 
     const handleConfirmClick = async () => {
-        setLoading(true);
-        let pajisjetPercjellese = ''
-
-        {aKaData ? pajisjetPercjellese = 'Data/' : ''}
-        {aKaAdapter ? pajisjetPercjellese += 'Adapter/' : ''}
-        {aKaÇante ? pajisjetPercjellese += 'Çante' : ''}
+        setLoading(true);     
 
         const dataPerNdryshim = {
             servisimiID:data.servisimiID,
             shifra:data.shifra,
-            pajisjetPercjellese,
-            shifraGarancionit,
             komenti,
+            totaliPerPageseFillestare,
+            totaliPagesesFillestare,
+            menyraPagesesIDFillestare,
             totaliPerPagese,
             totaliIPageses,
             mbetjaPerPagese,
-            updateType,
             perdoruesiID:1,
             nderrimiID,
             dataPageses:new Date().getDate(),
             subjektiID: data.subjektiID ,
             menyraPagesesID:menyraPagesesID,
-            products:products.slice(0, products.length - 1)
+            produktet:products.slice(0, products.length - 1)
         }
         try {
             console.log('dataPerndryshim',dataPerNdryshim)
-            const result = await window.api.ndryshoServisin(dataPerNdryshim);
+            const result = await window.api.ndryshoServisinPerfunduar(dataPerNdryshim);
             if (result.success) {
-              toast.success(`Servisi u ${updateType != 'perfundo' ? 'Ndryshua' : 'Perfundua'} me Sukses!`, {
+              toast.success(`Servisi u Ndryshua me Sukses!`, {
                 position: "top-center",  
                 autoClose: 1500,
                 onClose:() => window.location.reload()
@@ -90,7 +121,7 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
           } finally {
             setLoading(false);
             handleClose()
-            window.location.reload()
+            //window.location.reload()
           }
 
     };
@@ -110,7 +141,7 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
         }, 0);
        
           setTotaliPerPagese(total);
-          setTotaliIPageses(total)
+
       }, [products]);
 
     const openModalForRow = (index) => {
@@ -148,14 +179,14 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
 
       useEffect(()=>{
             setMbetjaPerPagese(totaliPerPagese - totaliIPageses)
-      },[totaliIPageses,mbetjaPerPagese])
+      },[totaliIPageses,mbetjaPerPagese,totaliPerPagese])
       
 
     return (
-        <Modal show={show} onHide={handleClose} size={updateType === 'perfundo' ? 'xl' : 'md'}>
+        <Modal show={show} onHide={handleClose} size='xl'>
             <Modal.Header closeButton>
-                <Modal.Title>{updateType === 'perfundo' ? <>{data.ndryshoServisinPerfunduar ? 'Ndrysho Servisin' : 'Mbyll Servisimin'}</> : 'Ndrysho te Dhenat'}</Modal.Title>
-            </Modal.Header> {loading ? <AnimatedSpinner /> :
+                <Modal.Title>Ndrysho Servisin</Modal.Title>
+            </Modal.Header> {loading ? <AnimatedSpinner /> : 
             <Modal.Body>
                 
                <Form className='d-flex d-row justify-content-start'>
@@ -168,9 +199,7 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
                         <Form.Control type="text" value={data?.subjekti || ''} disabled />
                     </Form.Group>
                </Form>
-                {updateType === 'perfundo' ? (
-                   <>
-                       
+                        {loading ? <AnimatedSpinner /> :
                         <Row className="mt-5">
                         <Col xs={12}>
                         <div className="table-responsive tabeleMeMaxHeight">
@@ -266,25 +295,40 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
                             )}
                         </div>
                         </Col>
-                    </Row>
+                    </Row>}
                             <hr/>  
                        <Row className='d-flex flex-row flex-wrap justify-content-between mt-5'>
-                            <Col xs={12} md={6} className="d-flex justify-content-center align-items-end ">
-                                <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleClose}>Anulo</Button>
-                                <Button variant="success" size="lg" className="mx-2 fs-1" onClick={handleConfirmClick} disabled={loading || (updateType != 'Perfundo' && menyraPagesesID == null)}>{loading ? (
-                                <>
-                                    <Spinner
-                                    as="span"
-                                    animation="border"
-                                    size="sm"
-                                    role="status"
-                                    aria-hidden="true"
-                                    />{' '}
-                                    Duke ruajtur...
-                                </>
-                                ) : (
-                                'Regjistro...'
-                                )}</Button>
+                            <Col className='d-flex flex-column flex-wrap'>
+                                <Col>
+                                    <Form.Group className='w-50'>
+                                        <Form.Label className="fw-bold">Komenti:</Form.Label>
+                                        <Form.Control
+                                            as="textarea"
+                                            rows={2}
+                                            className="form-control-lg"
+                                            
+                                            defaultValue={data?.komenti}
+                                            onChange={(e) => setKomenti(e.target.value)}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col xs={12} md={6} className="d-flex justify-content-center align-items-end ">
+                                    <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleClose}>Anulo</Button>
+                                    <Button variant="success" size="lg" className="mx-2 fs-1" onClick={handleConfirmClick} disabled={loading}>{loading ? (
+                                    <>
+                                        <Spinner
+                                        as="span"
+                                        animation="border"
+                                        size="sm"
+                                        role="status"
+                                        aria-hidden="true"
+                                        />{' '}
+                                        Duke ruajtur...
+                                    </>
+                                    ) : (
+                                    'Regjistro...'
+                                    )}</Button>
+                                </Col>
                             </Col>
                         <Form className='w-25 '>
                                 <Form.Group>
@@ -304,6 +348,7 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
                                         <Form.Control
                                         type="number"
                                         value={totaliIPageses}
+                                        disabled
                                         onChange={handleTotaliPagesesChange}
                                         min={0}
                                         />
@@ -333,50 +378,8 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
                                 </Form.Group>
                             </Form>
                        </Row>
-                   </>
-                    
-                ) : (
-                    <Form> 
-                        <Form.Group style={{ flex: 1 }}>
-                            <Form.Label className="fw-bold">Komenti:</Form.Label>
-                            <Form.Control
-                                as="textarea"
-                                rows={2}
-                                className="form-control-lg"
-                                defaultValue={data?.komenti}
-                                onChange={(e) => setKomenti(e.target.value)}
-                            />
-                        </Form.Group>
-                        <Form className="d-flex flex-row m-2">
-                            <Form.Group className="p-1 mx-3">
-                                <Form.Label>Data:</Form.Label>
-                                <Form.Check checked={aKaData} onChange={() => setAKaData(!aKaData)} />
-                            </Form.Group>
-                            <Form.Group className="p-1 mx-3">
-                                <Form.Label>Adapter:</Form.Label>
-                                <Form.Check checked={aKaAdapter} onChange={() => setKaAdapter(!aKaAdapter)} />
-                            </Form.Group>
-                            <Form.Group className="p-1 mx-3">
-                                <Form.Label>Çantë:</Form.Label>
-                                <Form.Check checked={aKaÇante} onChange={() => setAKaÇante(!aKaÇante)} />
-                            </Form.Group>
-                            <Form.Group className="p-1 mx-3">
-                                <Form.Label>Garancion:</Form.Label>
-                                <Form.Check checked={aKaGarancion} onChange={() => setAKaGarancion(!aKaGarancion)} />
-                                {aKaGarancion && (
-                                    <Form.Control
-                                        type="text"
-                                        defaultValue={data?.shifraGarancionit || ''}
-                                        onChange={(e) => setShifraGarancionit(e.target.value)}
-                                    />
-                                )}
-                            </Form.Group>
-                        </Form>
-                    </Form>
-                )}
-            </Modal.Body>
-            }
-            {updateType != 'perfundo' ? <Modal.Footer>
+            </Modal.Body>}
+            <Modal.Footer>
                 <Button variant="secondary" onClick={handleClose}>
                     Anulo
                 </Button>
@@ -397,10 +400,10 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
                         'Ruaj Ndryshimet...'
                     )}
                 </Button>
-            </Modal.Footer> : null}
+            </Modal.Footer> 
             <ToastContainer/>
         </Modal>
     );
 }
 
-export default UpdateServise;
+export default NdryshoServisinPerfunduar;
