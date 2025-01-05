@@ -10,21 +10,39 @@ import useAuthData, { formatCurrency } from '../useAuthData';
 
 function Layout() {
   const location = useLocation(); // Hook to get the current location object
-  const {avansi,dataFillimit,numriPercjelles,emriPerdoruesit,aKaUser} = useAuthData ()
+  const {avansi,dataFillimit,numriPercjelles,emriPerdoruesit,aKaUser,nderrimiID} = useAuthData ()
   const [perBonuse, setPerBonuse] = useState(0);
   const [profiti, setProfiti] = useState([]);
   const [totalShumaPerBonuse,setTotalShumaPerBonuse] = useState()
+  const [totaliIArkes,setTotaliIArkes] = useState()
 
 
   useEffect(() => {
-
-    window.api.fetchTableProfitiDitor().then((receivedData) => {
-      if (JSON.stringify(receivedData) !== JSON.stringify(profiti)) {
-        setProfiti(receivedData);
+    const fetchData = async () => {
+      try {
+        const receivedData = await window.api.fetchTableProfitiDitor();
+        setProfiti((prevProfiti) => {
+          return JSON.stringify(receivedData) !== JSON.stringify(prevProfiti) ? receivedData : prevProfiti;
+        });
+  
+        const totaliIArkesResult = await window.api.fetchTableQuery(`select SUM(t.totaliIPageses) as 'totaliArkes' from transaksioni t where t.nderrimiID = ${nderrimiID}`);
+        
+        const totaliArkes = totaliIArkesResult[0].totaliArkes || 0; 
+        
+        const totalArkesWithAvansi = Number(totaliArkes) + Number(avansi); 
+        
+        setTotaliIArkes(totalArkesWithAvansi);
+        
+        console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        kalkuloBonusetDitore();
+      } catch (error) {
+        console.error('Error fetching data:', error);
       }
-    });
-    kalkuloBonusetDitore();
+    };
+  
+    fetchData();
   }, [profiti]);
+  
 
   function kalkuloBonusetDitore() {
     const totalShuma = profiti.reduce((accumulator, current) => accumulator + current.shuma, 0);
@@ -69,7 +87,7 @@ function Layout() {
             <Col xs={12} md={8} className='d-flex justify-content-between'>
               <div className='d-flex align-items-center'>
                 <FontAwesomeIcon icon={faCoins} className='me-2 text-warning fs-5' />
-                <span className='me-4'>Avans: <strong>{formatCurrency(avansi)}</strong></span>
+                <span className='me-4'>Totali i Arkes: <strong>{formatCurrency(totaliIArkes)}</strong></span>
   
                 <FontAwesomeIcon icon={faExchangeAlt} className='me-2 text-success fs-5' />
                 <span className='me-4'>Nderrimi: <strong>{numriPercjelles}-{formatDate(dataFillimit)}</strong></span>

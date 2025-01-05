@@ -61,6 +61,7 @@ contextBridge.exposeInMainWorld('api', {
     deletePerdoruesi: (idPerAnulim) => ipcRenderer.invoke('deletePerdoruesi', idPerAnulim) ,
     deleteOpsionPagese: (idPerAnulim) => ipcRenderer.invoke('deleteOpsionPagese', idPerAnulim) ,
     deletePushimi: (idPerAnulim) => ipcRenderer.invoke('deletePushimi', idPerAnulim) ,
+    deletePagesa: (data) => ipcRenderer.invoke('deletePagesa', data) ,
     anuloBonusin: (data) => ipcRenderer.invoke('anuloBonusin', data) ,
 
     paguajBonuset: (data) => ipcRenderer.invoke('paguajBonuset', data),

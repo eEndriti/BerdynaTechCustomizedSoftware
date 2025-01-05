@@ -2,14 +2,18 @@ import { useState, useEffect,useMemo } from 'react';
 import { Container, Row, Col, Form, Spinner, Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faChevronRight,faE,faEye } from '@fortawesome/free-solid-svg-icons';
-import { formatCurrency } from '../useAuthData';
+import { faChevronDown, faChevronRight,faTrashCan,faEye } from '@fortawesome/free-solid-svg-icons';
+import useAuthData, { formatCurrency } from '../useAuthData';
 import AnimatedSpinner from './AnimatedSpinner';
+import ModalPerPyetje from './ModalPerPyetje'
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function DetajePerKlient() {
     const { subjektiID, lloji } = useParams();
     const [subjekti, setSubjekti] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [buttonLoading,setButtonLoading] = useState(false)
     const [shitjet, setShitjet] = useState([]);
     const [blerjet, setBlerjet] = useState([]);
     const [serviset, setServiset] = useState([]);
@@ -24,6 +28,9 @@ export default function DetajePerKlient() {
         totalTotaliPageses: 0,
         totalMbetjaPerPagese: 0
       });
+    const [dataPerAnulimPagese,setDataPerAnulimPagese] = useState()
+    const [modalPerPyetje,setModalPerPyetje] = useState(false)
+    const {nderrimiID,perdoruesiID} = useAuthData()
 
     useEffect(() => {
         const fetchData = async () => {
@@ -141,6 +148,38 @@ export default function DetajePerKlient() {
         return <h5 className="text-center text-danger mt-5">Nuk u gjet asnjë {lloji}!</h5>;
     }
 
+    const deletePagesa = (item) =>{
+        let llojiDokumentit
+        if(item.shifra.startsWith('S-')){
+            llojiDokumentit = 'servisimi'
+        }else if(item.shifra.startsWith('SH')){
+            llojiDokumentit = 'shitje'
+        }else if(item.shifra.startsWith('B')){
+            llojiDokumentit = 'blerje'
+        }
+        setDataPerAnulimPagese({
+            ...item,
+            llojiDokumentit,
+            perdoruesiID,
+            nderrimiID
+        })
+        setModalPerPyetje(true)
+    }
+    const handleConfirmModal = async () => {
+        console.log('fshijePagesen',dataPerAnulimPagese)
+        setButtonLoading(true)
+
+        try{
+            const result = await window.api.deletePagesa(dataPerAnulimPagese)
+            if(result.success){
+                toast.success('Pagesa u fshi me sukses')
+            }
+        }catch(e){
+            console.log(e)
+        }finally{
+            setButtonLoading(false)
+        }
+    }
     return (
         <Container fluid >
            <Row className='my-4'>
@@ -280,7 +319,9 @@ export default function DetajePerKlient() {
                                         <td>{new Date(item.dataPageses).toLocaleDateString()}</td>
                                         <td>{item.menyraPageses}</td>
                                         <td>
-                                            
+                                            <Button  variant='btn btn-outline-danger' onClick={() => deletePagesa(item)}>
+                                                <FontAwesomeIcon icon={faTrashCan}/>
+                                            </Button>
                                         </td>
                                         </tr>
                                     ))}
@@ -303,7 +344,9 @@ export default function DetajePerKlient() {
                <Button variant='danger' className='p-3 m-3 w-25 rounded fs-4'>Mbetja per Pagese :<span className='fs-2'>{formatCurrency(totals.totalMbetjaPerPagese)}</span></Button> 
             </Col>                                           
         </Row>
+        <ToastContainer />
 
+        <ModalPerPyetje show={modalPerPyetje} handleClose={() => setModalPerPyetje(false)} handleConfirm={handleConfirmModal}/>
         </Container>
     );
 }

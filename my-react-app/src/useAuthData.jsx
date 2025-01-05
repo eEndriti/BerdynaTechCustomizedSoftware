@@ -21,7 +21,7 @@ const useAuthData = () => {
     const emriPerdoruesit = Cookies.get('emriPerdoruesit');
     const aKaUser = Cookies.get('aKaUser');
     const nderrimiID = Cookies.get('nderrimiID');
-    const avansi = formatCurrency(Cookies.get('avansi')); 
+    const avansi = formatCurrency(Cookies.get('avansi'),true); 
     const numriPercjelles = Cookies.get('numriPercjelles');
     const dataFillimit = Cookies.get('dataFillimit');
     const folderPathGarancionet = 'C:\\Users\\BerdynaTech\\Documents\\btechPDFtest'

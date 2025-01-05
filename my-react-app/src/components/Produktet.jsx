@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Col, Container, Row, Button, Form, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan,faPencil } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan,faEdit } from '@fortawesome/free-solid-svg-icons';
 import ModalPerPyetje from './ModalPerPyetje';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -31,7 +31,7 @@ export default function Produktet() {
       setFilteredProduktet(receivedData);
     });
     setLoading(false)
-  }, [produktet]);
+  }, []);
 
   const thirreModalPerPyetje = (produktiID) => {
     setIdPerAnulim(produktiID);
@@ -62,31 +62,34 @@ export default function Produktet() {
     }
   };
 
-  const handleFilterChange = () => {
-    let filtered = produktet;
-
-    if (filterShifra) {
-      filtered = filtered.filter(item => item.shifra.toLowerCase().includes(filterShifra.toLowerCase()));
-    }
-    if (filterEmertimi) {
-      filtered = filtered.filter(item => item.emertimi.toLowerCase().includes(filterEmertimi.toLowerCase()));
-    }
-    if (filterSasia) {
-      filtered = filtered.filter(item => item.sasia.toString().includes(filterSasia));
-    }
-    if (filterKategoria) {
-      filtered = filtered.filter(item => item.emertimiKategorise.toLowerCase().includes(filterKategoria.toLowerCase()));
-    }
-    if(eliminoVleratZero){
-      filtered = filtered.filter(item => item.sasia > 0  );
-    }
-
-    setFilteredProduktet(filtered);
-  };
 
   useEffect(() => {
-    handleFilterChange();
-  }, [filterShifra, filterEmertimi, filterSasia, filterKategoria,eliminoVleratZero]);
+    const applyFilters = () => {
+        let filtered = [...produktet];
+        if (filterShifra) {
+            filtered = filtered.filter(item => item.shifra.toLowerCase().includes(filterShifra.toLowerCase()) );
+        }
+        if (filterEmertimi) {
+            filtered = filtered.filter(item => item.emertimi.toLowerCase().includes(filterEmertimi.toLowerCase()));
+        }
+        if (filterSasia) {
+            filtered = filtered.filter(item => item.sasia == filterSasia);
+        }
+        if (filterKategoria) {
+            filtered = filtered.filter(item => item.emertimiKategorise.toLowerCase().includes(filterKategoria.toLowerCase()));
+        }
+        if (eliminoVleratZero) {  
+            filtered = filtered.filter(item => item.sasia > 0);
+          }
+          
+
+        setFilteredProduktet(filtered);
+    };
+
+    applyFilters();
+}, [produktet, filterShifra, filterEmertimi, filterSasia, filterKategoria, eliminoVleratZero]);
+
+
 
   const handleDetaje = (subjektiID) =>{
     navigate(`/detajePerProdukt/${subjektiID}`)
@@ -151,7 +154,7 @@ export default function Produktet() {
               <Form.Label className='mx-3'>Elimino Vlerat Zero</Form.Label>
                 <Form.Check
                   checked = {eliminoVleratZero}
-                  onChange={() => setEliminoVleratZero(!eliminoVleratZero)}
+                  onChange={() => setEliminoVleratZero(prev => !prev)}
                 />
               </Form.Group>
               </Col>
@@ -164,7 +167,7 @@ export default function Produktet() {
         {loading ? <AnimatedSpinner /> : 
           <div className="table-responsive tableHeight50 mt-4">
           <table className="table table-sm table-striped border table-hover">
-            <thead className="table-secondary">
+            <thead className="table-secondary sticky-top">
               <tr className='fs-5 '>
                 <th scope="col">Nr</th>
                 <th scope="col">Shifra</th>
@@ -194,10 +197,10 @@ export default function Produktet() {
                   <td>{item.meFatureTeRregullt}</td>
                   <td>{item.emertimiKategorise}</td>
                   <td>{item.tvsh} %</td>
-                  <td>
-                    <Button  variant='info' onClick={() => handleDetaje(item.produktiID)}>Detaje...</Button>
-                    {item.sasia > 0 ? '' :
-                      <Button variant='outline-danger' className='m-1' onClick={() => thirreModalPerPyetje(item.produktiID)}>
+                  <td className='d-flex flex-row flex-wrap justify-content-between'>
+
+                    <Button  variant='outline-primary' onClick={() => thirreNdryshoProduktin(item)}><FontAwesomeIcon icon={faEdit}/></Button>
+                      <Button variant='outline-danger' onClick={() => thirreModalPerPyetje(item.produktiID)} disabled = {item.sasia > 0}>
                         {loading && idPerAnulim === item.produktiID ? (
                           <Spinner animation="border" role="status" size="sm">
                             <span className="visually-hidden">Loading...</span>
@@ -206,8 +209,8 @@ export default function Produktet() {
                           <FontAwesomeIcon icon={faTrashCan} />
                         )}
                       </Button>
-                    }
-                    <Button  variant='outline-primary' className='m-1' onClick={() => thirreNdryshoProduktin(item)}><FontAwesomeIcon icon={faPencil}/></Button>
+
+                      <Button  variant='outline-dark' onClick={() => handleDetaje(item.produktiID)}>Detaje...</Button>
                   </td>
                 </tr>
               ))}

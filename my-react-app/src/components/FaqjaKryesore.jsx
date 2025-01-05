@@ -1,7 +1,7 @@
 import { useState,useEffect } from 'react'
-import { Container,Button,Row,Col,Modal,Form, Spinner, InputGroup,Table } from 'react-bootstrap'
+import { Container,Button,Row,Col,Modal,Form, Spinner, InputGroup,Table,Card } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
+import { faEdit, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from './ModalPerPyetje'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -28,7 +28,6 @@ function FaqjaKryesoreAdmin() {
   const [aprovoShitjenOnlineModal,setAprovoShitjenOnlineModal] = useState(false)
   const [dataPerAprovim,setDataPerAprovim] = useState({kostoPostes:3,totaliIPranuar:0})
   const [buttonLoading,setButtonLoading] = useState(false)
-
   useEffect(() => {
 
     const fetchData = async () => {
@@ -47,6 +46,7 @@ function FaqjaKryesoreAdmin() {
     
         const servisetAktive = servisetData.filter(item => item.statusi === 'Aktiv');
         setServisetAktive(servisetAktive);
+        
       }catch(e){
         console.log(e)
       }finally{
@@ -237,16 +237,14 @@ const handleAprovoShitjenOnline = async () => {
                         </td>
                         <td>{item.komenti}</td>
                         <td>{item.dataTransaksionit.toLocaleTimeString()}</td>
-                        <td>
-                          <Button
-                            className="action-btn btn-primary"
+                        <td className='d-flex flex-row flex-wrap justify-content-around'>
+                          <Button  variant='btn btn-outline-primary'
                             disabled
                             onClick={() => ndryshoTransaksionin(item.lloji, item.transaksioniID)}
                           >
-                            <FontAwesomeIcon icon={faPen} />
+                            <FontAwesomeIcon icon={faEdit} />
                           </Button>
-                          <Button
-                            className="action-btn btn-danger"
+                          <Button  variant='btn btn-outline-danger'
                             onClick={() =>
                               thirreModal(item.lloji, item.transaksioniID, 'anuloTransaksionin')
                             }
@@ -300,7 +298,7 @@ const handleAprovoShitjenOnline = async () => {
                             className="action-btn mx-1"
                             disabled
                           >
-                            <FontAwesomeIcon icon={faPen} />
+                            <FontAwesomeIcon icon={faEdit} />
                           </Button>
                           <Button
                             variant="outline-danger"
@@ -357,7 +355,7 @@ const handleAprovoShitjenOnline = async () => {
                             className="action-btn btn-primary"
                             onClick={() => ndryshoServisin(item, 'ndrysho')}
                           >
-                            <FontAwesomeIcon icon={faPen} />
+                            <FontAwesomeIcon icon={faEdit} />
                           </Button>
                           <Button
                             className="action-btn btn-danger mx-1"
