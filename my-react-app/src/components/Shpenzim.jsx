@@ -1,6 +1,6 @@
 import  { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan,faPen,faChevronDown, faChevronRight,faExchangeAlt } from '@fortawesome/free-solid-svg-icons'; 
+import { faTrashCan,faEdit,faChevronDown, faChevronRight,faExchangeAlt } from '@fortawesome/free-solid-svg-icons'; 
 import { Row, Col, Button, Form,Spinner,Modal, Container, InputGroup} from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -347,8 +347,8 @@ export default function Shpenzim() {
                       <td>{item.komenti}</td>
                       <td>{item.perdoruesi}</td>
                       <td>
-                        <Button onClick={() => handleEditShpenzimiClick(item)}><FontAwesomeIcon icon={faPen}/></Button>
-                        <Button variant='danger' className='m-1' onClick={() => thirreModalPerPyetje(item.shpenzimiID,item.transaksioniID,'Shpenzimi')}><FontAwesomeIcon icon={faTrashCan}/></Button>
+                        <Button variant='btn btn-outline-primary' onClick={() => handleEditShpenzimiClick(item)}><FontAwesomeIcon icon={faEdit}/></Button>
+                        <Button variant='btn btn-outline-danger' className='mx-1' onClick={() => thirreModalPerPyetje(item.shpenzimiID,item.transaksioniID,'Shpenzimi')}><FontAwesomeIcon icon={faTrashCan}/></Button>
                       </td>
                     </tr>
                   ))}
@@ -444,9 +444,10 @@ export default function Shpenzim() {
                     <td>{item.emertimi}</td>
                     <td>{item.shumaStandarde.toFixed(2)} €</td>
                     <td>
-                     <Button onClick={() => handleEditLlojiShpenzimitClick(item)}><FontAwesomeIcon icon={faPen}/></Button>
-                     {item.total_shpenzime < 1 ? <>
-                      <Button variant='danger' className='m-1' onClick={() => thirreModalPerPyetje(item.llojetShpenzimeveID,'Lloji i Shpenzimit')}><FontAwesomeIcon icon={faTrashCan}/></Button></>:null}
+                     <Button onClick={() => handleEditLlojiShpenzimitClick(item)} variant='btn btn-outline-primary'><FontAwesomeIcon icon={faEdit}/></Button>
+                      <Button variant='btn btn-outline-danger' disabled = {item.total_shpenzime > 1} className='mx-1' onClick={() => thirreModalPerPyetje(item.llojetShpenzimeveID,'Lloji i Shpenzimit')}>
+                        <FontAwesomeIcon icon={faTrashCan}/>
+                      </Button>
                     </td>
                   </tr>
                 ))}

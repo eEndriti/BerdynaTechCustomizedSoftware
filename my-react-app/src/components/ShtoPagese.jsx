@@ -14,7 +14,6 @@ const ShtoPagese = ({ show, handleClose,data = {} }) => {
    const [menyraPagesesID,setMenyraPagesesID] = useState()
    const {nderrimiID,perdoruesiID} = useAuthData()
    
-    console.log('dataPerShtoPagese',data)
   useEffect(() => {
     setMbetjaPageses(data.mbetjaPerPagese)
   },[data])

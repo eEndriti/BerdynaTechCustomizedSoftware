@@ -2,7 +2,8 @@ const { app, BrowserWindow, ipcMain,dialog,shell } = require('electron');
 const path = require('path');
 const sql = require('mssql');
 const bcrypt = require('bcrypt');
-const fs = require('fs')
+const fs = require('fs');
+const { table } = require('console');
 
 // MSSQL connection configuration
 const config = {
@@ -675,9 +676,23 @@ ipcMain.handle('fetchTableProfitiDitor', async () => {
  const shifra = '' // ketu incializohet shifra globale, pastaj thirret prej ciles tabele kemi nevoje.
 
  async function generateNextShifra(tabela, shtojca, connection) {
-  let latestShifraNumber = 999; // Default starting number
   let nextShifra;
   let exists = true;
+  let emertimiDates;
+  const vitiAktual = new Date().getFullYear()
+
+  switch(shtojca){
+    case 'SH':emertimiDates = 'dataShitjes';
+      break;
+    case 'B' : emertimiDates = 'dataBlerjes';
+      break;
+    case 'S' : emertimiDates = 'dataPranimit'
+      break;
+    case 'P' : emertimiDates = 'dataKrijimit'
+      break;
+    case 'SHP' : emertimiDates = 'dataShpenzimit'
+      break;
+  }
 
   try {
       // Check if the connection is closed, reconnect if necessary
@@ -691,18 +706,19 @@ ipcMain.handle('fetchTableProfitiDitor', async () => {
 
           // Query to get the latest 'shifra'
           const result = await request.query(`
-              SELECT TOP 1 shifra 
-              FROM ${tabela} 
-              WHERE shifra LIKE '${shtojca}-%' 
-              ORDER BY CAST(SUBSTRING(shifra, LEN('${shtojca}-') + 1, LEN(shifra)) AS INT) DESC
-          `);
+              SELECT TOP 1 ${tabela+'ID'} as 'ID'
+              FROM ${tabela} t
+              WHERE YEAR(t.${emertimiDates}) = ${vitiAktual}
+              ORDER BY ID DESC
 
+          `);
+          
           if (result.recordset.length > 0) {
-              latestShifraNumber = parseInt(result.recordset[0].shifra.replace(`${shtojca}-`, ''), 10);
+              latestShifraNumber = result.recordset[0].ID
           }
 
           // Increment the number
-          nextShifra = `${shtojca}-${latestShifraNumber + 1}`;
+          nextShifra = `${shtojca}-${latestShifraNumber + 1}${vitiAktual % 100}`;
 
           // Check if this 'shifra' already exists
           const checkRequest = connection.request();
@@ -3075,11 +3091,11 @@ ipcMain.handle('anuloShitjen', async (event, data) => {
         where transaksioniID = @transaksioniID
       `
 
-      const shifraServisitResult = await connection.request()
+      const shifraShitjesResult = await connection.request()
         .input('transaksioniID', sql.Int, data.transaksioniID)
         .query(getShifraShitjes)
 
-      const shifraShitjes = shifraServisitResult.recordset
+      const shifraShitjes = shifraShitjesResult.recordset[0]
 
       for (const shmn of shumaMenyraPageses) {
 
@@ -3087,10 +3103,10 @@ ipcMain.handle('anuloShitjen', async (event, data) => {
 (shmn.menyraPagesesID,shmn.totaliPageses,'-',connection)
 
       }
-      await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteProfiti);
       await connection.request().input('shifra', sql.VarChar, shifraShitjes.shifra).query(deletePagesaQuery);
+      await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteProfiti);
       await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShitjeProduktiQuery);
-      await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShitjeQuery);
+      await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShitjeQuery) 
       await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteTransaksioniQuery);
 
       return { success: true };

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan, faPen,faChevronRight,faChevronDown,faEuroSign } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan, faEdit,faChevronRight,faChevronDown,faEuroSign } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
@@ -192,21 +192,21 @@ const hapeShtoPagese = (item) =>{
                                                     <td>{item.fatureERregullt === 'true' ? 'Po' : 'Jo'}</td>
                                                     <td>{item.nrFatures}</td>
                                                     <td>{item.menyraPagesese}</td>
-                                                    <td className='d-flex flex-row mb-0 p-2'>
-                                                        <Button variant="primary">
-                                                            <FontAwesomeIcon  icon={faPen} />
+                                                    <td className='d-flex flex-row justify-content-around'>
+                                                        <Button variant='btn btn-outline-primary' className='mx-1'>
+                                                            <FontAwesomeIcon  icon={faEdit} />
                                                         </Button>
-                                                        <Button variant="danger" className='mx-2' onClick={() => thirreModalPerPyetje(item.transaksioniID)}>
+                                                        <Button variant="btn btn-outline-danger"  className='mx-1' onClick={() => thirreModalPerPyetje(item.transaksioniID)}>
                                                             <FontAwesomeIcon  icon={faTrashCan} />
                                                         </Button>
-                                                        <Button variant='transparent' className='btn-outline-light mx-2'  onClick={() => shfaqProduktetEBlerjes(item.blerjeID,item.shifra)} 
+                                                        <Button variant='btn btn-outline-transparent'  className='mx-1'  onClick={() => shfaqProduktetEBlerjes(item.blerjeID,item.shifra)} 
                                                                  >
                                                         <FontAwesomeIcon 
                                                                 className={` ${IDPerDetaje === item.blerjeID ? 'text-primary fs-4 fw-bold' : 'text-secondary fw-bold'}`}
                                                                 icon={IDPerDetaje === item.blerjeID ? faChevronDown : faChevronRight}
                                                             />
                                                         </Button>
-                                                        <Button variant="" className=' btn btn-outline-success ' onClick={() => hapeShtoPagese(item)} disabled={item.mbetjaPerPagese == 0 }>
+                                                        <Button variant="btn btn-outline-success"  className='mx-1' onClick={() => hapeShtoPagese(item)} disabled={item.mbetjaPerPagese == 0 }>
                                                             <FontAwesomeIcon  icon={faEuroSign} />
                                                         </Button>
                                                     </td>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, Spinner, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan, faPen, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan, faEdit, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
@@ -196,22 +196,22 @@ export default function Klient() {
                                                 </td>
                                                 <td className="d-flex justify-content-center">
                                                     <Button
-                                                        variant="info"
-                                                        className="m-1"
+                                                        variant="btn btn-outline-secondary"
+                                                        className="mx-1"
                                                         onClick={() => handleDetaje(item.subjektiID)}
                                                     >
-                                                        Detaje
+                                                        Detaje...
                                                     </Button>
                                                     <Button
-                                                        variant="primary"
-                                                        className="m-1"
+                                                        variant="btn btn-outline-primary"
+                                                        className="mx-1"
                                                         onClick={() => handleShowNdrysho(item)}
                                                     >
-                                                        <FontAwesomeIcon icon={faPen} />
+                                                        <FontAwesomeIcon icon={faEdit} />
                                                     </Button>
                                                         <Button
-                                                            variant="danger"
-                                                            className="m-1"
+                                                            variant="btn btn-outline-danger"
+                                                            className="mx-1"
                                                             disabled = {item.totalTotaliPerPagese > 0}
                                                             onClick={() => thirreModalPerPyetje(item.subjektiID)}
                                                         >

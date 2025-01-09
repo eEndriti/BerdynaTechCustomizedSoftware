@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Table, Modal, Form, InputGroup, Spinner,OverlayTrigger,Tooltip } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faTrashCan, faGift, faCoins, faCheckCircle, faTimesCircle,faPencil } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrashCan, faGift, faCoins, faCheckCircle, faTimesCircle,faPencil } from '@fortawesome/free-solid-svg-icons';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AnimatedSpinner from './AnimatedSpinner';
@@ -181,7 +181,7 @@ export default function Punonjesit() {
                                                 <td>{item.nrTelefonit}</td>
                                                 <td>
                                                     <Button variant="outline-primary" className="me-2" onClick={() => {emptyDataPerPunonjes();setPerNdryshim(item); setShtoPunonjesModal(true);setDataPerPunonjes(item)}}>
-                                                        <FontAwesomeIcon icon={faPen} /> Ndrysho
+                                                        <FontAwesomeIcon icon={faEdit} /> Ndrysho
                                                     </Button>
                                                     <Button variant="outline-danger" className="me-2" onClick={() => {emptyDataPerPunonjes();modalPerPyetje(item.punonjesID)}}>
                                                         <FontAwesomeIcon icon={faTrashCan} /> Fshij

@@ -26,10 +26,15 @@ export default function Produktet() {
   const [produkti,setProdukti] = useState({})
 
   useEffect(() => {
-    window.api.fetchTableProdukti().then(receivedData => {
-      setProduktet(receivedData);
-      setFilteredProduktet(receivedData);
-    });
+
+    const fetchData = async () => {
+      await window.api.fetchTableProdukti().then(receivedData => {
+        setProduktet(receivedData);
+        setFilteredProduktet(receivedData);
+      });
+    }
+    
+    fetchData()
     setLoading(false)
   }, []);
 

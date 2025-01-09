@@ -1,7 +1,7 @@
 import {useState,useEffect} from 'react'
 import { Container,Row,Col,Button,Table,Modal,Form,Spinner,InputGroup } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faTrashCan,faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrashCan,faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import { toast, ToastContainer } from 'react-toastify';
 import AnimatedSpinner from './AnimatedSpinner';
 import ModalPerPyetje from './ModalPerPyetje'
@@ -186,7 +186,7 @@ export default function MenyratPagesave() {
                         <td>{formatCurrency(item.shuma)}</td>
                         <td>
                             <Button variant="outline-primary" className="me-2" onClick={() => {setPerNdryshim(true); setData(item);setModal(true)}}>
-                                <FontAwesomeIcon icon={faPen} /> Ndrysho
+                                <FontAwesomeIcon icon={faEdit} /> Ndrysho
                             </Button>
                                     
                             <Button

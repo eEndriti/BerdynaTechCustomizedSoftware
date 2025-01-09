@@ -14,7 +14,7 @@ import {
 import { toast, ToastContainer } from 'react-toastify';
 import { ClipLoader } from 'react-spinners';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan, faPen } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan, faEdit } from '@fortawesome/free-solid-svg-icons';
 import 'react-toastify/dist/ReactToastify.css';
 import 'animate.css';
 import ModalPerPyetje from './ModalPerPyetje';
@@ -124,7 +124,7 @@ export default function Kategorite() {
 
   return (
     <Container fluid className="mt-5">
-      <h3 className="text-center fw-bold text-primary">Kategorite</h3>
+      <h3 className="text-center fw-bold text-dark">Kategorite:</h3>
       <hr />
       <Row>
         <Col lg={3} className="bg-light border rounded p-4">
@@ -196,7 +196,7 @@ export default function Kategorite() {
                         <td>{index + 1}</td>
                         <td>{item.emertimi}</td>
                         <td>
-                          <Badge bg="info">{item.tvsh}%</Badge>
+                          <Badge bg="secondary">{item.tvsh}%</Badge>
                         </td>
                         <td>
                           {item.komponenta === 'true' ? (
@@ -213,17 +213,15 @@ export default function Kategorite() {
                             className="me-2"
                             onClick={() => handleEditCategory(item)}
                           >
-                            <FontAwesomeIcon icon={faPen} />
+                            <FontAwesomeIcon icon={faEdit} />
                           </Button>
-                          {item.total_sasia < 1 && (
-                            <Button
+                            <Button disabled = {item.total_sasia > 1}
                               variant="outline-danger"
                               size="sm"
                               onClick={() => thirreModalPerPyetje(item.kategoriaID)}
                             >
                               <FontAwesomeIcon icon={faTrashCan} />
                             </Button>
-                          )}
                         </td>
                       </tr>
                     ))}

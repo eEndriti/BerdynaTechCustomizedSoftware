@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Container, Row, Col, Button, Form, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Button, Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan, faPen,faChevronDown,faChevronRight,faFilePdf,faEdit,faEuroSign,faClipboard,faMoneyBillTransfer,faMoneyCheck,faSyncAlt } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan,faEdit,faChevronDown,faChevronRight,faFilePdf,faEuroSign } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
@@ -227,13 +227,13 @@ const hapeShtoPagese = (item) =>{
                                                     <td>{item.kohaGarancionit > 1 ? <>{item.kohaGarancionit} Muaj / {kontrolloStatusinGarancionit(item.kohaGarancionit,item.dataShitjes)}</>:'Pa Garancion'}</td>
                                                     <td >
                                                        <Col className="d-flex flex-wrap-flex-row justify-content-center align-items-center mt-1">
-                                                        <Button variant="primary" onClick={() => navigate(`/ndryshoShitjen/${item.shitjeID}`)}>
+                                                        <Button variant="btn btn-outline-primary" onClick={() => navigate(`/ndryshoShitjen/${item.shitjeID}`)}>
                                                                 <FontAwesomeIcon  icon={faEdit} />
                                                             </Button>
-                                                            <Button variant="danger" className='mx-2' onClick={() => thirreModalPerPyetje(item.shitjeID,item.transaksioniID,item.lloji)}>
+                                                            <Button variant="btn btn-outline-danger" className='mx-2' onClick={() => thirreModalPerPyetje(item.shitjeID,item.transaksioniID,item.lloji)}>
                                                                 <FontAwesomeIcon  icon={faTrashCan} />
                                                             </Button>
-                                                            <Button variant='transparent' className='btn btn-info mx-2'  onClick={() => shfaqProduktetEShitjes(item.shitjeID,item.shifra)} 
+                                                            <Button variant='btn btn-outline-transparent'   onClick={() => shfaqProduktetEShitjes(item.shitjeID,item.shifra)} 
                                                                     >
                                                             <FontAwesomeIcon 
                                                                     className={` ${IDPerDetaje === item.shitjeID ? 'text-primary fs-4 fw-bold' : 'text-secondary fw-bold'}`}
@@ -243,7 +243,7 @@ const hapeShtoPagese = (item) =>{
                                                             <Button variant="" className='mx-2 btn btn-link' onClick={() => hapePdf(item.shifra)} disabled = {item.kohaGarancionit < 1}>
                                                                 <FontAwesomeIcon  icon={faFilePdf} />
                                                             </Button>
-                                                            <Button variant="" className=' btn btn-outline-success ' onClick={() => hapeShtoPagese(item)} disabled={item.mbetjaPerPagese == 0 || item.lloji == 'online'}>
+                                                            <Button variant="btn btn-outline-success"  onClick={() => hapeShtoPagese(item)} disabled={item.mbetjaPerPagese == 0 || item.lloji == 'online'}>
                                                                 <FontAwesomeIcon  icon={faEuroSign} />
                                                             </Button>
                                                        </Col>

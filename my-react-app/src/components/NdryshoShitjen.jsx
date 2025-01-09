@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import AnimatedSpinner from './AnimatedSpinner'
 import { Container,Row,Form,Button,Col, InputGroup,Table, Spinner } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPen, faX,faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faX,faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import KerkoSubjektin from './KerkoSubjektin'
 import KerkoProduktin from './KerkoProduktin'
 import { ToastContainer, toast } from 'react-toastify';
@@ -298,7 +298,7 @@ export default function NdryshoShitjen() {
                             <Form.Label>Subjekti:</Form.Label>
                             <InputGroup >
                                 <Form.Control disabled = {true} value={selectedSubjekti.emertimi} />
-                                <InputGroup.Text disabled={inputDisabled} onClick={() => setNdryshoSubjektinModul(true)} style={{cursor:'pointer'}}><FontAwesomeIcon icon={faPen} className='text-primary' /></InputGroup.Text>
+                                <InputGroup.Text disabled={inputDisabled} onClick={() => setNdryshoSubjektinModul(true)} style={{cursor:'pointer'}}><FontAwesomeIcon icon={faEdit} className='text-primary' /></InputGroup.Text>
                             </InputGroup>
                             
                         </Form.Group>

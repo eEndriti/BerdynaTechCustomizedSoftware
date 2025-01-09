@@ -2,7 +2,7 @@ import { useState,useEffect } from 'react'
 import { Container,Row,Col,Button,Table,Form,Spinner } from 'react-bootstrap'
 import KerkoSubjektin from './KerkoSubjektin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faPen, faTrashCan,faCheckCircle, faTimesCircle,faEuroSign } from '@fortawesome/free-solid-svg-icons'; 
+import { faCheck, faEdit, faTrashCan,faCheckCircle, faTimesCircle,faEuroSign } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from './ModalPerPyetje'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -436,10 +436,10 @@ export default function Serviset() {
 
                         {item.statusi == 'Perfunduar' ?
                                 <>
-                                   <Button className='btn btn-primary mx-1' onClick={() => handleNdryshoServisinPerfunduar(item)}>
-                                        <FontAwesomeIcon icon={faPen} />
+                                   <Button variant='btn btn-outline-primary' className='mx-1' onClick={() => handleNdryshoServisinPerfunduar(item)}>
+                                        <FontAwesomeIcon icon={faEdit} />
                                     </Button>
-                                     <Button variant="" className=' btn btn-outline-success ' onClick={() => hapeShtoPagese(item)} disabled={item.mbetjaPageses == 0 }>
+                                     <Button variant='btn btn-outline-success' className='mx-1' onClick={() => hapeShtoPagese(item)} disabled={item.mbetjaPageses == 0 }>
                                         <FontAwesomeIcon  icon={faEuroSign} />
                                     </Button>
                                 </>: null}
@@ -448,14 +448,14 @@ export default function Serviset() {
                                    
                             {item.statusi == 'Aktiv' ?
                                 <>
-                                   <Button className='btn btn-primary mx-1' onClick={() => handleShowUpdateModal(item,item.statusi)}>
-                                        <FontAwesomeIcon icon={faPen} />
+                                   <Button variant='btn btn-outline-primary' className='mx-1' onClick={() => handleShowUpdateModal(item,item.statusi)}>
+                                        <FontAwesomeIcon icon={faEdit} />
                                     </Button>
-                                    <Button className='btn btn-success ' onClick={() => handleShowUpdateModal(item,'perfundo')}>
+                                    <Button variant='btn btn-outline-success' className='mx-1' onClick={() => handleShowUpdateModal(item,'perfundo')}>
                                         <FontAwesomeIcon  icon={faCheck} />
                                     </Button>
                                 </>: null}
-                                <Button className='btn bg-danger m-1 border-danger' onClick={() => thirreModal(item)}>
+                                <Button variant='btn btn-outline-danger' className='mx-1' onClick={() => thirreModal(item)}>
                                         <FontAwesomeIcon  icon={faTrashCan} />
                                     </Button>
                         </td>

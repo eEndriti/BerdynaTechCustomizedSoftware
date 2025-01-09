@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, Spinner, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan, faPen,faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan, faEdit,faPlus } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
@@ -154,13 +154,13 @@ export default function Furnitor() {
                                                             {formatCurrency(item.totalMbetjaPerPagese)}
                                                         </td>
                                                         <td>
-                                                            <Button variant="info" className="m-1" onClick={() => handleDetaje(item.subjektiID)}>
-                                                                Detaje
+                                                            <Button variant="btn btn-outline-secondary" className="mx-1" onClick={() => handleDetaje(item.subjektiID)}>
+                                                                Detaje...
                                                             </Button>
-                                                            <Button variant="primary" className="m-1" onClick={() => handleShowNdrysho(item)}>
-                                                                <FontAwesomeIcon icon={faPen} />
+                                                            <Button variant="btn btn-outline-primary" className="mx-1" onClick={() => handleShowNdrysho(item)}>
+                                                                <FontAwesomeIcon icon={faEdit} />
                                                             </Button>
-                                                            <Button variant="danger" disabled={item.totalTotaliPerPagese > 0 ? true: false} className="m-1" onClick={() => thirreModalPerPyetje(item.subjektiID)}>
+                                                            <Button variant="btn btn-outline-danger" disabled={item.totalTotaliPerPagese > 0 ? true: false} className="mx-1" onClick={() => thirreModalPerPyetje(item.subjektiID)}>
                                                                     <FontAwesomeIcon icon={faTrashCan} />
                                                             </Button>
                                                         </td>

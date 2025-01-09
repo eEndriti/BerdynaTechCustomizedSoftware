@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Table, Modal, Form, Spinner, Card, Toast,InputGroup,Alert, FormControl} from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faPen, faTrashCan,faUmbrellaBeach,faGift, faCoins,faTriangleExclamation,faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
+import {faEdit, faTrashCan,faUmbrellaBeach,faGift, faCoins,faTriangleExclamation,faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import AnimatedSpinner from './AnimatedSpinner';
 import { toast, ToastContainer } from 'react-toastify';
@@ -413,7 +413,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                                     <td>{paga.menyraPageses}</td>
                                                     <td>
                                                         <Button variant="outline-primary" className='mx-1' disabled = {!isWithin45Days(paga.dataPageses)} onClick={() => {setSelectedMenyraPageses(null);setPageseRroge(false);emptyActiveSalary();setActiveSalary(paga);setNdryshoModal(true)}}>
-                                                            <FontAwesomeIcon icon={faPen} /> Ndrysho
+                                                            <FontAwesomeIcon icon={faEdit} /> Ndrysho
                                                         </Button>
                                                         <Button variant="outline-danger" className='mx-1' onClick={() => {emptyActiveSalary();setActiveSalary(paga);setShowModalPerPyetje(true)}}>
                                                             <FontAwesomeIcon icon={faTrashCan} /> Fshij
@@ -468,7 +468,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                                     <td>{pushimi.arsyeja}</td>
                                                     <td>
                                                         <Button variant="outline-primary" className='mx-1' onClick={() => openModalNdryshoPushimin(pushimi)}>
-                                                            <FontAwesomeIcon icon={faPen} /> Ndrysho
+                                                            <FontAwesomeIcon icon={faEdit} /> Ndrysho
                                                         </Button>
                                                         <Button variant="outline-danger" className='mx-1' onClick={() => handlePushimiDelete(pushimi.pushimID)}>
                                                             <FontAwesomeIcon icon={faTrashCan} /> Fshij

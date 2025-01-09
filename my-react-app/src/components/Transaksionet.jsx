@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Table, Form,Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan,faPen } from '@fortawesome/free-solid-svg-icons'; 
+import { faTrashCan,faEdit } from '@fortawesome/free-solid-svg-icons'; 
 import Spinner from './AnimatedSpinner';
 import ModalPerPyetje from './ModalPerPyetje'
 import { ToastContainer, toast } from 'react-toastify';
@@ -187,7 +187,7 @@ export default function Transaksionet() {
                   <td>{transaksion.perdoruesi}</td>
                   <td>
                       <Button className='btn btn-primary' onClick={() => ndryshoTransaksionin(transaksion.lloji, transaksion.transaksioniID)}>
-                      <FontAwesomeIcon className=" mt-1" icon={faPen} />
+                      <FontAwesomeIcon className=" mt-1" icon={faEdit} />
                       </Button>
                       <Button className='btn btn-danger mx-2' onClick={() => thirreModal(transaksion.lloji, transaksion.transaksioniID, 'anuloTransaksionin')}>
                         <FontAwesomeIcon className=" mt-1" icon={faTrashCan} />

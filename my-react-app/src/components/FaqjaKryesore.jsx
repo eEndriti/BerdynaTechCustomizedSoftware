@@ -68,6 +68,7 @@ function FaqjaKryesoreAdmin() {
     alert(`Ndryshimi Transaksionit ${transaksioniID} ne Proces e mesiperm!!`)
   }
 
+
   const anuloTransaksionin =async () => {
     const data = {
       lloji:llojiPerAnulim,
@@ -189,8 +190,8 @@ const handleAprovoShitjenOnline = async () => {
       })
   },[dataPerAprovim.kostoPostes,dataPerAprovim.totaliIPranuar])
 
-  
 
+const x = 2025
   return (
     <Container fluid className="pt-3 modern-container">
       {loading ? (
@@ -199,7 +200,7 @@ const handleAprovoShitjenOnline = async () => {
         <div>
           {/* Transactions Section */}
           <section className="section-container mb-4">
-            <h3 className="section-title">Transaksionet e Nderrimit</h3>
+            <h3 className="section-title">Transaksionet e Nderrimit{x % 100}</h3>
             <div className="table-container tableHeight50">
               <Table responsive striped bordered hover size="sm" className="custom-table">
                 <thead className="table-header">
@@ -237,14 +238,14 @@ const handleAprovoShitjenOnline = async () => {
                         </td>
                         <td>{item.komenti}</td>
                         <td>{item.dataTransaksionit.toLocaleTimeString()}</td>
-                        <td className='d-flex flex-row flex-wrap justify-content-around'>
-                          <Button  variant='btn btn-outline-primary'
+                        <td className='d-flex flex-row justify-content-around'>
+                          <Button  variant='btn btn-outline-primary' className='mx-1'
                             disabled
                             onClick={() => ndryshoTransaksionin(item.lloji, item.transaksioniID)}
                           >
                             <FontAwesomeIcon icon={faEdit} />
                           </Button>
-                          <Button  variant='btn btn-outline-danger'
+                          <Button  variant='btn btn-outline-danger' className='mx-1'
                             onClick={() =>
                               thirreModal(item.lloji, item.transaksioniID, 'anuloTransaksionin')
                             }

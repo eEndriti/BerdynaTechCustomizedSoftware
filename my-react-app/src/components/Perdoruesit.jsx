@@ -1,7 +1,7 @@
 import {useState,useEffect} from 'react'
 import { Container, Row, Col, Button, Table, Modal, Form, InputGroup, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
+import { faEdit, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
 import AnimatedSpinner from './AnimatedSpinner';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -163,7 +163,7 @@ export default function Perdoruesit() {
                     <td>
                         {perdoruesiID != item.perdoruesiID ? <>
                             <Button variant="outline-primary" className="me-2" onClick={() => {setDataPerPerdorues(item);setPerNdryshim(true);setShtoPerdoruesModal(true)}}>
-                              <FontAwesomeIcon icon={faPen} /> Ndrysho
+                              <FontAwesomeIcon icon={faEdit} /> Ndrysho
                             </Button>
                             <Button 
                                     variant="outline-danger"
