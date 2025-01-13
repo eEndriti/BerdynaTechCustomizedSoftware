@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Button, Form, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan, faEdit,faChevronRight,faChevronDown,faEuroSign } from '@fortawesome/free-solid-svg-icons';
@@ -11,6 +12,7 @@ import { formatCurrency } from '../useAuthData';
 import ShtoPagese from './ShtoPagese';
 
 export default function Blerjet() {
+      const navigate = useNavigate();  
     const [blerjet, setBlerjet] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -193,7 +195,7 @@ const hapeShtoPagese = (item) =>{
                                                     <td>{item.nrFatures}</td>
                                                     <td>{item.menyraPagesese}</td>
                                                     <td className='d-flex flex-row justify-content-around'>
-                                                        <Button variant='btn btn-outline-primary' className='mx-1'>
+                                                        <Button variant="btn btn-outline-primary" onClick={() => navigate(`/ndryshoBlerjen/${item.blerjeID}`)}>
                                                             <FontAwesomeIcon  icon={faEdit} />
                                                         </Button>
                                                         <Button variant="btn btn-outline-danger"  className='mx-1' onClick={() => thirreModalPerPyetje(item.transaksioniID)}>

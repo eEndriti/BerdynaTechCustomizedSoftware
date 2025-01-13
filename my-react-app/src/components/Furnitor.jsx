@@ -129,7 +129,7 @@ export default function Furnitor() {
                         ) : (
                             <Card className="my-3">
                                 <Card.Body>
-                                    <div className="table-responsive">
+                                    <div className="table-responsive tableHeight50">
                                         <table className="table table-bordered table-hover text-center">
                                             <thead className="table-secondary">
                                                 <tr className="fs-5">

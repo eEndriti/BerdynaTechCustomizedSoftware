@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import AnimatedSpinner from './AnimatedSpinner'
 import { Container,Row,Form,Button,Col, InputGroup,Table, Spinner } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit, faX,faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faUndo,faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import KerkoSubjektin from './KerkoSubjektin'
 import KerkoProduktin from './KerkoProduktin'
 import { ToastContainer, toast } from 'react-toastify';
@@ -289,7 +289,7 @@ export default function NdryshoShitjen() {
                     <Col className='d-flex'>
                         <InputGroup >
                                 <KerkoSubjektin filter='klient' value={selectedSubjekti.emertimi} onSelect={handleSelectSubjekti} />
-                                <InputGroup.Text className='bg-transparent  border-0 mx-2' onClick={() => setNdryshoSubjektinModul(false)} style={{cursor:'pointer'}}><FontAwesomeIcon icon={faX} className='text-danger fs-4 fw-bold' /></InputGroup.Text>
+                                <InputGroup.Text className='bg-transparent  border-0 mx-2' onClick={() => setNdryshoSubjektinModul(false)} style={{cursor:'pointer'}}><FontAwesomeIcon icon={faUndo} className='text-danger fs-4 fw-bold' /></InputGroup.Text>
                         </InputGroup>
                     </Col>
                     :

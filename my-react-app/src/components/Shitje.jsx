@@ -202,17 +202,17 @@ export default function Shitje() {
 
     <Container fluid className="mt-5 d-flex flex-column" style={{ minHeight: "95vh" }}>
       <Row className="d-flex flex-row justify-content-between">
-            <Col>
-              <Form.Group as={Row} controlId="subjekti" className="mb-2">
+            <Col className="w-100">
+              <Form.Group as={Row} controlId="subjekti" className="mb-2  ">
                 <Form.Label column xs={6} className="text-start w-auto">Subjekti:</Form.Label>
-                <Col xs={6}>
-                  <KerkoSubjektin filter='klient' value={selectedSubjekti.emertimi} onSelect={handleSelectSubjekti} />
+                <Col xs={6} className="w-75 ">
+                  <KerkoSubjektin filter='klient'  value={selectedSubjekti.emertimi} onSelect={handleSelectSubjekti} />
                 </Col>
               </Form.Group>
               <Form.Group as={Row} controlId="kontakti" className="mb-2">
                 <Form.Label column xs={6} className="text-start w-auto">Kontakti:</Form.Label>
-                <Col xs={6}>
-                  <Form.Control disabled type="number" value={selectedSubjekti.kontakti} />
+                <Col xs={6} className="w-75">
+                  <Form.Control disabled type="text" value={selectedSubjekti.kontakti} />
                 </Col>
               </Form.Group>
             </Col>

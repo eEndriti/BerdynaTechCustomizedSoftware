@@ -60,7 +60,8 @@ export default function SearchInput({ filter,value, onSelect,lloji }) {
       </InputGroup>
 
       {showDropdown && filteredResults.length > 0 && (
-        <ListGroup className="position-absolute w-100 mt-2">
+        <ListGroup className="position-absolute w-100 mt-2 overflow-auto"   style={{ maxHeight: '300px', minHeight: '100px', overflowY: 'auto', border: '1px solid #ccc' }}
+>
           {filteredResults.map((result) => (
             <ListGroup.Item
               key={result.subjektiID}

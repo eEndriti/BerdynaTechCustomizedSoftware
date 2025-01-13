@@ -2521,7 +2521,7 @@ ipcMain.handle('insertBlerje', async (event, data) => {
         @shifra, @totaliPerPagese, @totaliPageses, @mbetjaPerPagese, @dataBlerjes, @dataFatures, @komenti, @fatureERregullt,@nrFatures, @perdoruesiID,@subjektiID, @transaksioniID, @menyraPagesesID,@nderrimiID
       )
     `;
-        const fatureERregulltValue = data.fatureERregullt ? 'true' : 'false';
+        const fatureERregulltValue = data.fatureERregullt ? 1 : 0;
 
     const blerjeResult = await connection.request()
       .input('shifra', sql.VarChar, shifra)
@@ -2531,7 +2531,7 @@ ipcMain.handle('insertBlerje', async (event, data) => {
       .input('dataBlerjes', sql.Date, dataDheOra)
       .input('dataFatures', sql.Date, data.dataFatures)
       .input('komenti', sql.VarChar, data.komenti)
-      .input('fatureERregullt', sql.VarChar, fatureERregulltValue)
+      .input('fatureERregullt', sql.Bit, fatureERregulltValue)
       .input('nrFatures', sql.VarChar, data.nrFatures)
       .input('perdoruesiID', sql.Int, data.perdoruesiID)
       .input('subjektiID', sql.Int, data.subjektiID)

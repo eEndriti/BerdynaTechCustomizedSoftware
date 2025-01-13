@@ -24,23 +24,27 @@ function Layout() {
         setProfiti((prevProfiti) => {
           return JSON.stringify(receivedData) !== JSON.stringify(prevProfiti) ? receivedData : prevProfiti;
         });
-  
-        const totaliIArkesResult = await window.api.fetchTableQuery(`select SUM(t.totaliIPageses) as 'totaliArkes' from transaksioni t where t.nderrimiID = ${nderrimiID}`);
         
-        const totaliArkes = totaliIArkesResult[0].totaliArkes || 0; 
-        
-        const totalArkesWithAvansi = Number(totaliArkes) + Number(avansi); 
-        
-        setTotaliIArkes(totalArkesWithAvansi);
-        
-        console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
         kalkuloBonusetDitore();
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     };
-  
+    const fetchTotaliArkes = async () =>{
+      try {
+        const totaliIArkesResult = await window.api.fetchTableQuery(`select SUM(t.totaliIPageses) as 'totaliArkes' from transaksioni t where t.nderrimiID = ${nderrimiID}`);
+
+        const totaliArkes = totaliIArkesResult[0].totaliArkes || 0; 
+        
+        const totalArkesWithAvansi = Number(totaliArkes) + Number(avansi); 
+        
+        setTotaliIArkes(totalArkesWithAvansi);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    }
     fetchData();
+    fetchTotaliArkes()
   }, [profiti]);
   
 

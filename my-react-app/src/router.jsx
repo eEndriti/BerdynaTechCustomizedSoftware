@@ -22,6 +22,7 @@ import NdryshoShitjen from './components/NdryshoShitjen';
 import Cookies from 'js-cookie'
 import Administrimi from './components/Administrimi';
 import PrintoLabell from './components/PrintoLabell';
+import NdryshoBlerjen from './components/NdryshoBlerjen';
 
 
 const isAuthenticated = () => {
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
       {
         path: '/ndryshoShitjen/:shitjeID',
         element: <NdryshoShitjen />,
+      },
+      {
+        path: '/ndryshoBlerjen/:blerjeID',
+        element: <NdryshoBlerjen />,
       },
       {
         path: '/shpenzim',

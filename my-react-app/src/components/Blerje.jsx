@@ -179,18 +179,18 @@ export default function Blerje() {
   
   return (
     <Container fluid className="pt-5">
-      <Row>
+      <Row className="border-bottom"> 
         <Col>
-          <Form.Group as={Row} controlId="subjekti" className="mb-2">
+          <Form.Group as={Row} controlId="subjekti" className="mb-2 ">
             <Form.Label column xs={6} className="text-start w-auto">Furnitori:</Form.Label>
-            <Col xs={6}>
+            <Col xs={6} className="w-75">
               <KerkoSubjektin filter='furnitor' value={selectedSubjekti.emertimi} onSelect={handleSelectSubjekti} />
             </Col>
           </Form.Group>
           <Form.Group as={Row} controlId="kontakti" className="mb-2">
             <Form.Label column xs={6} className="text-start w-auto">Kontakti:</Form.Label>
-            <Col xs={6}>
-              <Form.Control disabled type="number" value={selectedSubjekti.kontakti} />
+            <Col xs={6} className="w-75">
+              <Form.Control disabled type="text" value={selectedSubjekti.kontakti} />
             </Col>
           </Form.Group>
         </Col>
@@ -213,7 +213,6 @@ export default function Blerje() {
       </Row>
       {nukPranohetNrFatures ? <p className="text-center text-danger">Numri i Fatures Egziston tek ky Subjekt, Nuk Lejohet!</p> : null}
 
-      <hr/>
 
       <Row className="mt-5">
         <Col xs={12}>
