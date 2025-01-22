@@ -57,7 +57,7 @@ export default function Serviset() {
         };
     
         fetchData();
-      }, []);
+      }, [filterStatusi]);
 
     useEffect(() => {
         const applyFilters = () => {

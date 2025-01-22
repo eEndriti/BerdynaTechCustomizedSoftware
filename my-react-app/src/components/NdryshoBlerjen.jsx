@@ -1,9 +1,9 @@
 import {useState,useEffect} from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import AnimatedSpinner from './AnimatedSpinner'
-import { Container,Row,Form,Button,Col, InputGroup,Table, Spinner, Toast, Alert } from 'react-bootstrap'
+import { Container,Row,Form,Button,Col, InputGroup,Table, Spinner, Toast, Alert, Modal } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit, faUndo,faTrashCan,faWarning } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faUndo,faTrashCan,faWarning, faL } from '@fortawesome/free-solid-svg-icons';
 import KerkoSubjektin from './KerkoSubjektin'
 import KerkoProduktin from './KerkoProduktin'
 import { ToastContainer, toast } from 'react-toastify';
@@ -30,8 +30,9 @@ export default function NdryshoBlerjen() {
     const [totaliPageses,setTotaliPageses] = useState()
     const [mbetjaPerPagese,setMbetjaPerPagese] = useState()
     const [totaliTvsh,setTotaliTvsh] = useState()
-
- useEffect(() => {
+    const { nderrimiID,perdoruesiID } = useAuthData()
+    
+    useEffect(() => {
         const fetchData = async () => {
             try {
                 const receivedBlerjeData = await window.api.fetchTableQuery( `
@@ -60,9 +61,12 @@ export default function NdryshoBlerjen() {
                     dataBlerjes: formatDate(receivedBlerjeData[0].dataBlerjes),
                     dataFatures: formatDate(receivedBlerjeData[0].dataFatures),
                     fatureERregullt:receivedBlerjeData[0].fatureERregullt,
+                    komentiBlerjes:receivedBlerjeData[0].komenti,
+                    totaliPerPageseFillestare:receivedBlerjeData[0].totaliPerPagese,
+                    totaliPagesesFillestare:receivedBlerjeData[0].totaliPagesave,
+                    shifra:receivedBlerjeData[0].shifra,
                   }));
                 setTotaliPageses(formatCurrency(receivedBlerjeData[0].totaliPagesave,true))
-                
                 setSelectedSubjekti({emertimi:receivedBlerjeData[0].subjekti,subjektiID:receivedBlerjeData[0].subjektiID,kontakti:receivedBlerjeData[0].kontakti})
             } catch (error) {
                 toast.error('Error fetching data:', error);
@@ -73,23 +77,27 @@ export default function NdryshoBlerjen() {
         };
         fetchData();
     }, [blerjeID]);
+    console.log(data,'data')
 
     useEffect(() => {
         const fetchData = async () => {
+          setLoading(true)
             if (blerje && blerje.length > 0) {
                 try {
     
                     const productData = await window.api.fetchTableQuery(
-                        `select p.produktiID, p.shifra, p.emertimi, p.pershkrimi,p.kategoriaID, b.cmimiPerCope as 'cmimiBlerjes', p.sasia, b.sasia as 'sasiaBlerese', b.totaliProduktit, b.komenti,b.totaliTvsh,k.tvsh 
+                        `select p.produktiID, p.shifra, p.emertimi, p.pershkrimi,p.kategoriaID, b.cmimiPerCope as 'cmimiBlerjes', p.sasia, b.sasia as 'sasiaBlerese' , b.totaliProduktit, b.komenti,b.totaliTvsh,k.tvsh 
                         from produkti p
                         join blerjeProdukt b on b.produktiID = p.produktiID
-						join kategoria k on k.kategoriaID = p.kategoriaID
+						            join kategoria k on k.kategoriaID = p.kategoriaID
                         where b.blerjeID = ${blerjeID}`
                     );
                     setProduktetFillestare(productData);
                     console.log('produktetFillestare',productData)
                 } catch (error) {
                     toast.error('Error fetching data:', error);
+                }finally{
+                  setLoading(false)
                 }
             }
         };
@@ -120,7 +128,7 @@ export default function NdryshoBlerjen() {
     useEffect(() => {
         let totalPerPagese = 0;
         let llogaritjaETvsh = 0;
-      
+
         products.forEach((product) => {
           const cmimiBlerjes = parseFloat(product.cmimiBlerjes) || 0;
           const sasiaBlerjes = parseFloat(product.sasiaBlerese) || 0;
@@ -136,7 +144,6 @@ export default function NdryshoBlerjen() {
         setTotaliPerPagese(totalPerPagese);
         setTotaliTvsh(llogaritjaETvsh);
         
-
       }, [products]);
       
   const handleSelectSubjekti = (result) => {
@@ -195,10 +202,39 @@ export default function NdryshoBlerjen() {
       toast.error('Shuma e paguar nuk mund të jetë më e madhe se totali!');
     }
   };
+
+  const NdryshoBlerjen = async () => {
+   setInputDisabled(true)
+    const dataPerNdryshim = ({
+      ...data,
+      blerjeID,
+      subjektiID:selectedSubjekti.subjektiID,
+      products,
+      totaliPerPagese,
+      totaliPageses,
+      mbetjaPerPagese:totaliPerPagese - totaliPageses,
+      nderrimiID,
+      perdoruesiID
+    })
+      
+    try{
+      console.log(dataPerNdryshim)
+      const response = await window.api.ndryshoBlerje(dataPerNdryshim)
+      if(response){
+        toast.success('Blerja u ndryshua me sukses!')
+        navigate('/faqjaKryesore/')
+      }
+    }catch(e){
+      console.log(e)
+    }finally{
+      setInputDisabled(false)
+    }
+  }
   return (
     <>
         {loading ? <AnimatedSpinner /> : 
     <Container fluid className='mt-4'>
+      
          <Row>
             <h4 className='text-center text-secondary fw-bold'>Ndryshimi i Blerjes : {blerjeID}</h4>
         </Row>
@@ -289,7 +325,7 @@ export default function NdryshoBlerjen() {
                               {product.cmimiBlerjes == null ? <td></td> : <td>{formatCurrency(product.cmimiBlerjes)}</td>}
                               <td>{product.sasia}</td>
                               <td>
-                                <Form.Control className="bg-light border-0" type="number" min={0} value={product.sasiaBlerese}
+                                <Form.Control className="bg-light border-0" type="number" min={1} value={product.sasiaBlerese || 1}
                                   onChange={(e) => { const updatedProducts = [...products]; updatedProducts[index].sasiaBlerese = e.target.value;setProducts(updatedProducts);
                                   }}
                                 />
@@ -339,7 +375,7 @@ export default function NdryshoBlerjen() {
             </Form.Group>
         </Col>
         <Col xs={12} md={6} className="d-flex justify-content-center">
-          <Form.Control as="textarea" onChange={handleDataChange} name='komentiBlerjes' rows={3} className="p-3" placeholder="Shkruaj komentin..." />
+          <Form.Control as="textarea" onChange={handleDataChange} name='komentiBlerjes' rows={3} className="p-3" placeholder="Shkruaj komentin..." value={data.komentiBlerjes}/>
         </Col>
       </Row>
 
@@ -428,6 +464,7 @@ export default function NdryshoBlerjen() {
             </div>
         </Col>
         </Row>
+        <ModalPerPyetje show={modalPerPyetje} handleClose={() => setModalPerPyetje(false)} handleConfirm={NdryshoBlerjen}/>
         <ToastContainer/>
     </Container>}
     </>

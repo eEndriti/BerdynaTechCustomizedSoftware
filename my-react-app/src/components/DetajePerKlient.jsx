@@ -31,7 +31,7 @@ export default function DetajePerKlient() {
     const [dataPerAnulimPagese,setDataPerAnulimPagese] = useState()
     const [modalPerPyetje,setModalPerPyetje] = useState(false)
     const {nderrimiID,perdoruesiID} = useAuthData()
-
+      console.log('shitjet dhe serviset',combinedData,pagesat)
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -185,7 +185,7 @@ export default function DetajePerKlient() {
            <Row className='my-4'>
             <Col className='d-flex flex-row'>
                 <Form.Group className='d-flex align-items-center me-3'>
-                <Form.Label className='me-2 fw-bold'>Klienti:</Form.Label>
+                <Form.Label className='me-2 fw-bold'>{lloji == 'klient' ? 'Klienti:' : 'Furnitori:'}</Form.Label>
                 <Form.Control type="text" value={subjekti[0].emertimi} disabled />
                 </Form.Group>
 
@@ -345,6 +345,7 @@ export default function DetajePerKlient() {
             </Col>                                           
         </Row>
         <ToastContainer />
+
 
         <ModalPerPyetje show={modalPerPyetje} handleClose={() => setModalPerPyetje(false)} handleConfirm={handleConfirmModal}/>
         </Container>

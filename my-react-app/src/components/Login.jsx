@@ -78,7 +78,7 @@ export default function Login() {
 
         if (currentShift) {
           const shiftDate = new Date(currentShift.dataFillimit).toLocaleDateString();
-
+          console.log('data',currentDate,'shift',shiftDate)
           setSessionCookie('nderrimiID', currentShift.nderrimiID);
           setSessionCookie('avansi', currentShift.avansi);
           setSessionCookie('numriPercjelles', currentShift.numriPercjelles);

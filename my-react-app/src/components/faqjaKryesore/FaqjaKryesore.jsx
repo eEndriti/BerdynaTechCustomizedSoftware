@@ -2,12 +2,13 @@ import { useState,useEffect } from 'react'
 import { Container,Button,Row,Col,Modal,Form, Spinner, InputGroup,Table,Card } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
-import ModalPerPyetje from './ModalPerPyetje'
+import ModalPerPyetje from '../ModalPerPyetje'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import UpdateServise from './UpdateServise';
-import AnimatedSpinner from './AnimatedSpinner';
-import useAuthData, { formatCurrency } from '../useAuthData';
+import UpdateServise from '../UpdateServise';
+import AnimatedSpinner from '../AnimatedSpinner';
+import useAuthData, { formatCurrency } from '../../useAuthData';
+import Transaksionet from './Transaksionet';
 
 function FaqjaKryesoreAdmin() {
   const [loading,setLoading] = useState(true)
@@ -191,75 +192,13 @@ const handleAprovoShitjenOnline = async () => {
   },[dataPerAprovim.kostoPostes,dataPerAprovim.totaliIPranuar])
 
 
-const x = 2025
   return (
     <Container fluid className="pt-3 modern-container">
       {loading ? (
         <AnimatedSpinner />
       ) : (
         <div>
-          {/* Transactions Section */}
-          <section className="section-container mb-4">
-            <h3 className="section-title">Transaksionet e Nderrimit{x % 100}</h3>
-            <div className="table-container tableHeight50">
-              <Table responsive striped bordered hover size="sm" className="custom-table">
-                <thead className="table-header">
-                  <tr>
-                    <th>Nr</th>
-                    <th>Shifra</th>
-                    <th>Lloji</th>
-                    <th>Pershkrimi</th>
-                    <th>Totali Per Pagese</th>
-                    <th>Totali Pageses</th>
-                    <th>Mbetja Per Pagese</th>
-                    <th>Komenti</th>
-                    <th>Koha</th>
-                    <th>Opsionet</th>
-                  </tr>
-                </thead>
-                <tbody className='text-nowrap'>
-                  {transaksionetENderrimit.slice().reverse().map((item, index) => (
-                    item.transaksioniID !== 0 && (
-                      <tr key={index}>
-                        <td>{transaksionetENderrimit.length - index}</td>
-                        <td>{item.shifra}</td>
-                        <td>{item.lloji}</td>
-                        <td className='text-wrap'>{item.pershkrimi}</td>
-                        <td>{formatCurrency(item.totaliperPagese)}</td>
-                        <td>{formatCurrency(item.totaliIPageses)}</td>
-                        <td
-                          className={
-                            item.mbetjaPerPagese > 0
-                              ? 'text-danger fw-bold'
-                              : 'text-success fw-bold'
-                          }
-                        >
-                          {formatCurrency(item.mbetjaPerPagese)}
-                        </td>
-                        <td>{item.komenti}</td>
-                        <td>{item.dataTransaksionit.toLocaleTimeString()}</td>
-                        <td className='d-flex flex-row justify-content-around'>
-                          <Button  variant='btn btn-outline-primary' className='mx-1'
-                            disabled
-                            onClick={() => ndryshoTransaksionin(item.lloji, item.transaksioniID)}
-                          >
-                            <FontAwesomeIcon icon={faEdit} />
-                          </Button>
-                          <Button  variant='btn btn-outline-danger' className='mx-1'
-                            onClick={() =>
-                              thirreModal(item.lloji, item.transaksioniID, 'anuloTransaksionin')
-                            }
-                          >
-                            <FontAwesomeIcon icon={faTrashCan} />
-                          </Button>
-                        </td>
-                      </tr>
-                    )
-                  ))}
-                </tbody>
-              </Table>
-            </div>
-          </section>
+          <Transaksionet/>
 
           <div className="d-flex flex-wrap">
             {/* Orders Section */}

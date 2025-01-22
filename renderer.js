@@ -26,9 +26,11 @@ contextBridge.exposeInMainWorld('api', {
     fetchTableBonuset: () => ipcRenderer.invoke('fetchTableBonuset'),
     fetchTablePushimet: () => ipcRenderer.invoke('fetchTablePushimet'),
     fetchTablePagat: () => ipcRenderer.invoke('fetchTablePagat'),
+    fetchTotaliArkes: (nderrimiID) => ipcRenderer.invoke('fetchTotaliArkes',nderrimiID),
 
+    
 
-    insertTransaksioniAndShitje: (data) => ipcRenderer.invoke('insert-transaksioni-and-shitje', data),
+    insertShitje: (data) => ipcRenderer.invoke('insertShitje', data),
     insertShpenzimi: (data) => ipcRenderer.invoke('insertShpenzimi', data),
     kaloNgaStokuNeShpenzim: (data) => ipcRenderer.invoke('kaloNgaStokuNeShpenzim', data) ,
     insertLlojiShpenzimit: (data) => ipcRenderer.invoke('insertLlojiShpenzimit', data) ,
@@ -80,6 +82,7 @@ contextBridge.exposeInMainWorld('api', {
     ndryshoServisin: (data) => ipcRenderer.invoke('ndryshoServisin', data),
     ndryshoServisinPerfunduar: (data) => ipcRenderer.invoke('ndryshoServisinPerfunduar', data),
     ndryshoShitje: (data) => ipcRenderer.invoke('ndryshoShitje', data),
+    ndryshoBlerje: (data) => ipcRenderer.invoke('ndryshoBlerje', data),
     ndryshoPerdorues: (data) => ipcRenderer.invoke('ndryshoPerdorues', data),
     ndryshoOpsionPagese: (data) => ipcRenderer.invoke('ndryshoOpsionPagese', data),
     ndryshoPagen: (data) => ipcRenderer.invoke('ndryshoPagen', data),

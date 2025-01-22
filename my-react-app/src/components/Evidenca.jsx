@@ -48,7 +48,7 @@ export default function Evidenca() {
         setProduktiData(produktiResponse);
         setStartDate(() => {
           const today = new Date();
-          today.setDate(1); 
+          today.setDate(2); 
           return today.toISOString().split('T')[0]; 
         })
         setEndDate(() => new Date().toISOString().split('T')[0])

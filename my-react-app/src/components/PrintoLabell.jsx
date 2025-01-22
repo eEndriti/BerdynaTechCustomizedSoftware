@@ -30,7 +30,7 @@ const PrintoLabell = ({ type = 'service', data }) => {
               width: "2in",
               height: "1in",
               border: "1px solid black",
-              padding: "5px",
+              padding: "1px",
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
@@ -44,6 +44,9 @@ const PrintoLabell = ({ type = 'service', data }) => {
             </Row>
             <Row>
               <Col className="text-center">{'data.phoneNumber'}</Col>
+            </Row>
+            <Row>
+              <Col className="text-center">{'data.characters'}</Col>
             </Row>
             <Row>
               <Col className="text-center">{'data.characters'}</Col>

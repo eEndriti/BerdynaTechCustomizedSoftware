@@ -156,7 +156,7 @@ export default function Shitje() {
     };
   
     try {
-      const result = await window.api.insertTransaksioniAndShitje(data);
+      const result = await window.api.insertShitje(data);
       console.log(result)
       if (result.success) {
         toast.success('Shitja u Regjistrua me Sukses!', {

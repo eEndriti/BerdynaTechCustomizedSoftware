@@ -98,6 +98,7 @@ export default function KerkoProduktin({ show, onHide, onSelect, meFatureProp })
                   <Form.Control
                     type="text"
                     name={field}
+                    autoFocus={field === "shifra"}
                     value={searchFields[field]}
                     onChange={handleInputChange}
                     placeholder={`Kërko ${field}...`}
@@ -128,7 +129,7 @@ export default function KerkoProduktin({ show, onHide, onSelect, meFatureProp })
                 <tbody>
                   {results.map((product, index) => (
                     <tr key={index} onClick={() => handleProductSelect(product)}>
-                      <td>{product.shifra}</td>
+                      <td >{product.shifra}</td>
                       <td>{product.emertimi}</td>
                       <td>{product.pershkrimi}</td>
                       <td>{product.sasia}</td>

@@ -9,6 +9,8 @@ import AnimatedSpinner from './AnimatedSpinner'
 import DetajePerShitjeBlerje from './DetajePerShitjeBlerje';
 import { useNavigate } from 'react-router-dom';
 import ShtoPagese from './ShtoPagese';
+import LineChartComponent from './Charts/LineChartComponent';
+import PieChartComponent from './Charts/PieChartComponent';
 
 export default function Shitjet() {
     const navigate = useNavigate()
@@ -27,6 +29,7 @@ export default function Shitjet() {
     const [shifraPerDetaje,setShifraPerDetaje] = useState()
     const [dataPerShtoPagese,setDataPerShtoPagese] = useState()
     const [showShtoPagese,setShowShtoPagese] = useState(false)
+
     useEffect(() => {
         window.api.fetchTableShitje().then((receivedData) => {
             setShitjet(receivedData);
@@ -40,7 +43,7 @@ export default function Shitjet() {
     const handleUserChange = (e) => setUserFilter(e.target.value);
     const handleStartDateChange = (e) => setStartDate(e.target.value);
     const handleEndDateChange = (e) => setEndDate(e.target.value);
-
+    console.log(shitjet)
     const filteredShitjet = shitjet.filter(item => {
         const itemDate = new Date(item.dataShitjes).toISOString().slice(0, 10);
         return (
@@ -262,6 +265,19 @@ const hapeShtoPagese = (item) =>{
             {IDPerDetaje ? <>
                 <DetajePerShitjeBlerje shifraPerDetaje = {shifraPerDetaje}  IDPerDetaje = {IDPerDetaje} lloji = {'shitje'} />
                 </>:null}
+                
+                {!loading ? 
+                <Row className='d-flex flex-row flex-wrap justify-content-center' >
+                    <Col style={{maxHeight:'400px' ,minHeight:'400px'}}>
+                        <LineChartComponent dataFillimit={startDate} dataMbarimit={endDate} teDhenat={shitjet.map(sale => ({
+                            ...sale,
+                            dataTransaksionit: sale.dataShitjes, 
+                            }))} lloji={'Shitjeve'} />
+                    </Col>
+                    <Col className='' style={{maxHeight:'400px' ,minHeight:'400px'}}>
+                        <PieChartComponent teDhenat={shitjet} labels={['Shitje ne Dyqan', 'Shitje Online']} lloji = {'Shitjeve'} />
+                    </Col>
+                </Row> : ''}
 
             <ToastContainer />
             <ModalPerPyetje show={showModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />

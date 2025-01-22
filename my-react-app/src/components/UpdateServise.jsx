@@ -19,7 +19,7 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
     const [totaliPerPagese, setTotaliPerPagese] = useState(0);
     const [totaliIPageses, setTotaliIPageses] = useState(0);
     const [mbetjaPerPagese, setMbetjaPerPagese] = useState(0);
-    const {nderrimiID} = useAuthData()
+    const {nderrimiID,perdoruesiID} = useAuthData()
     const [menyraPagesesID,setMenyraPagesesID] = useState()
     const [products, setProducts] = useState([{}]);
     const [showModalKerkoProduktin,setShowModalKerkoProduktin] = useState(false)
@@ -66,7 +66,7 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
             totaliIPageses,
             mbetjaPerPagese,
             updateType,
-            perdoruesiID:1,
+            perdoruesiID,
             nderrimiID,
             dataPageses:new Date().getDate(),
             subjektiID: data.subjektiID ,

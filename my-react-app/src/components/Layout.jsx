@@ -15,7 +15,7 @@ function Layout() {
   const [profiti, setProfiti] = useState([]);
   const [totalShumaPerBonuse,setTotalShumaPerBonuse] = useState()
   const [totaliIArkes,setTotaliIArkes] = useState()
-
+  const [totaliArkesResult,setTotaliArkesResult] = useState([])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,29 +24,26 @@ function Layout() {
         setProfiti((prevProfiti) => {
           return JSON.stringify(receivedData) !== JSON.stringify(prevProfiti) ? receivedData : prevProfiti;
         });
-        
+        const totaliIArkesResult = await window.api.fetchTableQuery(`select totaliArkes from nderrimi t where t.nderrimiID = ${nderrimiID}`);
+        setTotaliArkesResult(totaliIArkesResult);
         kalkuloBonusetDitore();
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     };
-    const fetchTotaliArkes = async () =>{
-      try {
-        const totaliIArkesResult = await window.api.fetchTableQuery(`select SUM(t.totaliIPageses) as 'totaliArkes' from transaksioni t where t.nderrimiID = ${nderrimiID}`);
-
-        const totaliArkes = totaliIArkesResult[0].totaliArkes || 0; 
-        
-        const totalArkesWithAvansi = Number(totaliArkes) + Number(avansi); 
-        
-        setTotaliIArkes(totalArkesWithAvansi);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    }
+   
     fetchData();
-    fetchTotaliArkes()
-  }, [profiti]);
+   
+  }, [profiti,nderrimiID]);
   
+  useEffect(() => {
+
+    if(totaliArkesResult.length > 0){
+      const totaliArkes = totaliArkesResult[0].totaliArkes || 0; 
+      const totalArkesWithAvansi = Number(totaliArkes) + Number(avansi); 
+      setTotaliIArkes(totalArkesWithAvansi);
+    }
+  }, [totaliArkesResult]);
 
   function kalkuloBonusetDitore() {
     const totalShuma = profiti.reduce((accumulator, current) => accumulator + current.shuma, 0);

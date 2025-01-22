@@ -62,7 +62,6 @@ export default function Klient() {
 
         fetchData();
     }, []);
-
     const handleSearchChange = (e) => setSearchTerm(e.target.value);
 
     const filteredKlientet = klientet.filter(item => {

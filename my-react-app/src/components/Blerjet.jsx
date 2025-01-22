@@ -10,6 +10,8 @@ import DetajePerShitjeBlerje from './DetajePerShitjeBlerje';
 import AnimatedSpinner from './AnimatedSpinner';
 import { formatCurrency } from '../useAuthData';
 import ShtoPagese from './ShtoPagese';
+import LineChartComponent from './Charts/LineChartComponent';
+import PieChartComponent from './Charts/PieChartComponent';
 
 export default function Blerjet() {
       const navigate = useNavigate();  
@@ -225,7 +227,18 @@ const hapeShtoPagese = (item) =>{
              {IDPerDetaje ? <>
                 <DetajePerShitjeBlerje shifraPerDetaje = {shifraPerDetaje}  IDPerDetaje = {IDPerDetaje} lloji = {'blerje'}/>
                 </>:null}
-
+                {!loading ? 
+                <Row className='d-flex flex-row flex-wrap justify-content-center' >
+                <Col style={{maxHeight:'400px' ,minHeight:'400px'}}>
+                    <LineChartComponent dataFillimit={startDate} dataMbarimit={endDate} teDhenat={blerjet.map(sale => ({
+                        ...sale,
+                        dataTransaksionit: sale.dataBlerjes, 
+                        }))} lloji={'Blerjeve'} />
+                </Col>
+                <Col className='' style={{maxHeight:'400px' ,minHeight:'400px'}}>
+                    <PieChartComponent teDhenat={blerjet} labels={['Me Fature', 'Pa Fature']} lloji = {'Blerjeve'}/>
+                </Col>
+            </Row> : ''}
             <ToastContainer />
             <ModalPerPyetje show={showModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />
             <ShtoPagese show={showShtoPagese} handleClose={() => setShowShtoPagese(false)} data={dataPerShtoPagese} />

@@ -4,10 +4,10 @@ import { faTrashCan,faEdit,faChevronDown, faChevronRight,faExchangeAlt } from '@
 import { Row, Col, Button, Form,Spinner,Modal, Container, InputGroup} from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import ModalPerPyetje from './ModalPerPyetje'
-import KerkoProduktin from './KerkoProduktin';
-import AnimatedSpinner from './AnimatedSpinner';
-import useAuthData from '../useAuthData';
+import ModalPerPyetje from '../ModalPerPyetje'
+import KerkoProduktin from '../KerkoProduktin';
+import AnimatedSpinner from '../AnimatedSpinner';
+import useAuthData from '../../useAuthData';
 
 export default function Shpenzim() {
   const [shpenzimet, setShpenzimet] = useState([]);

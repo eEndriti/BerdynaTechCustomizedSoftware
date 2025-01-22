@@ -1,11 +1,11 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './components/Login';
-import FaqjaKryesore from './components/FaqjaKryesore'
+import FaqjaKryesore from './components/faqjaKryesore/FaqjaKryesore'
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './components/NotFound'; 
 import Shitje from './components/Shitje';
-import Shpenzim from './components/Shpenzim'
+import Shpenzim from './components/shpenzimi/Shpenzim'
 import Blerje from './components/Blerje';
 import Produktet from './components/Produktet';
 import Kategorite from './components/Kategorite'

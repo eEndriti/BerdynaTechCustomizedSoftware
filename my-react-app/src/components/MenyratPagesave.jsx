@@ -40,6 +40,7 @@ export default function MenyratPagesave() {
                     `SELECT 
                         m.menyraPagesesID, 
                         m.emertimi, 
+                        m.asociuarMeArken,
                         b.shuma, 
                         CASE 
                             WHEN EXISTS (SELECT 1 FROM blerje WHERE menyraPagesesID = m.menyraPagesesID)
@@ -180,9 +181,9 @@ export default function MenyratPagesave() {
                 {menyratPagesave.slice().reverse().map((item, index) => (
                 <tr key={index}>
                     {menyratPagesave.length != 0 ? (
-                    <>
+                    <>  {console.log(item)}
                         <th scope="row">{menyratPagesave.length - index}</th>
-                        <td>{item.emertimi}</td>
+                        <td>{item.asociuarMeArken ? <>{item.emertimi} (Asociuar me Arken!)</> : item.emertimi }</td>
                         <td>{formatCurrency(item.shuma)}</td>
                         <td>
                             <Button variant="outline-primary" className="me-2" onClick={() => {setPerNdryshim(true); setData(item);setModal(true)}}>
