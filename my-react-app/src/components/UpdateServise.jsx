@@ -271,7 +271,8 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
                        <Row className='d-flex flex-row flex-wrap justify-content-between mt-5'>
                             <Col xs={12} md={6} className="d-flex justify-content-center align-items-end ">
                                 <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleClose}>Anulo</Button>
-                                <Button variant="success" size="lg" className="mx-2 fs-1" onClick={handleConfirmClick} disabled={loading || (updateType != 'Perfundo' && menyraPagesesID == null)}>{loading ? (
+                                <Button variant="success" size="lg" className="mx-2 fs-1" onClick={handleConfirmClick} 
+                                disabled={loading || (updateType != 'Perfundo' && menyraPagesesID == null) || products.some(product => product.sasiaShitjes < 1)}>{loading ? (
                                 <>
                                     <Spinner
                                     as="span"

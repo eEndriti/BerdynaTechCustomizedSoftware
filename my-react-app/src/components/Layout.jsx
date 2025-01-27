@@ -87,8 +87,12 @@ function Layout() {
           <Row className='align-items-center '>
             <Col xs={12} md={8} className='d-flex justify-content-between'>
               <div className='d-flex align-items-center'>
-                <FontAwesomeIcon icon={faCoins} className='me-2 text-warning fs-5' />
-                <span className='me-4'>Totali i Arkes: <strong>{formatCurrency(totaliIArkes)}</strong></span>
+              <span className='me-3'>
+                <FontAwesomeIcon icon={faCoins} className='me-2 text-warning fs-4' />
+                Totali i Arkes: <strong>{formatCurrency(totaliIArkes)}</strong>
+                 <span className='d-block text-muted text-center'>Avansi: {formatCurrency(avansi,false)}</span>
+              </span>
+                <span className='me-4'></span>
   
                 <FontAwesomeIcon icon={faExchangeAlt} className='me-2 text-success fs-5' />
                 <span className='me-4'>Nderrimi: <strong>{numriPercjelles}-{formatDate(dataFillimit)}</strong></span>

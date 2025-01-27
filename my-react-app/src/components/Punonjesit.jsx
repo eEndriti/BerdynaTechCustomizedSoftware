@@ -187,7 +187,7 @@ export default function Punonjesit() {
                                                         <FontAwesomeIcon icon={faTrashCan} /> Fshij
                                                     </Button>
 
-                                                    <Button variant="outline-secondary"  onClick={() => {setShowDetaje(prev => !prev);setDataPerPunonjes(item)}}>
+                                                    <Button variant="outline-secondary"  onClick={() => {setShowDetaje(true);setDataPerPunonjes(item)}}>
                                                         Detaje...
                                                     </Button>                                          
                                                 </td>

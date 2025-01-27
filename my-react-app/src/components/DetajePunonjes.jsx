@@ -12,7 +12,7 @@ import useAuthData , {formatCurrency} from '../useAuthData';
 
 export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     const [loading, setLoading] = useState(true);
-    const [showData,setShowData] = useState()
+    const [showData,setShowData] = useState(null)
     const [pushimet, setPushimet] = useState([]);
     const [bonuset, setBonuset] = useState([]);
     const [bonusetNeDetaje, setBonusetNeDetaje] = useState([]);
@@ -35,7 +35,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     const [idPerPerdorim,setIdPerPerdorim] = useState()
     const [perNdryshim,setPerNdryshim] = useState()
     const [dataPerPushim,setDataPerPushim] = useState({dataFillimit:'',dataMbarimit:'',nrDiteve:'',lloji:'',arsyeja:''})
-    const {nderrimiID,punonjesiID} = useAuthData()
+    const {nderrimiID,perdoruesiID} = useAuthData()
     const albanianMonths = [
         "Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor",
         "Korrik", "Gusht", "Shtator", "Tetor", "Nëntor", "Dhjetor"
@@ -47,7 +47,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
             const fetchedBonuset = await window.api.fetchTableBonuset();
             const fetchedPaga = await window.api.fetchTablePagat();
             const fetchedBonusetNeDetaje = await window.api.fetchTableQuery(`
-                SELECT b.bonusetID,  b.dataBonuseve,  b.shuma,  bp.dataPageses,  bp.menyraPagesesID,  bp.punonjesiID,  bp.statusi,  m.emertimi 
+                SELECT b.bonusetID,  b.dataBonuseve,  b.shuma,  bp.dataPageses,  bp.menyraPagesesID,  bp.punonjesiID,  bp.statusi, bp.shifra,bp.transaksioniID,  m.emertimi 
             FROM bonuset b
             JOIN bonusetPunonjesit bp ON bp.bonusetID = b.bonusetID
             LEFT JOIN menyraPageses m ON m.menyraPagesesID = bp.menyraPagesesID
@@ -78,6 +78,10 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
         const total = bonusetPerPunonjes.reduce((acc, item) => acc + item.shuma, 0);
         setTotalBonuset(total);
     }, [bonusetPerPunonjes]);
+
+    useEffect(() => {
+        setShowData(null)
+    }, [punonjesID]);
 
       const updateMenyraPageses = (menyraPageses) => {
         setSelectedMenyraPageses(menyraPageses);
@@ -164,7 +168,8 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                 ...activeSalary,
                 punonjesID,
                 menyraPagesesID:selectedMenyraPageses.menyraPagesesID,
-                nderrimiID
+                nderrimiID,
+                perdoruesiID
             }  
 
           await window.api.paguajPagen(data)
@@ -180,7 +185,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
       
   }
 
-    function isWithin45Days(mssqlDate) {
+    function isWithin30Days(mssqlDate) {
         const inputDate = new Date(mssqlDate); 
         const currentDate = new Date();
     
@@ -188,7 +193,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
         
         const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
     
-        return diffInDays <= 45;
+        return diffInDays <= 30;
     }
 
     useEffect(() => {
@@ -232,8 +237,11 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
             punonjesiID:punonjesID,
             menyraPagesesID:selectedMenyraPageses.menyraPagesesID,
             bonusetPerPunonjes,
-            totalBonuset
+            totalBonuset,
+            perdoruesiID,
+            nderrimiID
         }
+        console.log(data)
         try{
             await window.api.paguajBonuset(data)
         }catch(error){
@@ -245,7 +253,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
 
     const handleAnuloBonusin = async (id,shumaPageses,menyraPagesesID) => {
         const data = {
-            bonusetID:id,
+            transaksioniID:id,
             shumaPageses,
             punonjesID,
             menyraPagesesID
@@ -391,43 +399,45 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                             <Card className="mb-4 shadow">
                                 <Card.Body>
                                     <Card.Title className='fs-3 pb-2'>Menaxho Pagen:</Card.Title>
-                                    <Table striped bordered hover variant="light">
-                                        <thead>
-                                            <tr>
-                                                <th>Nr.</th>
-                                                <th>Data Pageses</th>
-                                                <th>Paga</th>
-                                                <th>Bonusi</th>
-                                                <th>Zbritje</th>
-                                                <th>Menyra e Pageses</th>
-                                                <th>Veprime</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {pagat.slice().reverse().map((paga, index) => (
-                                                <tr key={index}>
-                                                    <td>{pagat.length -index}</td>
-                                                    <td>{formatLongDateToAlbanian(paga.dataPageses)}</td>
-                                                    <td>{formatCurrency(paga.paga)}</td>
-                                                    <td>{formatCurrency(paga.bonusi)}</td>
-                                                    <td>{formatCurrency(paga.zbritje)}</td>
-                                                    <td>{paga.menyraPageses}</td>
-                                                    <td>
-                                                        <Button variant="outline-primary" className='mx-1' disabled = {!isWithin45Days(paga.dataPageses)} onClick={() => {setSelectedMenyraPageses(null);setPageseRroge(false);emptyActiveSalary();setActiveSalary(paga);setNdryshoModal(true)}}>
-                                                            <FontAwesomeIcon icon={faEdit} /> Ndrysho
-                                                        </Button>
-                                                        <Button variant="outline-danger" className='mx-1' onClick={() => {emptyActiveSalary();setActiveSalary(paga);setShowModalPerPyetje(true)}}>
-                                                            <FontAwesomeIcon icon={faTrashCan} /> Fshij
-                                                        </Button>
-                                                    </td>
+                                    <div className='tableHeight50'>
+                                        <Table striped bordered hover variant="light">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nr.</th>
+                                                    <th>Data Pageses</th>
+                                                    <th>Paga</th>
+                                                    <th>Bonusi</th>
+                                                    <th>Zbritje</th>
+                                                    <th>Menyra e Pageses</th>
+                                                    <th>Veprime</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </Table>
+                                            </thead>
+                                            <tbody>
+                                                {pagat.slice().reverse().map((paga, index) => (
+                                                    <tr key={index}>
+                                                        <td>{pagat.length -index}</td>
+                                                        <td>{formatLongDateToAlbanian(paga.dataPageses)} / {paga.dataPageses.toLocaleTimeString() } </td>
+                                                        <td>{formatCurrency(paga.paga)}</td>
+                                                        <td>{formatCurrency(paga.bonusi)}</td>
+                                                        <td>{formatCurrency(paga.zbritje)}</td>
+                                                        <td>{paga.menyraPageses}</td>
+                                                        <td>
+                                                            <Button variant="outline-primary" className='mx-1' disabled = {!isWithin30Days(paga.dataPageses)} onClick={() => {setSelectedMenyraPageses(null);setPageseRroge(false);emptyActiveSalary();setActiveSalary(paga);setNdryshoModal(true)}}>
+                                                                <FontAwesomeIcon icon={faEdit} /> Ndrysho
+                                                            </Button>
+                                                            <Button variant="outline-danger" className='mx-1' onClick={() => {emptyActiveSalary();setActiveSalary(paga);setShowModalPerPyetje(true)}}>
+                                                                <FontAwesomeIcon icon={faTrashCan} /> Fshij
+                                                            </Button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </Table>
+                                    </div>
                                     <Alert variant="warning" className="d-flex align-items-center mt-3">
                                         <FontAwesomeIcon icon={faTriangleExclamation} size={20} className="me-2" />
                                         <span>
-                                            <strong>Kujdes!</strong> Pagat me te vjetra se 45 Dite nuk mund te ndryshohen!
+                                            <strong>Kujdes!</strong> Pagat me te vjetra se 30 Dite nuk mund te ndryshohen!
                                         </span>
                                     </Alert>
                                 </Card.Body>
@@ -446,39 +456,41 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                             <Card className="mb-4 shadow">
                                 <Card.Body>
                                 <Card.Title className='fs-3 pb-2'>Menaxho Pushimet:</Card.Title>
-                                <Table striped bordered hover variant="light">
-                                        <thead>
-                                            <tr>
-                                                <th>Nr.</th>
-                                                <th>Data Fillimit</th>
-                                                <th>Nr. Diteve</th>
-                                                <th>Data Mbarimit</th>
-                                                <th>Lloji</th>
-                                                <th>Arsyeja</th>
-                                                <th>Veprime</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {pushimet.map((pushimi, index) => (
-                                                <tr key={index}>
-                                                    <td>{index+1}</td>
-                                                    <td>{formatLongDateToAlbanian(pushimi.dataFillimit)}</td>
-                                                    <td>{pushimi.nrDiteve}</td>
-                                                    <td>{formatLongDateToAlbanian(pushimi.dataMbarimit)}</td>
-                                                    <td>{pushimi.lloji}</td>
-                                                    <td>{pushimi.arsyeja}</td>
-                                                    <td>
-                                                        <Button variant="outline-primary" className='mx-1' onClick={() => openModalNdryshoPushimin(pushimi)}>
-                                                            <FontAwesomeIcon icon={faEdit} /> Ndrysho
-                                                        </Button>
-                                                        <Button variant="outline-danger" className='mx-1' onClick={() => handlePushimiDelete(pushimi.pushimID)}>
-                                                            <FontAwesomeIcon icon={faTrashCan} /> Fshij
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </Table>
+                                    <div className='tableHeight50'>
+                                        <Table striped bordered hover variant="light">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Nr.</th>
+                                                        <th>Data Fillimit</th>
+                                                        <th>Nr. Diteve</th>
+                                                        <th>Data Mbarimit</th>
+                                                        <th>Lloji</th>
+                                                        <th>Arsyeja</th>
+                                                        <th>Veprime</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {pushimet.map((pushimi, index) => (
+                                                        <tr key={index}>
+                                                            <td>{index+1}</td>
+                                                            <td>{formatLongDateToAlbanian(pushimi.dataFillimit)}</td>
+                                                            <td>{pushimi.nrDiteve}</td>
+                                                            <td>{formatLongDateToAlbanian(pushimi.dataMbarimit)}</td>
+                                                            <td>{pushimi.lloji}</td>
+                                                            <td>{pushimi.arsyeja}</td>
+                                                            <td>
+                                                                <Button variant="outline-primary" className='mx-1' onClick={() => openModalNdryshoPushimin(pushimi)}>
+                                                                    <FontAwesomeIcon icon={faEdit} /> Ndrysho
+                                                                </Button>
+                                                                <Button variant="outline-danger" className='mx-1' onClick={() => handlePushimiDelete(pushimi.pushimID)}>
+                                                                    <FontAwesomeIcon icon={faTrashCan} /> Fshij
+                                                                </Button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                        </Table>
+                                    </div>
                                     
                                 </Card.Body>
                                 <Card.Footer>
@@ -493,10 +505,13 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                             <Card className="mb-4 shadow">
                                 <Card.Body>
                                 <Card.Title className='fs-3 pb-2'>Menaxho Bonuset:</Card.Title>
-                                {bonusetNeDetaje && <Table striped bordered hover className='text-center' variant="light">
+                                {bonusetNeDetaje && 
+                                    <div className='tableHeight50'>
+                                     <Table striped bordered hover className='text-center' variant="light" >
                                         <thead>
                                             <tr>
                                                 <th>Nr.</th>
+                                                <th>Shifra</th>
                                                 <th>Shuma e Paguar</th>
                                                 <th>Data e Pageses</th>
                                                 <th>Menyra e Pageses</th>
@@ -507,22 +522,25 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                             {bonusetNeDetaje.slice().reverse().map((bonus, index) => (
                                                 <tr key={index}>
                                                     <td>{index+1}</td>
+                                                    <td>{bonus.shifra}</td>
                                                     <td>{formatCurrency(bonus.shuma)}</td>
-                                                    <td>{formatLongDateToAlbanian(bonus.dataPageses)}</td>
+                                                    <td>{formatLongDateToAlbanian(bonus.dataPageses)} / {bonus.dataPageses.toLocaleTimeString() }
+                                                    </td>
                                                     <td>{bonus.emertimi}</td>
                                                     <td>                                                       
-                                                        <Button variant="outline-danger" className='mx-1' disabled = {!isWithin45Days(bonus.dataPageses)} onClick={() => handleAnuloBonusin(bonus.bonusetID,bonus.shuma,bonus.menyraPagesesID)}>
+                                                        <Button variant="outline-danger" className='mx-1' disabled = {!isWithin30Days(bonus.dataPageses)} onClick={() => handleAnuloBonusin(bonus.transaksioniID,bonus.shuma,bonus.menyraPagesesID)}>
                                                             <FontAwesomeIcon icon={faTrashCan} /> Anulo Pagesen
                                                         </Button>
                                                     </td>
                                                 </tr>
                                             ))}
                                         </tbody>
-                                    </Table>}
+                                    </Table>
+                                </div>}
                                     <Alert variant="warning" className="d-flex align-items-center mt-3">
                                         <FontAwesomeIcon icon={faTriangleExclamation} size={20} className="me-2" />
                                         <span>
-                                            <strong>Kujdes!</strong> Bonuset me te vjetra se 45 Dite nuk mund te ndryshohen!
+                                            <strong>Kujdes!</strong> Bonuset me te vjetra se 30 Dite nuk mund te ndryshohen!
                                         </span>
                                     </Alert>
                                 </Card.Body>                                

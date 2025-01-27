@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from '../ModalPerPyetje'
 import KerkoProduktin from '../KerkoProduktin';
 import AnimatedSpinner from '../AnimatedSpinner';
-import useAuthData from '../../useAuthData';
+import useAuthData, { normalizoDaten } from '../../useAuthData';
 
 export default function Shpenzim() {
   const [shpenzimet, setShpenzimet] = useState([]);
@@ -36,6 +36,7 @@ export default function Shpenzim() {
   const [loadingPerStok,setLoadingPerStok] = useState(false)
   const [kategoriaID,setKategoriaID] = useState() // kjo perdoret per me selektu kategorine me kalu stok ne shpenzim
   const {nderrimiID,perdoruesiID} = useAuthData()
+  const [buttonLoading,setButtonLoading] = useState(false)
 
   useEffect(() => {2
     // Fetch all shpenzimet data
@@ -55,9 +56,11 @@ export default function Shpenzim() {
 
   useEffect(() => {
     // Filter shpenzimet based on the selected date range
+    const normalizedStartDate = normalizoDaten(startDate);
+const normalizedEndDate = normalizoDaten(endDate);
     const filtered = shpenzimet.filter(shpenzim => {
-      const shpenzimDate = new Date(shpenzim.dataShpenzimit);
-      return shpenzimDate >= new Date(startDate) && shpenzimDate <= new Date(endDate);
+      const shpenzimDate = normalizoDaten(shpenzim.dataShpenzimit);
+      return shpenzimDate >= normalizedStartDate && shpenzimDate <= normalizedEndDate;
     });
     setFilteredShpenzimet(filtered);
   }, [startDate, endDate, shpenzimet]);
@@ -85,7 +88,7 @@ export default function Shpenzim() {
   };
 
   const shtoShpenzimin = async () => {
-
+    setButtonLoading(true)
     const data = {
       shumaShpenzimit: selectedShumaStandarde,
       komenti: komenti,
@@ -105,11 +108,12 @@ export default function Shpenzim() {
       setLoading(false)
       toast.error('Gabim gjate regjistrimit: ' + result.error);
     }
+    setButtonLoading(false)
   };
 
   const handleKaloNgaStoki = async () => {
     setLoadingPerStok(true)
-
+    setButtonLoading(true)
     const data = {
       cmimiFurnizimit: produktiSelektuar.cmimiBlerjes,
       llojetShpenzimeveID: kategoriaID,
@@ -131,18 +135,12 @@ export default function Shpenzim() {
       setLoading(false)
       toast.error('Gabim gjate regjistrimit: ' + result.error);
     }
-  };
-
-  const handleShpenzimiRiChange = (e) => {
-    setShpenzimiRi(e.target.value);
-  };
-
-  const handleShumaStandardeEReChange = (e) => {
-    setShumaStandardeERe(e.target.value);
+    setButtonLoading(false)
   };
 
   const shtoLlojinShpenzimit = async () => {
     setLoading(true)
+    setButtonLoading(true)
     const data = {
       emertimi: shpenzimiRi,
       shumaStandarde: shumaStandardeERe
@@ -159,6 +157,7 @@ export default function Shpenzim() {
       setLoading(false)
       toast.error('Gabim gjate regjistrimit: ');
     }
+    setButtonLoading(false)
   };
   const handleEditShpenzimiClick = (item) =>{
     setSelectedRowData({
@@ -177,6 +176,7 @@ export default function Shpenzim() {
   }
   const handleRuajNdryshimet = async () =>{
     setLoading(true)
+    setButtonLoading(true)
     let result
     
     if(selectedRowData.lloji){
@@ -197,7 +197,7 @@ export default function Shpenzim() {
       }
        result = await window.api.ndryshoLlojinShpenzimit(data)
     }
-
+    setButtonLoading(false)
     if (result.success) {
       toast.success('Ndryshimet u ruajten me sukses!', {
         position: 'top-center',
@@ -225,7 +225,7 @@ export default function Shpenzim() {
   }
   const handleDelete = async () =>{
     let result
-
+    setButtonLoading(true)
     if(burimiThirrjes == 'Shpenzimi'){
       const data ={
         lloji:'Shpenzim',
@@ -247,6 +247,7 @@ export default function Shpenzim() {
       setLoading(false)
       toast.error('Gabim gjate fshirjes: ' + result.error);
     }
+    setButtonLoading(false)
   }
   const handleProductSelect = (product) =>{
     setProduktiSelektuar(product)
@@ -298,7 +299,7 @@ export default function Shpenzim() {
             </Form.Group>
           </div>
           <div className=''>
-            <Button variant='success w-100 mt-3' onClick={() => shtoShpenzimin()} disabled = {loading}>{loading ? <>
+            <Button variant='success w-100 mt-3' onClick={() => shtoShpenzimin()} disabled = {loading || selectedShumaStandarde < 1 || !llojiShpenzimeveSelektuarID || buttonLoading} >{loading ? <>
             <Spinner as="span" animation='border' size='sm' role='status' aria-hidden={true}/>{''}Duke Ruajtur...
           </>:'Regjistro'}</Button>
           </div>
@@ -407,7 +408,8 @@ export default function Shpenzim() {
             <Form.Control
               type='text'
               placeholder='Emertimi i Shpenzimit te Ri...'
-              onChange={handleShpenzimiRiChange}
+              value={shpenzimiRi}
+              onChange={(e) => setShpenzimiRi(e.target.value)}
             />
           </Form.Group>
           <Form.Group>
@@ -415,13 +417,14 @@ export default function Shpenzim() {
               <InputGroup>
                 <Form.Control
                   type='number'
+                  value={shumaStandardeERe}
                   placeholder='Shuma Standarde...'
-                  onChange={handleShumaStandardeEReChange}
+                  onChange={(e) => setShumaStandardeERe(e.target.value)}
                 />
                 <InputGroup.Text>€</InputGroup.Text>
               </InputGroup>
           </Form.Group>
-          <Button variant='success' className='my-4' onClick={shtoLlojinShpenzimit} disabled={loading}>{loading ? <>
+          <Button variant='success' className='my-4' onClick={shtoLlojinShpenzimit} disabled={loading || !shpenzimiRi || !shumaStandardeERe || buttonLoading}>{loading ? <>
             <Spinner as="span" animation='border' size='sm' role='status' aria-hidden={true}/>{''}Duke Ruajtur...
           </>:'Regjistro Llojin e Shpenzimit'}</Button>
         </Col>
@@ -445,7 +448,7 @@ export default function Shpenzim() {
                     <td>{item.shumaStandarde.toFixed(2)} €</td>
                     <td>
                      <Button onClick={() => handleEditLlojiShpenzimitClick(item)} variant='btn btn-outline-primary'><FontAwesomeIcon icon={faEdit}/></Button>
-                      <Button variant='btn btn-outline-danger' disabled = {item.total_shpenzime > 1} className='mx-1' onClick={() => thirreModalPerPyetje(item.llojetShpenzimeveID,'Lloji i Shpenzimit')}>
+                      <Button variant='btn btn-outline-danger' disabled = {item.total_shpenzime > 1 } className='mx-1' onClick={() => thirreModalPerPyetje(item.llojetShpenzimeveID,'Lloji i Shpenzimit')}>
                         <FontAwesomeIcon icon={faTrashCan}/>
                       </Button>
                     </td>
@@ -495,7 +498,7 @@ export default function Shpenzim() {
               <Form.Control type='text' disabled value={`Produkt ID:${kategoriaID}`}/>
             </Form.Group>
 
-            <Button variant='success' className='mt-3 w-100' disabled={sasiaPerProdukt < 1} onClick={() => handleKaloNgaStoki()}>{loadingPerStok ? <><Spinner as="span" animation='border' size='sm' role='status' aria-hidden={true}/>{''}Duke Ruajtur...
+            <Button variant='success' className='mt-3 w-100' disabled={sasiaPerProdukt < 1 || buttonLoading} onClick={() => handleKaloNgaStoki()}>{loadingPerStok ? <><Spinner as="span" animation='border' size='sm' role='status' aria-hidden={true}/>{''}Duke Ruajtur...
             </> :'Ruaj Ndryshimet'}</Button>
           </Form>
 
@@ -508,7 +511,10 @@ export default function Shpenzim() {
                 meFatureProp={null}
                 onSelect={handleProductSelect}
               />
-            )}      <ModalPerPyetje show={ShowModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />
+            )}   
+
+      <ModalPerPyetje show={ShowModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />
+
       <Modal show={showModal} onHide={() => setShowModal(false)}>
   <Modal.Header closeButton>
     <Modal.Title>{selectedRowData.lloji ? 'Ndrysho Shpenzimin' : 'Ndrysho Llojin e Shpenzimit'}</Modal.Title>
@@ -569,11 +575,11 @@ export default function Shpenzim() {
   </Modal.Body>
   <Modal.Footer>
     <Button variant="secondary" onClick={() => setShowModal(false)}>Mbyll</Button>
-    <Button variant="primary" onClick={handleRuajNdryshimet} disabled={loading}>{loading ? <>
+    <Button variant="primary" onClick={handleRuajNdryshimet} disabled={loading || selectedRowData.shumaShpenzimit < 1 || buttonLoading}>{loading ? <>
       <Spinner as="span" animation='border' size='sm' role='status' aria-hidden={true}/>{''}Duke Ruajtur...
       </> :'Ruaj Ndryshimet'}</Button>
   </Modal.Footer>
-</Modal>
+      </Modal>
 
     </Container>
   );

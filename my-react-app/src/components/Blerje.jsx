@@ -308,7 +308,7 @@ export default function Blerje() {
         <Col xs={12} md={6} className="d-flex justify-content-center align-items-end">
           <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleAnulo}>Anulo</Button>
           <Button variant="success" size="lg" className="mx-2 fs-1" 
-          disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || nrFatures == null || nukPranohetNrFatures || loading || !menyraPagesesID} onClick={handleRegjistro} >{loading ? (
+          disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || nrFatures == null || nukPranohetNrFatures || loading || !menyraPagesesID || products.some(product => product.sasiaBlerjes == 0)} onClick={handleRegjistro} >{loading ? (
             <>
               <Spinner
                 as="span"

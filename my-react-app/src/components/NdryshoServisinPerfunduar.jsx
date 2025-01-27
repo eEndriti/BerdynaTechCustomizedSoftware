@@ -314,7 +314,7 @@ function NdryshoServisinPerfunduar({ show, handleClose,data = {}}) {
                                 </Col>
                                 <Col xs={12} md={6} className="d-flex justify-content-center align-items-end ">
                                     <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleClose}>Anulo</Button>
-                                    <Button variant="success" size="lg" className="mx-2 fs-1" onClick={handleConfirmClick} disabled={loading}>{loading ? (
+                                    <Button variant="success" size="lg" className="mx-2 fs-1" onClick={handleConfirmClick} disabled={loading || products.some(product => product.sasiaShitjes < 1)}>{loading ? (
                                     <>
                                         <Spinner
                                         as="span"

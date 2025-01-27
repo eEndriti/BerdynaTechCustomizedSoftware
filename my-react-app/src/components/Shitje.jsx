@@ -194,7 +194,15 @@ export default function Shitje() {
 
   const handleCloseShtoProduktinModal = () => setShowShtoProduktinModal(false);
  
+const kontrolloValidetin = () => {
+  let vlera = true
 
+  !(selectedSubjekti.subjektiID) || !(products.length>1) 
+  || !(menyraPagesesID) || loading || 
+  (llojiShitjes == 'online' && nrPorosise.length < 3) || products.some(product => product.sasiaShitjes == 0) ? vlera = true : vlera = false
+
+  return vlera
+}
 
   return (
     <>
@@ -384,7 +392,7 @@ export default function Shitje() {
       <Col xs={12} md={6} className="d-flex justify-content-center align-items-end">
         <Button variant="danger" size="lg" className="mx-2 fs-1" onClick={handleAnulo}>Anulo</Button>
         <Button variant="success" size="lg" className="mx-2 fs-1" 
-        disabled={!(selectedSubjekti.subjektiID) || !(products.length>1) || !(menyraPagesesID) || loading || (llojiShitjes == 'online' && nrPorosise.length < 1)} 
+        disabled={kontrolloValidetin()} 
         onClick={handleRegjistro} >{loading ? (
           <>
             <Spinner
@@ -452,10 +460,11 @@ export default function Shitje() {
             <Col xs={6}>
             <Form.Control
               type="text"  // Use "text" instead of "number"
-              maxLength={8}  // Set maxLength to 8
+              value={nrPorosise}
+              maxLength={15}  // Set maxLength to 8
               onChange={(e) => {
                 const value = e.target.value;
-                if (/^\d*$/.test(value) && value.length <= 8) {
+                if (/^\d*$/.test(value)) {
                   handleNrPorosiseChange(e);
                 }
               }}

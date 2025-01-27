@@ -11,7 +11,11 @@ export const formatCurrency = (value,kushti) => {
 
   return `${formattedValue} ${!kushti ? '€':''}`;
 };
-
+export const normalizoDaten = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0); // Set time to 00:00:00
+  return d;
+};
 
 const useAuthData = () => {
   const [authData, setAuthData] = useState({});

@@ -56,7 +56,7 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
   };
 
   const handleShtoProduktin = async () => {
-    if (parseFloat(productDetails.cmimiShitjes) <= parseFloat(productDetails.cmimiBlerjes)) {
+    if ((parseFloat(productDetails.cmimiShitjes) <= parseFloat(productDetails.cmimiBlerjes))) {
         toast.warn('Cmimi Shitjes duhet të jetë më i madh se Cmimi Blerjes!', {
           position: 'top-center',
           autoClose: 1500,

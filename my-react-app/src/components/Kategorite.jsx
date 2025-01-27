@@ -276,7 +276,7 @@ export default function Kategorite() {
           <Button variant="secondary" onClick={() => setShowModal(false)}>
             Mbyll
           </Button>
-          <Button variant="primary" onClick={handleUpdateCategory}>
+          <Button variant="primary" onClick={handleUpdateCategory} disabled={submitLoading }>
             Ndrysho Kategorine
           </Button>
         </Modal.Footer>
