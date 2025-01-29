@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Button, Form, Spinner } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -7,6 +7,12 @@ export default function ShtoNdryshoSubjektin({show,handleClose,data}) {
     const [loading,setLoading] = useState(false)
     const [inputEmertimi,setInputEmertimi] = useState('')
     const [inputKontakti,setInputKontakti] = useState('')
+
+    useEffect(() => {
+      setInputEmertimi(data.inputEmertimi || ''); // Default to an empty string
+      setInputKontakti(data.inputKontakti || ''); // Default to an empty string
+  }, [data]);
+  
 
     const handleSubmit = () =>{
         if(data.ndrysho){
@@ -80,6 +86,15 @@ export default function ShtoNdryshoSubjektin({show,handleClose,data}) {
         }
       };
 
+      const kontrolloValidetin = () => {
+        return (
+            loading || 
+            inputEmertimi.trim().length < 1 || 
+            inputKontakti.trim().length < 1
+        );
+    };
+    
+
   return (
     <Modal show={show} onHide={handleClose}>
         <Modal.Header closeButton>
@@ -101,7 +116,7 @@ export default function ShtoNdryshoSubjektin({show,handleClose,data}) {
             <Button variant='secondary' onClick={handleClose}>
                 Anulo
             </Button>
-            <Button variant='primary' onClick={handleSubmit} disabled={loading}>
+            <Button variant='primary' onClick={handleSubmit} disabled={kontrolloValidetin()}>
             {loading ? (
                 <>
                 <Spinner

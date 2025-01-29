@@ -10,6 +10,7 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
   const [aKa,setAKa] = useState(true)
   const [selectedKategoria, setSelectedKategoria] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showModal,setShowModal] = useState(false)
   const [meFature, setMeFature] = useState(false);
   const [productDetails, setProductDetails] = useState({
     emertimi: '',
@@ -22,39 +23,59 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
     komenti: ''
   });
   const {perdoruesiID} = useAuthData()
-  
+
   useEffect(() => {
-    
-    window.api.fetchTableKategoria().then((data) => setKategorite(data));
-    if(produkti && aKa){
-      setMeFature(produkti.meFatureTeRregullt == 'po') 
-      setProductDetails(produkti)
-      console.log('prd',produkti)
-      handleCategoryChange(produkti.kategoriaID)
-      setAKa(false)
+
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    const fetchData = async () => {
+      await window.api.fetchTableKategoria().then((data) => setKategorite(data));
+  
+    if (produkti && aKa) {
+      setMeFature(produkti.meFatureTeRregullt === "po");
+      setProductDetails(produkti);
+      setAKa(false);
     }
-    
+  
+    setProductDetails(produkti);
+  
+    // Only call handleCategoryChange if produkti.kategoriaID exists
+    if (produkti?.kategoriaID) {
+      handleCategoryChange(produkti.kategoriaID);
+    }
+    setLoading(false);
+    setShowModal(true)
+  }
+  fetchData()
   }, [produkti]);
+  
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProductDetails((prevDetails) => ({ ...prevDetails, [name]: value }));
   };
 
-  const handleCategoryChange = (e) => {
-    let selectedCategoryId
-    if(produkti){
-      selectedCategoryId = parseInt(e, 10);
-      
-    }else{
-      selectedCategoryId = parseInt(e.target.value, 10);
+  const handleCategoryChange = (eOrId) => {
+    let selectedCategoryId;
+  
+    if (typeof eOrId === "number") {
+      // If a direct category ID is provided (like from produkti.kategoriaID)
+      selectedCategoryId = eOrId;
+    } else {
+      // If the function is called from the <select> dropdown event
+      selectedCategoryId = parseInt(eOrId.target.value, 10);
     }
+  
     const selectedCategory = kategorite.find(
       (kategoria) => kategoria.kategoriaID === selectedCategoryId
     );
-    setSelectedKategoria(selectedCategory);
+  
+    setSelectedKategoria(selectedCategory || null);
   };
-
+  
+  
   const handleShtoProduktin = async () => {
     if ((parseFloat(productDetails.cmimiShitjes) <= parseFloat(productDetails.cmimiBlerjes))) {
         toast.warn('Cmimi Shitjes duhet të jetë më i madh se Cmimi Blerjes!', {
@@ -123,23 +144,34 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
 
   const ndryshoProduktin = async () => {
     if (parseFloat(productDetails.cmimiShitjes) <= parseFloat(productDetails.cmimiBlerjes)) {
-        toast.warn('Cmimi Shitjes duhet të jetë më i madh se Cmimi Blerjes!', {
-          position: 'top-center',
-          autoClose: 1500,
-        });
-        return; 
-      }
-    setLoading(true);
-    let pershkrimi = productDetails.pershkrimi || null;
-    const cpu = productDetails.cpu + '/' || '';
-    const ram = productDetails.ram + '/' || '';
-    const disku = productDetails.disku + '/' || '';
-    const gpu = productDetails.gpu + '/' || '';
-
-    if (selectedKategoria.komponenta === 'true') {
-      pershkrimi = cpu + ram + disku + gpu;
+      toast.warn('Cmimi Shitjes duhet të jetë më i madh se Cmimi Blerjes!', {
+        position: 'top-center',
+        autoClose: 1500,
+      });
+      return; 
     }
-
+  
+    setLoading(true);
+  
+    let pershkrimi = productDetails.pershkrimi || null;
+  
+    if (selectedKategoria.komponenta === 'true') {
+      const komponentet = [
+        productDetails.cpu?.trim(), 
+        productDetails.ram?.trim(), 
+        productDetails.disku?.trim(), 
+        productDetails.gpu?.trim()
+      ].filter(Boolean); 
+  
+      pershkrimi = komponentet.join(' / '); 
+    }else{
+      productDetails.cpu = '';
+      productDetails.ram = '';
+      productDetails.disku = '';
+      productDetails.gpu = '';
+      
+    }
+  
     if (selectedKategoria && productDetails.emertimi && perdoruesiID) {
       const data = {
         emertimi: productDetails.emertimi,
@@ -149,16 +181,17 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
         cmimiShitjes: productDetails.cmimiShitjes,
         kategoriaID: selectedKategoria.kategoriaID,
         komenti: productDetails.komenti || '',
-        cpu: cpu,
-        ram: ram,
-        disku: disku,
-        gpu: gpu,
+        cpu: productDetails.cpu || '',
+        ram: productDetails.ram || '',
+        disku: productDetails.disku || '',
+        gpu: productDetails.gpu || '',
         meFature,
-        produktiID:produkti.produktiID
+        produktiID: produkti.produktiID
       };
+  
       try {
         const result = await window.api.ndryshoProduktin(data);
-
+  
         if (result.success) {
           toast.success('Produkti u Ndryshua me Sukses!', {
             position: 'top-center',
@@ -174,8 +207,8 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
         toast.error('Gabim gjatë komunikimit me serverin.' + error);
       } finally {
         setLoading(false);
-        if(prejardhja == 'meRefresh'){
-            window.location.reload()
+        if (prejardhja === 'meRefresh') {
+          window.location.reload();
         }
       }
     } else {
@@ -186,190 +219,202 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
       setLoading(false);
     }
   };
+  
+  const kontrolloValidetin = () => {
+    let vlera = false
+
+    loading || productDetails?.emertimi == ''  || !productDetails?.cmimiBlerjes || !productDetails?.cmimiShitjes || selectedKategoria == null || (
+    selectedKategoria?.komponenta == 'true' &&(productDetails?.cpu === '' || productDetails?.ram === '' || productDetails?.disku === '' || productDetails?.gpu === '') )? vlera = true : vlera = false
+
+    return vlera
+  }
 
   return (
-    <Modal show={show} onHide={handleClose}>
-      <Modal.Header closeButton>
-        <Modal.Title>{produkti ? 'Ndrysho' : 'Shto'} Një Produkt</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form>
-          <Form.Group>
-            <Form.Label>Emertimi</Form.Label>
-            <Form.Control
-              type="text"
-              name="emertimi"
-              required={true}
-              value={productDetails.emertimi}
-              onChange={handleInputChange}
-            />
-          </Form.Group>
-
-          <Form.Group>
-            <Form.Label>Kategoria</Form.Label>
-            <Form.Control
-              as="select"
-              name="kategoria"
-              required={true}
-              value={selectedKategoria ? selectedKategoria.kategoriaID : ''}
-              onChange={handleCategoryChange}
-            >
-              <option value="">Zgjidh Kategorinë</option>
-              {kategorite.map((kategoria) => (
-                <option key={kategoria.kategoriaID} value={kategoria.kategoriaID}>
-                  {kategoria.emertimi}
-                </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-
-          {selectedKategoria && selectedKategoria.komponenta === 'true' ? (
-            <>
-              <hr />
-              <div className='d-flex flex-row justify-content-around'>
-                <Form.Group>
-                  <Form.Label>Procesori:</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="cpu"
-                    required={true}
-                    placeholder='Modeli i Procesorit...'
-                    value={productDetails.cpu}
-                    onChange={handleInputChange}
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>RAM</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="ram"
-                    required={true}
-                    placeholder='Kapaciteti i RAM...'
-                    value={productDetails.ram}
-                    onChange={handleInputChange}
-                  />
-                </Form.Group>
-              </div>
-              <div className='d-flex flex-row justify-content-around'>
-                <Form.Group>
-                  <Form.Label>Disku</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="disku"
-                    required={true}
-                    placeholder='Kapaciteti i Disqeve...'
-                    value={productDetails.disku}
-                    onChange={handleInputChange}
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>GPU</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="gpu"
-                    required={true}
-                    placeholder='Kapaciteti i Grafikes...'
-                    value={productDetails.gpu}
-                    onChange={handleInputChange}
-                  />
-                </Form.Group>
-              </div>
-              <hr />
-            </>
-          ) : (
-            <>
+   <>{loading ? <AnimatedSpinner/> :  
+   
+    <>{showModal && <Modal show={show} onHide={handleClose}>
+    <Modal.Header closeButton>
+      <Modal.Title>{produkti ? 'Ndrysho' : 'Shto'} Një Produkt</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <Form>
+        <Form.Group>
+          <Form.Label>Emertimi</Form.Label>
+          <Form.Control
+            type="text"
+            name="emertimi"
+            required={true}
+            value={productDetails?.emertimi || ''}
+            onChange={handleInputChange}
+          />
+        </Form.Group>
+ 
+        <Form.Group>
+          <Form.Label>Kategoria</Form.Label>
+          <Form.Control
+            as="select"
+            name="kategoria"
+            required={true}
+            value={selectedKategoria?.kategoriaID || ''}
+            onChange={handleCategoryChange}
+          >
+            <option value="">Zgjidh Kategorinë</option>
+            {kategorite.map((kategoria) => (
+              <option key={kategoria.kategoriaID} value={kategoria.kategoriaID}>
+                {kategoria.emertimi}
+              </option>
+            ))}
+          </Form.Control>
+        </Form.Group>
+ 
+        {selectedKategoria && selectedKategoria.komponenta === 'true' ? (
+          <>
+            <hr />
+            <div className='d-flex flex-row justify-content-around'>
               <Form.Group>
-                <Form.Label>Pershkrimi</Form.Label>
+                <Form.Label>Procesori:</Form.Label>
                 <Form.Control
                   type="text"
-                  name="pershkrimi"
+                  name="cpu"
                   required={true}
-                  placeholder='Pershkrimi i Produktit...'
-                  value={productDetails.pershkrimi}
+                  placeholder='Modeli i Procesorit...'
+                  value={productDetails.cpu}
                   onChange={handleInputChange}
                 />
               </Form.Group>
-            </>
-          )}
-
-          <Form.Group>
-            <Form.Label>Cmimi Blerjes</Form.Label>
-            <InputGroup>
+              <Form.Group>
+                <Form.Label>RAM</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="ram"
+                  required={true}
+                  placeholder='Kapaciteti i RAM...'
+                  value={productDetails.ram}
+                  onChange={handleInputChange}
+                />
+              </Form.Group>
+            </div>
+            <div className='d-flex flex-row justify-content-around'>
+              <Form.Group>
+                <Form.Label>Disku</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="disku"
+                  required={true}
+                  placeholder='Kapaciteti i Disqeve...'
+                  value={productDetails.disku}
+                  onChange={handleInputChange}
+                />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>GPU</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="gpu"
+                  required={true}
+                  placeholder='Kapaciteti i Grafikes...'
+                  value={productDetails.gpu}
+                  onChange={handleInputChange}
+                />
+              </Form.Group>
+            </div>
+            <hr />
+          </>
+        ) : (
+          <>
+            <Form.Group>
+              <Form.Label>Pershkrimi</Form.Label>
               <Form.Control
-                type="number"
-                name="cmimiBlerjes"
+                type="text"
+                name="pershkrimi"
                 required={true}
-                value={productDetails.cmimiBlerjes}
+                placeholder='Pershkrimi i Produktit...'
+                value={productDetails?.pershkrimi || ''}
                 onChange={handleInputChange}
-                step="0.01"
               />
-              <InputGroup.Text>€</InputGroup.Text>
-            </InputGroup>
-          </Form.Group>
-
-          <Form.Group>
-            <Form.Label>Cmimi Shitjes</Form.Label>
-            <InputGroup>
-              <Form.Control
-                type="number"
-                min={productDetails.cmimiBlerjes+1}
-                name="cmimiShitjes"
-                required={true}
-                value={productDetails.cmimiShitjes}
-                onChange={handleInputChange}
-                step="0.01"
-              />
-              <InputGroup.Text>€</InputGroup.Text>
-            </InputGroup>
-          </Form.Group>
-
-          <Form.Group>
-            <Form.Label>Komenti</Form.Label>
+            </Form.Group>
+          </>
+        )}
+ 
+        <Form.Group>
+          <Form.Label>Cmimi Blerjes</Form.Label>
+          <InputGroup>
             <Form.Control
-              as="textarea"
-              name="komenti"
+              type="number"
+              name="cmimiBlerjes"
               required={true}
-              value={productDetails.komenti}
+              value={productDetails?.cmimiBlerjes || ''}
               onChange={handleInputChange}
+              step="0.01"
             />
-          </Form.Group>
-
-          <Form.Group className='d-flex mt-3'>
-            <Form.Label className='mx-2'>Me Fature te Rregullt</Form.Label>
-            <Form.Check
-              checked = {meFature}
-              onClick={() => setMeFature(prev => !prev)}
+            <InputGroup.Text>€</InputGroup.Text>
+          </InputGroup>
+        </Form.Group>
+ 
+        <Form.Group>
+          <Form.Label>Cmimi Shitjes</Form.Label>
+          <InputGroup>
+            <Form.Control
+              type="number"
+              min={productDetails?.cmimiBlerjes+1 || ''}
+              name="cmimiShitjes"
+              required={true}
+              value={productDetails?.cmimiShitjes || ''}  
+              onChange={handleInputChange}
+              step="0.01"
             />
-          </Form.Group>
-        </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose} disabled={loading}>
-          Mbyll
-        </Button>
-        <Button
-          variant="primary"
-          onClick={() => {produkti != null ? ndryshoProduktin() : handleShtoProduktin()}}
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <Spinner
-                as="span"
-                animation="border"
-                size="sm"
-                role="status"
-                aria-hidden="true"
-              />{' '}
-              Duke ruajtur...
-            </>
-          ) : (
-            <>{produkti != null ? 'Ruaj Ndryshimet' : 'Shto Produktin'}</>
-          )}
-        </Button>
-      </Modal.Footer>
-      <ToastContainer />
-    </Modal>
+            <InputGroup.Text>€</InputGroup.Text>
+          </InputGroup>
+        </Form.Group>
+ 
+        <Form.Group>
+          <Form.Label>Komenti</Form.Label>
+          <Form.Control
+            as="textarea"
+            name="komenti"
+            required={true}
+            value={productDetails?.komenti || ''}
+            onChange={handleInputChange}
+          />
+        </Form.Group>
+ 
+        <Form.Group className='d-flex mt-3'>
+          <Form.Label className='mx-2'>Me Fature te Rregullt</Form.Label>
+          <Form.Check
+            checked = {meFature}
+            onClick={() => setMeFature(prev => !prev)}
+          />
+        </Form.Group>
+      </Form>
+    </Modal.Body>
+    <Modal.Footer>
+      <Button variant="secondary" onClick={handleClose} disabled={loading}>
+        Mbyll
+      </Button>
+      <Button
+        variant="primary"
+        onClick={() => {produkti != null ? ndryshoProduktin() : handleShtoProduktin()}}
+        disabled={kontrolloValidetin()}
+      >
+        {loading ? (
+          <>
+            <Spinner
+              as="span"
+              animation="border"
+              size="sm"
+              role="status"
+              aria-hidden="true"
+            />{' '}
+            Duke ruajtur...
+          </>
+        ) : (
+          <>{produkti != null ? 'Ruaj Ndryshimet' : 'Shto Produktin'}</>
+        )}
+      </Button>
+    </Modal.Footer>
+    <ToastContainer />
+  </Modal> } </>
+    }</>
   );
 };
 

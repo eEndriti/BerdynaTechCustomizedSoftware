@@ -191,7 +191,7 @@ export default function Perdoruesit() {
                         centered
                     >
                         <Modal.Header closeButton>
-                            <Modal.Title className="text-dark">{!perNdryshim ? <>Forma për Regjistrim të Perdoruesit</> : <>Forma për Ndryshim të Perdoruesit</>}</Modal.Title>
+                            <Modal.Title className="text-dark">Forma për{!perNdryshim ? <> Regjistrim </> : <> Ndryshim </>}të Perdoruesit</Modal.Title>
                         </Modal.Header>
                         <Modal.Body>
                             <Form>
@@ -244,7 +244,7 @@ export default function Perdoruesit() {
                             <Button variant="outline-secondary" disabled={buttonLoading} onClick={() => setShtoPerdoruesModal(false)}>
                                 Mbyll
                             </Button>
-                            <Button variant="primary" disabled={buttonLoading} onClick={() => {perNdryshim ? ndryshoPerdorues() : shtoPerdorues()}}>
+                            <Button variant="primary" disabled={buttonLoading || !dataPerPerdorues.emri || !dataPerPerdorues.fjalekalimi || !dataPerPerdorues.roli} onClick={() => {perNdryshim ? ndryshoPerdorues() : shtoPerdorues()}}>
                                 {buttonLoading ? (
                                     <>
                                         <Spinner size="sm" /> {'Duke ruajtur'}

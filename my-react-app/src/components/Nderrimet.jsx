@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, Table, Form, Card, Badge, Container,Row,Col,Alert } from 'react-bootstrap';
+import { Button, Modal, Table, Form, Card, Badge, Container,Row,Col,Alert, InputGroup, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClock, faPlus, faCheck, faBan, faHistory,faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { faHandHoldingDollar, faArrowsRotate, faCheck, faBan, faHistory,faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { formatCurrency } from '../useAuthData';
-
+import Cookies from 'js-cookie';
 
 export default function Nderrimet() {
     const [loading,setLoading] = useState()
@@ -22,6 +22,9 @@ export default function Nderrimet() {
       "Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor",
       "Korrik", "Gusht", "Shtator", "Tetor", "Nëntor", "Dhjetor"
     ];
+
+    const [ndryshojeAvansinModal, setNdryshojeAvansinModal] = useState(false);
+
     useEffect(()  => {
 
         const fetchData = async () => {
@@ -88,7 +91,21 @@ export default function Nderrimet() {
           }
         }
     };
- 
+    
+    const ndryshojeAvansin = async () => {
+        setButtonLoading(true)
+
+        try{
+            await window.api.ndryshojeAvansinNderrimitAktual(nderrimiAktiv)
+        }catch(e){
+          console.log(e)
+        }finally{
+            setButtonLoading(false)
+            setNdryshojeAvansinModal(false)
+            Cookies.set('avansi', nderrimiAktiv.avansi);
+
+        }
+    }
     return (
         
         <Container >
@@ -107,8 +124,12 @@ export default function Nderrimet() {
                         </p>   
                         <p>
                             <strong>Avansi:</strong> {formatCurrency(nderrimiAktiv.avansi)}
-                        </p>                 
-                        <Button variant="danger" onClick={() => setShowMbyllNderriminModal(true)}>
+                        </p>   
+                        <Button variant="primary" className='mx-2' onClick={() => setNdryshojeAvansinModal(true)}>
+                            <FontAwesomeIcon icon={faArrowsRotate} className="me-2" />
+                              Ndryshoje Avansin e Nderrimit Aktual 
+                        </Button>               
+                        <Button variant="danger" className='mx-2' onClick={() => setShowMbyllNderriminModal(true)}>
                             <FontAwesomeIcon icon={faBan} className="me-2" />
                               Mbylle Nderrimin Aktual
                         </Button> 
@@ -175,7 +196,35 @@ export default function Nderrimet() {
                 </Card.Body>
             </Card>
 
-            
+            {/* Ndryshon Avansin */}
+            <Modal show={ndryshojeAvansinModal} onHide={() => {buttonLoading ? null :setNdryshojeAvansinModal(false)}}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Ndryshoje Vleren e Avansit te Nderrimit Aktual</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form.Group>
+                        <Form.Label>Vlera e Avansit:</Form.Label>
+                        <InputGroup>
+                            <Form.Control
+                                type="number"
+                                placeholder="€"
+                                value={nderrimiAktiv.avansi}
+                                onChange={(e) => setNderrimiAktiv({ ...nderrimiAktiv, avansi: e.target.value })} />
+                                <InputGroup.Text>€</InputGroup.Text>
+                        </InputGroup>
+                    </Form.Group>                  
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => {buttonLoading ? null :setNdryshojeAvansinModal(false)}}>
+                        Anulo
+                    </Button>
+                    <Button variant="danger" onClick={() => {buttonLoading ? null : ndryshojeAvansin()}} disabled={buttonLoading || nderrimiAktiv.avansi < 1 || !nderrimiAktiv.avansi }>
+                        {buttonLoading ? <Spinner animation="border" size="sm" /> : 
+                        <><FontAwesomeIcon icon={faCheck} className="me-2" />
+                        Ruaj Ndryshimet...</>}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
             {/* Mbyll Nderrimin Modal */}
             <Modal show={showMbyllNderriminModal} onHide={() => {buttonLoading ? null :setShowMbyllNderriminModal(false)}}>

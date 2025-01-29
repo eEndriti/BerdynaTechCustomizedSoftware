@@ -203,6 +203,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     }, [muaji, viti, modalPerBonuset]); 
     
     const kalkuloBonusetPerPunonjes = () => {
+        setSelectedMenyraPageses(null);
 
         setMuajiEmertim(albanianMonths[muaji - 1]); 
         
@@ -494,7 +495,17 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                     
                                 </Card.Body>
                                 <Card.Footer>
-                                    <Button variant='outline-success' className='float-end' onClick={() => setModalPerPushime(true)}><FontAwesomeIcon icon={faUmbrellaBeach} /> Shto Nje Pushim</Button>
+                                    <Button variant='outline-success' className='float-end' onClick={() => {
+                                        const tomorrow = new Date();
+                                        tomorrow.setDate(tomorrow.getDate() + 1);
+
+                                        setDataPerPushim(prevState => ({
+                                            ...prevState, 
+                                            dataFillimit: new Date().toISOString().split('T')[0] // Format: YYYY-MM-DD
+                                          }));setDataPerPushim(prevState => ({
+                                            ...prevState, 
+                                            dataMbarimit: tomorrow.toISOString().split('T')[0] // Format: YYYY-MM-DD
+                                          }));setModalPerPushime(true)}}><FontAwesomeIcon icon={faUmbrellaBeach} /> Shto Nje Pushim</Button>
                                 </Card.Footer>
                             </Card>
                         </Col>
@@ -669,7 +680,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                     <Button variant="outline-secondary" disabled={buttonLoading} onClick={() => {buttonLoading ? null: setModalPerBonuse(false)}}>
                         Mbyll
                     </Button>
-                    <Button variant="primary" disabled={buttonLoading || !selectedMenyraPageses} onClick={() => paguajBonuset()}>
+                    <Button variant="primary" disabled={buttonLoading || !selectedMenyraPageses || bonusetPerPunonjes.length < 1} onClick={() => paguajBonuset()}>
                         {buttonLoading ? (
                             <><Spinner size="sm" /> {'Duke ruajtur'}</>
                         ) : (
@@ -776,7 +787,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                         }}>
                                 Mbyll
                             </Button>
-                            <Button variant="primary" disabled={buttonLoading || !selectedMenyraPageses} onClick={() => {pageseRroge ? paguajRrogen() : ndryshoRrogen()}}>
+                            <Button variant="primary" disabled={buttonLoading || !selectedMenyraPageses || !activeSalary.paga || activeSalary.paga < 1} onClick={() => {pageseRroge ? paguajRrogen() : ndryshoRrogen()}}>
                                 {buttonLoading  ? (
                                     <>
                                         <Spinner size="sm" /> {'Duke ruajtur'}
@@ -881,7 +892,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
             </Modal.Body>
             <Modal.Footer className="d-flex justify-content-between border-0">
                 <Button variant="outline-secondary" onClick={() => {buttonLoading ? null : setModalPerPushime(false)}} className="px-4">Anulo</Button>
-                <Button variant="primary" disabled={buttonLoading || !dataPerPushim.arsyeja || !dataPerPushim.lloji || !dataPerPushim.dataFillimit || !dataPerPushim.dataMbarimit || !dataPerPushim.nrDiteve} onClick={() => {perNdryshim ? handleNdryshoPushimin() :handleShtoPushimin()}}>
+                <Button variant="primary" disabled={buttonLoading || !dataPerPushim.arsyeja || !dataPerPushim.lloji || !dataPerPushim.dataFillimit || !dataPerPushim.dataMbarimit || !dataPerPushim.nrDiteve || dataPerPushim.nrDiteve < 1} onClick={() => {perNdryshim ? handleNdryshoPushimin() :handleShtoPushimin()}}>
                                 {buttonLoading  ? (
                                     <>
                                         <Spinner size="sm" /> {'Duke ruajtur'}

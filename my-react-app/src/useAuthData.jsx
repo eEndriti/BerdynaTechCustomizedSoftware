@@ -29,6 +29,7 @@ const useAuthData = () => {
     const numriPercjelles = Cookies.get('numriPercjelles');
     const dataFillimit = Cookies.get('dataFillimit');
     const folderPathGarancionet = 'C:\\Users\\BerdynaTech\\Documents\\btechPDFtest'
+    const shitjeFunditID = Cookies.get('shitjeFunditID');
 
     setAuthData({
       perdoruesiID,
@@ -39,6 +40,7 @@ const useAuthData = () => {
       numriPercjelles,
       dataFillimit,
       folderPathGarancionet,
+      shitjeFunditID
     });
   }, []);
 

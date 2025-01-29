@@ -11,6 +11,8 @@ import ShtoNjeProdukt from "./ShtoNjeProdukt";
 import AnimatedSpinner from "./AnimatedSpinner";
 import useAuthData from "../useAuthData";
 import { PrintoGarancion } from "./PrintoGarancion";
+import Cookies from 'js-cookie';
+
 
 export default function Shitje() {
   const navigate = useNavigate();  
@@ -119,6 +121,8 @@ export default function Shitje() {
   };
 
   const handleRegjistro = async () => {
+    let returnedShitjeID;
+
     console.log(products)
     if (!perdoruesiID || !menyraPagesesID || !selectedSubjekti?.subjektiID || !products?.length) {
       toast.error('Të gjitha fushat e nevojshme duhet të plotësohen!');
@@ -159,6 +163,7 @@ export default function Shitje() {
       const result = await window.api.insertShitje(data);
       console.log(result)
       if (result.success) {
+        returnedShitjeID = result.shitjeID
         toast.success('Shitja u Regjistrua me Sukses!', {
           position: "top-center",  
           autoClose: 1500
@@ -174,6 +179,7 @@ export default function Shitje() {
       toast.error('Gabim gjate komunikimit me server: ' + error.message);
     } finally {
       setLoading(false);
+      Cookies.set('shitjaFundit',returnedShitjeID)
       navigate('/faqjaKryesore')
     }
   };

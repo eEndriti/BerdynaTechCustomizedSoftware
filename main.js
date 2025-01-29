@@ -1238,6 +1238,29 @@ ipcMain.handle('ndryshoProduktin', async (event, data) => {
   }  
 });
 
+ipcMain.handle('ndryshojeAvansinNderrimitAktual', async (event, data) => {
+  let connection;
+  let dataDheOra
+  try {
+    connection = await sql.connect(config);
+   
+    const updateAvansi = `
+     Update nderrimi 
+        SET avansi = @avansi   
+        where nderrimiID = @nderrimiID
+`
+  
+    await connection.request()
+      .input('avansi', sql.Decimal(18,2), data.avansi)
+      .input('nderrimiID', sql.Int, data.nderrimiID)
+      .query(updateAvansi);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  }  
+});
 
 ipcMain.handle('insertKategorine', async (event, data) => {
   let connection;
@@ -2882,7 +2905,7 @@ ipcMain.handle('insertShitje', async (event, data) => {
               await ndryshoGjendjenEArkes(data.menyraPagesesID,data.totaliPageses,'+',data.nderrimiID,connection)//tested ok
             }
 
-    return { success: true,shifra:shifra };
+    return { success: true,shifra:shifra,shitjeID:shitjeID };
   } catch (error) {
     console.error('Database error:', error);
     return { success: false, error: error.message };

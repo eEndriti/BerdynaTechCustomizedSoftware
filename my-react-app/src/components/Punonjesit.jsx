@@ -306,7 +306,7 @@ export default function Punonjesit() {
                             <Button variant="outline-secondary" disabled={buttonLoading} onClick={() => setShtoPunonjesModal(false)}>
                                 Mbyll
                             </Button>
-                            <Button variant="primary" disabled={buttonLoading} onClick={() => {perNdryshim ? ndryshoPunonjes() :shtoPunonjes()}}>
+                            <Button variant="primary" disabled={buttonLoading || dataPerPunonjes.emri.trim() == '' || dataPerPunonjes.mbiemri.trim() == '' || dataPerPunonjes.pagaBaze < 1 || !dataPerPunonjes.pagaBaze || dataPerPunonjes.nrTelefonit < 1 || !dataPerPunonjes.nrTelefonit} onClick={() => {perNdryshim ? ndryshoPunonjes() :shtoPunonjes()}}>
                                 {buttonLoading ? (
                                     <>
                                         <Spinner size="sm" /> {'Duke ruajtur'}

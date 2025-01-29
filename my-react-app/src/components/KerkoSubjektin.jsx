@@ -50,6 +50,8 @@ export default function SearchInput({ filter,value, onSelect,lloji }) {
           value={query}
           onChange={handleSearch}
           placeholder="Subjekti..."
+          autoFocus
+          onFocus={() => setShowDropdown(true)}
         />
         <Button variant="outline-secondary border" disabled>
           <IoSearchSharp />

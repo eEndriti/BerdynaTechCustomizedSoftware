@@ -1,16 +1,15 @@
+import React from 'react';
 import { Navigate } from 'react-router-dom';
-import useAuthData from '../useAuthData';
+import Cookies from 'js-cookie';
 
-const ProtectedRoute = ({ role, children }) => {
-  const {aKaUser} = useAuthData()
-
-  if (aKaUser === role) {
-    return children;
-  } else if (!aKaUser) {
-    return <Navigate to="/login" replace />;
-  } else {
-    return <Navigate to="/login" replace />;
+const ProtectedRoute = ({ element, requiredRole }) => {
+  const userRole = Cookies.get('aKaUser'); 
+  
+  if (!userRole || (requiredRole && userRole !== requiredRole)) {
+    return <Navigate to='/login' replace />;
   }
+
+  return element;
 };
 
 export default ProtectedRoute;

@@ -171,7 +171,7 @@ export default function Produktet() {
       <Row>
         {loading ? <AnimatedSpinner /> : 
           <div className="table-responsive tableHeight50 mt-4">
-          <table className="table table-sm table-striped border table-hover">
+          <table className="table table-sm table-striped border table-hover ">
             <thead className="table-secondary sticky-top">
               <tr className='fs-5 '>
                 <th scope="col">Nr</th>
@@ -188,7 +188,7 @@ export default function Produktet() {
                 <th scope="col">Opsionet</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className=' text-nowrap'>
               {filteredProduktet.map((item, index) => (
                 <tr key={index}>
                   <th scope="row">{index + 1}</th>
@@ -202,7 +202,7 @@ export default function Produktet() {
                   <td>{item.meFatureTeRregullt}</td>
                   <td>{item.emertimiKategorise}</td>
                   <td>{item.tvsh} %</td>
-                  <td className='d-flex flex-row flex-wrap justify-content-between'>
+                  <td className='d-flex flex-row justify-content-between'>
 
                     <Button  variant='outline-primary' onClick={() => thirreNdryshoProduktin(item)}><FontAwesomeIcon icon={faEdit}/></Button>
                       <Button variant='outline-danger' onClick={() => thirreModalPerPyetje(item.produktiID)} disabled = {item.sasia > 0}>

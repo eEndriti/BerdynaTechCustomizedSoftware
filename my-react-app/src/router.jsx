@@ -1,14 +1,14 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './components/Login';
-import FaqjaKryesore from './components/faqjaKryesore/FaqjaKryesore'
+import FaqjaKryesore from './components/faqjaKryesore/FaqjaKryesore';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './components/NotFound'; 
 import Shitje from './components/Shitje';
-import Shpenzim from './components/shpenzimi/Shpenzim'
+import Shpenzim from './components/shpenzimi/Shpenzim';
 import Blerje from './components/Blerje';
 import Produktet from './components/Produktet';
-import Kategorite from './components/Kategorite'
+import Kategorite from './components/Kategorite';
 import Furnitor from './components/Furnitor';
 import Klient from './components/Klient';
 import Blerjet from './components/Blerjet';
@@ -19,14 +19,13 @@ import Transaksionet from './components/Transaksionet';
 import Serviset from './components/Serviset';
 import DetajePerProdukt from './components/DetajePerProdukt';
 import NdryshoShitjen from './components/NdryshoShitjen';
-import Cookies from 'js-cookie'
+import Cookies from 'js-cookie';
 import Administrimi from './components/Administrimi';
 import PrintoLabell from './components/PrintoLabell';
 import NdryshoBlerjen from './components/NdryshoBlerjen';
 
-
 const isAuthenticated = () => {
-  return !!Cookies.get('aKaUser') 
+  return !!Cookies.get('aKaUser'); 
 };
 
 const router = createBrowserRouter([
@@ -84,7 +83,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/furnitor',
-        element: <Furnitor />,
+        element: <ProtectedRoute element={<Furnitor />} requiredRole="admin" />,
       },
       {
         path: '/blerjet',
@@ -96,24 +95,24 @@ const router = createBrowserRouter([
       },
       {
         path: '/detajePerSubjekt/:lloji/:subjektiID',
-        element: <DetajePerKlient />,
+        element: <ProtectedRoute element={<DetajePerKlient />} requiredRole="admin" />,
       },
-      
       {
         path: '/evidenca',
-        element: <Evidenca />,
+        element: <ProtectedRoute element={<Evidenca />} requiredRole="admin" />,
       },
       {
         path: '/transaksionet',
-        element: <Transaksionet />,
+        element: <ProtectedRoute element={<Transaksionet />} requiredRole="admin" />,
       },
       {
         path: '/printoLabell',
-        element: <PrintoLabell/>,
+        element: <PrintoLabell />,
       },
+      // Protect the 'administrimi' route (only for admins)
       {
         path: '/administrimi',
-        element: <Administrimi />,
+        element: <ProtectedRoute element={<Administrimi />} requiredRole="admin" />,
       },
       {
         path: '/',
@@ -121,7 +120,7 @@ const router = createBrowserRouter([
       },
       {
         path: '*',
-        element: <NotFound />, // Catch-all route for undefined paths
+        element: <NotFound />,
       },
     ],
   },

@@ -254,10 +254,10 @@ export default function MenyratPagesave() {
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="outline-secondary" disabled={buttonLoading} onClick={() => setModal(false)}>
+                    <Button variant="outline-secondary" disabled={buttonLoading } onClick={() => setModal(false)}>
                         Mbyll
                     </Button>
-                    <Button variant="primary" disabled={buttonLoading} onClick={() => {perNdryshim ? ndryshoOpsion() : shtoOpsion()}}>
+                    <Button variant="primary" disabled={buttonLoading|| !data.emertimi || !data.shuma} onClick={() => {perNdryshim ? ndryshoOpsion() : shtoOpsion()}}>
                         {buttonLoading ? (
                             <>
                                 <Spinner size="sm" /> {'Duke ruajtur'}

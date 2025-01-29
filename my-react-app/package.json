@@ -43,7 +43,8 @@
     "react-spinners": "^0.14.1",
     "react-switch": "^7.1.0",
     "react-to-print": "^3.0.2",
-    "react-toastify": "^10.0.5"
+    "react-toastify": "^10.0.5",
+    "styled-components": "^6.1.14"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

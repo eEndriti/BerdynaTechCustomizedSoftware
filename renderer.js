@@ -73,7 +73,7 @@ contextBridge.exposeInMainWorld('api', {
     shtoPagese: (data) => ipcRenderer.invoke('shtoPagese', data),
 
 
-
+    
     ndryshoShpenzimin: (data) => ipcRenderer.invoke('ndryshoShpenzimin', data), 
     ndryshoPushimin: (data) => ipcRenderer.invoke('ndryshoPushimin', data), 
     ndryshoLlojinShpenzimit: (data) => ipcRenderer.invoke('ndryshoLlojinShpenzimit', data),
@@ -88,6 +88,7 @@ contextBridge.exposeInMainWorld('api', {
     ndryshoPagen: (data) => ipcRenderer.invoke('ndryshoPagen', data),
     ndryshoProduktin: (data) => ipcRenderer.invoke('ndryshoProduktin', data),
     ndryshoSubjektin: (data) => ipcRenderer.invoke('ndryshoSubjektin', data),
+    ndryshojeAvansinNderrimitAktual: (data) => ipcRenderer.invoke('ndryshojeAvansinNderrimitAktual', data), 
 
     savePDF: (data) => ipcRenderer.send('savePDF', data  ),
     openFile: (filePath) => ipcRenderer.send('openFile', filePath)

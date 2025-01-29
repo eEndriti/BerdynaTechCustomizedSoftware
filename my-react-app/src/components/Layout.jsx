@@ -1,21 +1,68 @@
 import { useState, useEffect } from 'react';
-import { Container, Row, Col,ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col,ProgressBar,Badge } from 'react-bootstrap';
 import logo from '../assets/BtechLogo.png';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import '../assets/css/Layout.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faExchangeAlt, faCoins, faGift } from '@fortawesome/free-solid-svg-icons';
 import AnimatedSpinner from './AnimatedSpinner'
 import useAuthData, { formatCurrency } from '../useAuthData';
+import Cookies from 'js-cookie';
 
 function Layout() {
   const location = useLocation(); // Hook to get the current location object
+  const navigate = useNavigate()
   const {avansi,dataFillimit,numriPercjelles,emriPerdoruesit,aKaUser,nderrimiID} = useAuthData ()
   const [perBonuse, setPerBonuse] = useState(0);
   const [profiti, setProfiti] = useState([]);
   const [totalShumaPerBonuse,setTotalShumaPerBonuse] = useState()
   const [totaliIArkes,setTotaliIArkes] = useState()
   const [totaliArkesResult,setTotaliArkesResult] = useState([])
+  
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      switch (event.key) {
+        case "F1":
+          navigate("/faqjakryesore"); 
+          event.preventDefault(); 
+          break;
+        case "F2":
+          navigate("/shitje"); 
+          break;
+        case "F3":
+          navigate("/shpenzim"); 
+          break;
+        case "F4":
+          navigate("/blerje"); 
+          break;
+        case "F5":
+          navigate("/serviset"); 
+          event.preventDefault(); 
+          break;
+          case "F6": {
+            console.log('Entered case F6');
+            const shitjeID = Cookies.get('shitjaFundit');
+            if (shitjeID) {
+              console.log('shitjeID found:', shitjeID);
+
+              navigate(`/ndryshoShitjen/${shitjeID}`);
+            } else {
+              console.log('ee');
+            }
+            event.preventDefault();
+            break;
+          }
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [navigate]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -97,13 +144,13 @@ function Layout() {
                 <FontAwesomeIcon icon={faExchangeAlt} className='me-2 text-success fs-5' />
                 <span className='me-4'>Nderrimi: <strong>{numriPercjelles}-{formatDate(dataFillimit)}</strong></span>
   
-                <Col className='mt-2'>
+               {aKaUser === 'Admin' && <> <Col className='mt-2'>
                   <Col className='d-flex flex-row pb-2'>
                     <FontAwesomeIcon icon={faGift} className='me-2 text-info fs-5' />
                     <span>Bonuse: <strong>{formatCurrency(perBonuse)}</strong> <span className='d-inline mx-4 text-secondary'>{formatCurrency(totalShumaPerBonuse)}</span></span>
                   </Col>
                   <Col className='w-50'><ProgressBar animated variant={getPerBonuseFillBar() > 199 ? 'success' : 'info'} now={getPerBonuseFillBar()} style={{height:'7px'}}/></Col>
-                </Col>
+                </Col></>}
               </div>
                
             </Col>
@@ -128,32 +175,33 @@ function Layout() {
                 <img className='w-50' src={logo} alt="logo" />
               </div>
               <div className='sidebar-content d-flex flex-column'>
-                <NavLink exact to='/faqjaKryesore' className='nav-link' activeClassName='active'>
-                  Kryefaqja
-                </NavLink>
-                <NavLink to='/shitje' className='nav-link' activeClassName='active'>
-                  Shitje
-                </NavLink>
-                <NavLink to='/shpenzim' className='nav-link' activeClassName='active'>
-                  Shpenzim
-                </NavLink>
-                <NavLink exact to='/blerje' className='nav-link' activeClassName='active'>
-                  Blerje
-                </NavLink>
-                <NavLink to='/serviset' className='nav-link' activeClassName='active'>
-                  Serviset
-                </NavLink>
+              <NavLink exact to='/faqjaKryesore' className='nav-link' activeClassName='active'>
+                Kryefaqja <Badge bg="secondary" className="ms-2 float-end">F 1</Badge>
+              </NavLink>
+              <NavLink to='/shitje' className='nav-link' activeClassName='active'>
+                Shitje <Badge bg="secondary" className="ms-2 float-end">F 2</Badge>
+              </NavLink>
+              <NavLink to='/shpenzim' className='nav-link' activeClassName='active'>
+                Shpenzim <Badge bg="secondary" className="ms-2 float-end">F3</Badge>
+              </NavLink>
+              <NavLink exact to='/blerje' className='nav-link' activeClassName='active'>
+                Blerje <Badge bg="secondary" className="ms-2 float-end">F4</Badge>
+              </NavLink>
+              <NavLink to='/serviset' className='nav-link' activeClassName='active'>
+                Serviset <Badge bg="secondary" className="ms-2 float-end">F5</Badge>
+              </NavLink>
                 <NavLink to='/stoku' className='nav-link' activeClassName='active'>
                   Stoku
                 </NavLink>
                 <NavLink to='/klient' className='nav-link' activeClassName='active'>
                   Klient
                 </NavLink>
-                <NavLink exact to='/furnitor' className='nav-link' activeClassName='active'>
+                {aKaUser === 'Admin' && <>
+                  <NavLink exact to='/furnitor' className='nav-link' activeClassName='active'>
                   Furnitor
                 </NavLink>
                 <NavLink to='/printoLabell' className='nav-link' activeClassName='active'>
-                  Nderrimet
+                  Testo Labellen
                 </NavLink>
                 <NavLink to='/evidenca' className='nav-link' activeClassName='active'>
                   Evidenca
@@ -164,6 +212,7 @@ function Layout() {
                 <NavLink to='/administrimi' className='nav-link' activeClassName='active'>
                   Administrimi
                 </NavLink>
+                </>}
                 <div className='current-url p-3'>
                   <p>Current URL: {location.pathname}</p> {/* Display the current URL */}
                 </div>
