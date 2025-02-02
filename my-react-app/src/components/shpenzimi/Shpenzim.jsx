@@ -1,4 +1,4 @@
-import  { useState, useEffect } from 'react';
+import  { useState, useEffect, useContext } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan,faEdit,faChevronDown, faChevronRight,faExchangeAlt } from '@fortawesome/free-solid-svg-icons'; 
 import { Row, Col, Button, Form,Spinner,Modal, Container, InputGroup} from 'react-bootstrap';
@@ -6,8 +6,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from '../ModalPerPyetje'
 import KerkoProduktin from '../KerkoProduktin';
-import AnimatedSpinner from '../AnimatedSpinner';
-import useAuthData, { normalizoDaten } from '../../useAuthData';
+import AuthContext, { normalizoDaten , localTodayDate } from '../AuthContext';
 
 export default function Shpenzim() {
   const [shpenzimet, setShpenzimet] = useState([]);
@@ -34,35 +33,40 @@ export default function Shpenzim() {
   const [sasiaPerProdukt,setSasiaPerProdukt] = useState(0)
   const [kostoTotale,setKostoTotale] = useState()
   const [loadingPerStok,setLoadingPerStok] = useState(false)
-  const [kategoriaID,setKategoriaID] = useState() // kjo perdoret per me selektu kategorine me kalu stok ne shpenzim
-  const {nderrimiID,perdoruesiID} = useAuthData()
+  const [kategoriaID,setKategoriaID] = useState() // kjo perdoret per me selektu kategorine me kalu stokin ne shpenzim
+  const {authData} = useContext(AuthContext)
   const [buttonLoading,setButtonLoading] = useState(false)
 
-  useEffect(() => {2
-    // Fetch all shpenzimet data
-    window.api.fetchTableShpenzimet().then(receivedData => {
-      setShpenzimet(receivedData);
-      setFilteredShpenzimet(receivedData); // Initialize filtered data
-    });
+  useEffect(() => {
+
+    const fetchData = async () => {
+      await window.api.fetchTableShpenzimet().then(receivedData => {
+        setShpenzimet(receivedData);
+      });
+      
+      await window.api.fetchTableLlojetShpenzimeve().then(receivedData => {
+        setLlojetShpenzimeve(receivedData);
+      });
+    }
+
+    fetchData()
+   if(authData.aKaUser == 'admin'){
+    setStartDate(localTodayDate)
+    setEndDate(localTodayDate)
+   }
 
   }, []);
 
   useEffect(() => {
-    // Fetch llojetShpenzimeve data
-    window.api.fetchTableLlojetShpenzimeve().then(receivedData => {
-      setLlojetShpenzimeve(receivedData);
-    });
-  }, []);
 
-  useEffect(() => {
-    // Filter shpenzimet based on the selected date range
     const normalizedStartDate = normalizoDaten(startDate);
-const normalizedEndDate = normalizoDaten(endDate);
+    const normalizedEndDate = normalizoDaten(endDate);
     const filtered = shpenzimet.filter(shpenzim => {
-      const shpenzimDate = normalizoDaten(shpenzim.dataShpenzimit);
+    const shpenzimDate = normalizoDaten(shpenzim.dataShpenzimit);
       return shpenzimDate >= normalizedStartDate && shpenzimDate <= normalizedEndDate;
     });
     setFilteredShpenzimet(filtered);
+
   }, [startDate, endDate, shpenzimet]);
 
   const handleSelectChange = (event) => {
@@ -93,8 +97,8 @@ const normalizedEndDate = normalizoDaten(endDate);
       shumaShpenzimit: selectedShumaStandarde,
       komenti: komenti,
       llojetShpenzimeveID: llojiShpenzimeveSelektuarID,
-      perdoruesiID: perdoruesiID,
-      nderrimiID
+      perdoruesiID: authData.perdoruesiID,
+      nderrimiID:authData.nderrimiID
     };
     const result = await window.api.insertShpenzimi(data);
     if (result.success) {
@@ -117,8 +121,8 @@ const normalizedEndDate = normalizoDaten(endDate);
     const data = {
       cmimiFurnizimit: produktiSelektuar.cmimiBlerjes,
       llojetShpenzimeveID: kategoriaID,
-      perdoruesiID: perdoruesiID,
-      nderrimiID,
+      perdoruesiID: authData.perdoruesiID,
+      nderrimiID:authData.nderrimiID,
       produktiID:produktiSelektuar.produktiID,
       sasia:sasiaPerProdukt,
     };
@@ -311,14 +315,16 @@ const normalizedEndDate = normalizoDaten(endDate);
               <Form.Control
                 type='date'
                 value={startDate}
-                onChange={handleStartDateChange}
+                onChange={authData.aKaUser != 'admin' ? handleStartDateChange : null}
+                readOnly = {authData.aKaUser != 'admin'}
               />
             </Form.Group>
             <Form.Group className='mx-1'>
               <Form.Control
                 type='date'
                 value={endDate}
-                onChange={handleEndDateChange}
+                onChange={authData.aKaUser != 'admin' ? handleEndDateChange : null}
+                readOnly = {authData.aKaUser != 'admin'}
               />
             </Form.Group>
           </div>
@@ -386,7 +392,7 @@ const normalizedEndDate = normalizoDaten(endDate);
             )}
           </Button>
           
-          <Button className='fs-5 mx-5' onClick={() => showShpenzoStokin()}>
+          {authData.aKaUser == 'admin' && <Button className='fs-5 mx-5' onClick={() => showShpenzoStokin()}>
               {kaloNgaStoki ? <>
                 <FontAwesomeIcon icon={faChevronDown}  className='px-2'/>
                 Kalo nga Stoki ne Shpenzim
@@ -394,7 +400,7 @@ const normalizedEndDate = normalizoDaten(endDate);
                 <FontAwesomeIcon icon={faExchangeAlt}  className='px-2'/>
                 Kalo nga Stoki ne Shpenzim
               </>}
-          </Button>
+          </Button>}
         </Col>
 
       </Row>
@@ -508,7 +514,7 @@ const normalizedEndDate = normalizoDaten(endDate);
               <KerkoProduktin
                 show={showModalProduct}
                 onHide={() => setShowModalProduct(false)}
-                meFatureProp={null}
+                meFatureProp={'ngaStoku'}
                 onSelect={handleProductSelect}
               />
             )}   

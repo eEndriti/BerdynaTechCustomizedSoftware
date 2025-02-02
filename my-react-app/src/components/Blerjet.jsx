@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect,useContext } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Button, Form, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,10 +8,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
 import DetajePerShitjeBlerje from './DetajePerShitjeBlerje';
 import AnimatedSpinner from './AnimatedSpinner';
-import { formatCurrency } from '../useAuthData';
 import ShtoPagese from './ShtoPagese';
 import LineChartComponent from './Charts/LineChartComponent';
 import PieChartComponent from './Charts/PieChartComponent';
+import AuthContext,{ formatCurrency, localTodayDate } from './AuthContext';
 
 export default function Blerjet() {
       const navigate = useNavigate();  
@@ -28,12 +28,17 @@ export default function Blerjet() {
     const [shifraPerDetaje,setShifraPerDetaje] = useState()
     const [dataPerShtoPagese,setDataPerShtoPagese] = useState()
     const [showShtoPagese,setShowShtoPagese] = useState(false)
+    const { authData } = useContext(AuthContext);
 
     useEffect(() => {
         window.api.fetchTableBlerje().then((receivedData) => {
             setBlerjet(receivedData);
             setLoading(false);
         });
+        if(authData.aKaUser != 'admin'){
+            setStartDate(localTodayDate)
+            setEndDate(localTodayDate)
+        }
     }, []);
 
     const handleSearchChange = (e) => setSearchTerm(e.target.value);
@@ -137,14 +142,16 @@ const hapeShtoPagese = (item) =>{
                     <Form.Control
                         type="date"
                         value={startDate}
-                        onChange={handleStartDateChange}
+                        readOnly={authData.aKaUser != 'admin'}
+                        onChange={authData.aKaUser != 'admin' ? handleStartDateChange  :  null}
                     />
                 </Col>
                 <Col md={2} className=''>
                     <Form.Control
                         type="date"
                         value={endDate}
-                        onChange={handleEndDateChange}
+                        readOnly={authData.aKaUser != 'admin'}
+                        onChange={authData.aKaUser != 'admin' ? handleEndDateChange : null}
                     />
                 </Col>
             </Row>
@@ -168,7 +175,7 @@ const hapeShtoPagese = (item) =>{
                                             <tr className="fs-5">
                                                 <th scope="col">Nr</th>
                                                 <th scope="col">Shifra</th>
-                                                <th scope="col">Klienti</th>
+                                                <th scope="col">Furnitori</th>
                                                 <th scope="col">Totali Per Pagese</th>
                                                 <th scope="col">Totali Pageses</th>
                                                 <th scope="col">Mbetja Per Pagese</th>
@@ -196,21 +203,21 @@ const hapeShtoPagese = (item) =>{
                                                     <td>{item.fatureERregullt === 'true' ? 'Po' : 'Jo'}</td>
                                                     <td>{item.nrFatures}</td>
                                                     <td>{item.menyraPagesese}</td>
-                                                    <td className='d-flex flex-row justify-content-around'>
+                                                    <td className='d-flex flex-row justify-content-around align-items-center'>
                                                         <Button variant="btn btn-outline-primary" onClick={() => navigate(`/ndryshoBlerjen/${item.blerjeID}`)}>
                                                             <FontAwesomeIcon  icon={faEdit} />
                                                         </Button>
-                                                        <Button variant="btn btn-outline-danger"  className='mx-1' onClick={() => thirreModalPerPyetje(item.transaksioniID)}>
+                                                        <Button variant="btn btn-outline-danger" onClick={() => thirreModalPerPyetje(item.transaksioniID)}>
                                                             <FontAwesomeIcon  icon={faTrashCan} />
                                                         </Button>
-                                                        <Button variant='btn btn-outline-transparent'  className='mx-1'  onClick={() => shfaqProduktetEBlerjes(item.blerjeID,item.shifra)} 
+                                                        <Button variant='btn btn-outline-transparent' onClick={() => shfaqProduktetEBlerjes(item.blerjeID,item.shifra)} 
                                                                  >
                                                         <FontAwesomeIcon 
                                                                 className={` ${IDPerDetaje === item.blerjeID ? 'text-primary fs-4 fw-bold' : 'text-secondary fw-bold'}`}
                                                                 icon={IDPerDetaje === item.blerjeID ? faChevronDown : faChevronRight}
                                                             />
                                                         </Button>
-                                                        <Button variant="btn btn-outline-success"  className='mx-1' onClick={() => hapeShtoPagese(item)} disabled={item.mbetjaPerPagese == 0 }>
+                                                        <Button variant="btn btn-outline-success"  onClick={() => hapeShtoPagese(item)} disabled={item.mbetjaPerPagese == 0 }>
                                                             <FontAwesomeIcon  icon={faEuroSign} />
                                                         </Button>
                                                     </td>
@@ -227,7 +234,8 @@ const hapeShtoPagese = (item) =>{
              {IDPerDetaje ? <>
                 <DetajePerShitjeBlerje shifraPerDetaje = {shifraPerDetaje}  IDPerDetaje = {IDPerDetaje} lloji = {'blerje'}/>
                 </>:null}
-                {!loading ? 
+                {!loading && authData.aKaUser == 'admin' ? 
+
                 <Row className='d-flex flex-row flex-wrap justify-content-center' >
                 <Col style={{maxHeight:'400px' ,minHeight:'400px'}}>
                     <LineChartComponent dataFillimit={startDate} dataMbarimit={endDate} teDhenat={blerjet.map(sale => ({
@@ -239,6 +247,7 @@ const hapeShtoPagese = (item) =>{
                     <PieChartComponent teDhenat={blerjet} labels={['Me Fature', 'Pa Fature']} lloji = {'Blerjeve'}/>
                 </Col>
             </Row> : ''}
+
             <ToastContainer />
             <ModalPerPyetje show={showModalPerPyetje} handleClose={handleCloseModalPerPyetje} handleConfirm={handleConfirmModal} />
             <ShtoPagese show={showShtoPagese} handleClose={() => setShowShtoPagese(false)} data={dataPerShtoPagese} />

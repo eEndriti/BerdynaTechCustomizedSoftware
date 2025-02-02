@@ -1,17 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Modal, Button, Form, InputGroup, Spinner } from 'react-bootstrap';
+import { useState, useEffect, useContext } from 'react';
+import { Modal, Button, Form, InputGroup, Spinner,Col } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import useAuthData from '../useAuthData';
+import AuthContext from "../components/AuthContext";
 import AnimatedSpinner from './AnimatedSpinner';
 
 const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
   const [kategorite, setKategorite] = useState([]);
-  const [aKa,setAKa] = useState(true)
   const [selectedKategoria, setSelectedKategoria] = useState(null);
+  const [aKa , setAka] = useState(true)
   const [loading, setLoading] = useState(false);
   const [showModal,setShowModal] = useState(false)
   const [meFature, setMeFature] = useState(false);
+  const [sasiStatike, setSasiStatike] = useState(false);
   const [productDetails, setProductDetails] = useState({
     emertimi: '',
     cpu: '',
@@ -22,25 +23,25 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
     cmimiShitjes: '',
     komenti: ''
   });
-  const {perdoruesiID} = useAuthData()
-
-  useEffect(() => {
-
-  }, []);
+  const {authData} = useContext(AuthContext)
 
   useEffect(() => {
     setLoading(true);
     const fetchData = async () => {
       await window.api.fetchTableKategoria().then((data) => setKategorite(data));
   
-    if (produkti && aKa) {
-      setMeFature(produkti.meFatureTeRregullt === "po");
-      setProductDetails(produkti);
-      setAKa(false);
-    }
-  
+      if(produkti && aKa){
+        if(produkti.meFatureTeRregullt == "po"){
+          setMeFature(true)
+        }else{
+          setMeFature(false)
+        }
+        setSasiStatike(produkti.sasiStatike)
+        setProductDetails(produkti);
+      }
+   
     setProductDetails(produkti);
-  
+
     // Only call handleCategoryChange if produkti.kategoriaID exists
     if (produkti?.kategoriaID) {
       handleCategoryChange(produkti.kategoriaID);
@@ -51,7 +52,6 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
   fetchData()
   }, [produkti]);
   
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProductDetails((prevDetails) => ({ ...prevDetails, [name]: value }));
@@ -95,7 +95,7 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
       pershkrimi = cpu + ram + disku + gpu;
     }
 
-    if (selectedKategoria && productDetails.emertimi && perdoruesiID) {
+    if (selectedKategoria && productDetails.emertimi && authData.perdoruesiID) {
       const data = {
         emertimi: productDetails.emertimi,
         pershkrimi: pershkrimi,
@@ -108,7 +108,8 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
         ram: ram,
         disku: disku,
         gpu: gpu,
-        meFature
+        meFature,
+        sasiStatike
       };
       try {
         const result = await window.api.insertProduktin(data);
@@ -172,7 +173,7 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
       
     }
   
-    if (selectedKategoria && productDetails.emertimi && perdoruesiID) {
+    if (selectedKategoria && productDetails.emertimi && authData.perdoruesiID) {
       const data = {
         emertimi: productDetails.emertimi,
         pershkrimi: pershkrimi,
@@ -186,7 +187,8 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
         disku: productDetails.disku || '',
         gpu: productDetails.gpu || '',
         meFature,
-        produktiID: produkti.produktiID
+        produktiID: produkti.produktiID,
+        sasiStatike
       };
   
       try {
@@ -377,14 +379,44 @@ const ShtoNjeProdukt = ({ show, handleClose,prejardhja,produkti = {} }) => {
             onChange={handleInputChange}
           />
         </Form.Group>
- 
-        <Form.Group className='d-flex mt-3'>
-          <Form.Label className='mx-2'>Me Fature te Rregullt</Form.Label>
-          <Form.Check
-            checked = {meFature}
-            onClick={() => setMeFature(prev => !prev)}
-          />
-        </Form.Group>
+
+       <Col className="d-flex flex-row justify-content-between align-items-center mt-4">
+        <Form.Group controlId="employeeStatus" className="d-flex flex-column align-items-center">
+              <Button
+                onClick={() => setMeFature((prev) => !prev)}
+                variant={meFature ? 'info' : 'secondary'}
+                style={{
+                  padding: '12px 25px',
+                  fontSize: '1.2rem',
+                  borderRadius: '30px',
+                  transition: 'all 0.3s ease',
+                  boxShadow: meFature 
+                    ? '0px 4px 15px rgba(30, 126, 204, 0.5)' 
+                    : '0px 4px 15px rgba(108, 117, 125, 0.5)'
+                }}
+              >
+                {meFature ? 'Me Fature te Rregullt' : 'Pa Fature te Rregullt'}
+              </Button>
+          </Form.Group>
+          
+          <Form.Group controlId="employeeStatus" className="d-flex flex-column align-items-center">
+              <Button
+                onClick={() => setSasiStatike((prev) => !prev)}
+                variant={sasiStatike ? 'info' : 'secondary'}
+                style={{
+                  padding: '12px 25px',
+                  fontSize: '1.2rem',
+                  borderRadius: '30px',
+                  transition: 'all 0.3s ease',
+                  boxShadow: sasiStatike 
+                    ? '0px 4px 15px rgba(40, 167, 69, 0.5)' 
+                    : '0px 4px 15px rgba(108, 117, 125, 0.5)'
+                }}
+              >
+                {sasiStatike ? 'Sasi Statike' : 'Sasi Jo Statike'}
+              </Button>
+          </Form.Group>
+       </Col>
       </Form>
     </Modal.Body>
     <Modal.Footer>

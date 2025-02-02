@@ -1,11 +1,11 @@
-import {useState,useEffect} from 'react'
+import {useState,useEffect, useContext} from 'react'
 import { Container, Row, Col, Button, Table, Modal, Form, InputGroup, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
 import AnimatedSpinner from './AnimatedSpinner';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import useAuthData from '../useAuthData';
+import AuthContext from "../components/AuthContext";
 import ModalPerPyetje from './ModalPerPyetje'
 
 export default function Perdoruesit() {
@@ -16,7 +16,7 @@ export default function Perdoruesit() {
     const [dataPerPerdorues,setDataPerPerdorues] = useState({emri:'',fjalekalimi:'',roli:''})
     const [shtoPerdoruesModal,setShtoPerdoruesModal] = useState(false)
     const [perNdryshim,setPerNdryshim] = useState()
-    const { perdoruesiID } = useAuthData()
+    const { authData } = useContext(AuthContext)
     const [idPerPerdorim,setIdPerPerdorim] = useState()
     const [modalPerPyetje,setModalPerPyetje] = useState(false)
 
@@ -161,7 +161,7 @@ export default function Perdoruesit() {
                     <td>{item.emri}</td>
                     <td>{item.roli}</td>
                     <td>
-                        {perdoruesiID != item.perdoruesiID ? <>
+                        {authData.perdoruesiID != item.perdoruesiID ? <>
                             <Button variant="outline-primary" className="me-2" onClick={() => {setDataPerPerdorues(item);setPerNdryshim(true);setShtoPerdoruesModal(true)}}>
                               <FontAwesomeIcon icon={faEdit} /> Ndrysho
                             </Button>

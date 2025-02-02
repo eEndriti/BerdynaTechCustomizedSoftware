@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { createContext, useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
+
+const AuthContext = createContext();
 
 export const formatCurrency = (value,kushti) => {
   if (value == null || isNaN(value)) return `0.00 ${!kushti ? '€':''}`;
@@ -22,20 +24,28 @@ export const localTodayDate = () => {
   return localDate
 }
 
-const useAuthData = () => {
+
+export const AuthProvider = ({ children }) => {
   const [authData, setAuthData] = useState({});
+
+  const updateAuthData = (newData) => {
+    setAuthData((prevData) => ({
+      ...prevData,
+      ...newData,
+    }));
+  };
 
   useEffect(() => {
     const perdoruesiID = Cookies.get('perdoruesiID');
     const emriPerdoruesit = Cookies.get('emriPerdoruesit');
     const aKaUser = Cookies.get('aKaUser');
     const nderrimiID = Cookies.get('nderrimiID');
-    const avansi = formatCurrency(Cookies.get('avansi'),true); 
+    const avansi = formatCurrency(Cookies.get('avansi'), true);
     const numriPercjelles = Cookies.get('numriPercjelles');
     const dataFillimit = Cookies.get('dataFillimit');
-    const folderPathGarancionet = 'C:\\Users\\BerdynaTech\\Documents\\btechPDFtest'
+    const folderPathGarancionet = 'C:\\Users\\BerdynaTech\\Documents\\btechPDFtest';
     const shitjeFunditID = Cookies.get('shitjeFunditID');
-
+    console.log('shitjaFunditID:', shitjeFunditID);
     setAuthData({
       perdoruesiID,
       emriPerdoruesit,
@@ -45,11 +55,16 @@ const useAuthData = () => {
       numriPercjelles,
       dataFillimit,
       folderPathGarancionet,
-      shitjeFunditID
+      shitjeFunditID,
     });
   }, []);
 
-  return authData;
+  return (
+    <AuthContext.Provider value={{ authData, updateAuthData }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export default useAuthData;
+// Export the context for consumption
+export default AuthContext;

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Modal, Button, Form,Spinner, Toast,InputGroup,Row,Col,Table } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import useAuthData, { formatCurrency } from '../useAuthData';
+import AuthContext, { formatCurrency } from "../components/AuthContext";
 import KerkoProduktin from './KerkoProduktin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
@@ -19,7 +19,7 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
     const [totaliPerPagese, setTotaliPerPagese] = useState(0);
     const [totaliIPageses, setTotaliIPageses] = useState(0);
     const [mbetjaPerPagese, setMbetjaPerPagese] = useState(0);
-    const {nderrimiID,perdoruesiID} = useAuthData()
+    const {authData} = useContext(AuthContext)
     const [menyraPagesesID,setMenyraPagesesID] = useState()
     const [products, setProducts] = useState([{}]);
     const [showModalKerkoProduktin,setShowModalKerkoProduktin] = useState(false)
@@ -66,8 +66,8 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
             totaliIPageses,
             mbetjaPerPagese,
             updateType,
-            perdoruesiID,
-            nderrimiID,
+            perdoruesiID:authData.perdoruesiID,
+            nderrimiID:authData.nderrimiID,
             dataPageses:new Date().getDate(),
             subjektiID: data.subjektiID ,
             menyraPagesesID:menyraPagesesID,
@@ -125,7 +125,6 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
         if (selectedRow === products.length - 1) {
           updatedProducts.push({});
         }
-    
         setProducts(updatedProducts);
         setShowModalKerkoProduktin(false);
       };

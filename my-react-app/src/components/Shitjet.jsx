@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect,useContext } from 'react';
 import { Container, Row, Col, Button, Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan,faEdit,faChevronDown,faChevronRight,faFilePdf,faEuroSign } from '@fortawesome/free-solid-svg-icons';
@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import ShtoPagese from './ShtoPagese';
 import LineChartComponent from './Charts/LineChartComponent';
 import PieChartComponent from './Charts/PieChartComponent';
+import AuthContext , {localTodayDate, normalizoDaten} from './AuthContext';
 
 export default function Shitjet() {
     const navigate = useNavigate()
@@ -29,12 +30,17 @@ export default function Shitjet() {
     const [shifraPerDetaje,setShifraPerDetaje] = useState()
     const [dataPerShtoPagese,setDataPerShtoPagese] = useState()
     const [showShtoPagese,setShowShtoPagese] = useState(false)
+    const {authData} = useContext(AuthContext)
 
     useEffect(() => {
         window.api.fetchTableShitje().then((receivedData) => {
             setShitjet(receivedData);
             setLoading(false);
         });
+        if(authData.aKaUser != 'admin'){
+            setEndDate(localTodayDate);
+            setStartDate(localTodayDate)
+        }
        
     }, []);    
 
@@ -43,16 +49,18 @@ export default function Shitjet() {
     const handleUserChange = (e) => setUserFilter(e.target.value);
     const handleStartDateChange = (e) => setStartDate(e.target.value);
     const handleEndDateChange = (e) => setEndDate(e.target.value);
-    console.log(shitjet)
+
     const filteredShitjet = shitjet.filter(item => {
         const itemDate = new Date(item.dataShitjes).toISOString().slice(0, 10);
-        return (
-            item.shifra.toLowerCase().includes(searchTerm.toLowerCase()) &&
-            item.subjekti.toLowerCase().includes(clientFilter.toLowerCase()) &&
-            item.perdoruesi.toLowerCase().includes(userFilter.toLowerCase()) &&
-            (!startDate || itemDate >= startDate) &&
-            (!endDate || itemDate <= endDate)
-        );
+        const normalizedStartDate = normalizoDaten(startDate)
+        const normalizedEndDate = normalizoDaten(endDate)
+            return (
+                item.shifra.toLowerCase().includes(searchTerm.toLowerCase()) &&
+                item.subjekti.toLowerCase().includes(clientFilter.toLowerCase()) &&
+                item.perdoruesi.toLowerCase().includes(userFilter.toLowerCase()) &&
+                (!normalizedStartDate || normalizoDaten(itemDate) >= normalizedStartDate) &&
+                (!normalizedEndDate || normalizoDaten(itemDate) <= normalizedEndDate)
+            );
     });
 
     const thirreModalPerPyetje = (shitjeIDPerAnulim,transaksioniIDPerAnulim,llojiShitjes) => {
@@ -76,7 +84,6 @@ export default function Shitjet() {
         };
         let result
         if(llojiShitjes == 'dyqan'){
-            console.log('innnn',data)
              result = await window.api.anuloShitjen(data);
         }else if (llojiShitjes == 'online'){
             result = await window.api.anuloPorosineOnline(shitjeIDPerAnulim)
@@ -169,14 +176,17 @@ const hapeShtoPagese = (item) =>{
                     <Form.Control
                         type="date"
                         value={startDate}
-                        onChange={handleStartDateChange}
+                        onChange={authData.aKaUser == 'admin' ? handleStartDateChange : null}
+                        readOnly = {authData.aKaUser != 'admin'}
                     />
                 </Col>
                 <Col md={2} className=''>
                     <Form.Control
                         type="date"
                         value={endDate}
-                        onChange={handleEndDateChange}
+                        onChange={authData.aKaUser == 'admin' ? handleEndDateChange : null}
+                        readOnly = {authData.aKaUser != 'admin'}
+
                     />
                 </Col>
             </Row>
@@ -266,7 +276,7 @@ const hapeShtoPagese = (item) =>{
                 <DetajePerShitjeBlerje shifraPerDetaje = {shifraPerDetaje}  IDPerDetaje = {IDPerDetaje} lloji = {'shitje'} />
                 </>:null}
                 
-                {!loading ? 
+                {!loading && authData.aKaUser == 'admin'? 
                 <Row className='d-flex flex-row flex-wrap justify-content-center' >
                     <Col style={{maxHeight:'400px' ,minHeight:'400px'}}>
                         <LineChartComponent dataFillimit={startDate} dataMbarimit={endDate} teDhenat={shitjet.map(sale => ({

@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Container, Col, Row } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import AnimatedSpinner from './AnimatedSpinner';
-import { formatCurrency } from '../useAuthData';
+import AuthContext,{formatCurrency} from "../components/AuthContext";
 
 export default function DetajePerShitjeBlerje({ shifraPerDetaje, IDPerDetaje,lloji }) {
   const [loading, setLoading] = useState(true);
   const [queryResponse, setQueryResponse] = useState([]);
   const [tregoProfitinDetaje, setTregoProfitinDetaje] = useState(false);
+  const {authData} = useContext(AuthContext);
 
   function fetchOneQuery(query) {
     window.api.fetchTableQuery(query)
@@ -71,7 +72,8 @@ export default function DetajePerShitjeBlerje({ shifraPerDetaje, IDPerDetaje,llo
                           <>
                           <th scope="col">Totali</th>
                           <th scope="col">Komenti per Produkt</th>
-                          <th scope="col">Profiti per Produkt</th>
+                          {authData.aKaUser == 'admin' && <> 
+                            <th scope="col">Profiti per Produkt</th> </>}
                           </>
                         ) :<>
                          <th scope="col">Sasia Aktuale</th>
@@ -93,12 +95,14 @@ export default function DetajePerShitjeBlerje({ shifraPerDetaje, IDPerDetaje,llo
                             <>
                                 <td>{formatCurrency(item.totaliProduktit)}</td>
                                 <td>{item.komenti}</td>
-                                <td
+                                {authData.aKaUser == 'Admin' && <>
+                                  <td
                                 onMouseEnter={() => setTregoProfitinDetaje(true)}
                                 onMouseLeave={() => setTregoProfitinDetaje(false)}
                                 >
                                 {tregoProfitinDetaje ? item.profitiProduktit : '****'}
                                 </td>
+                                </>}
                             </>
                           ) : <>
                                 <td>{item.sasiaAktuale}</td>

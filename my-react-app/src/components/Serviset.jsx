@@ -1,4 +1,4 @@
-import { useState,useEffect } from 'react'
+import { useState,useEffect, useContext } from 'react'
 import { Container,Row,Col,Button,Table,Form,Spinner } from 'react-bootstrap'
 import KerkoSubjektin from './KerkoSubjektin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -7,7 +7,7 @@ import ModalPerPyetje from './ModalPerPyetje'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UpdateServise from './UpdateServise'
-import useAuthData from '../useAuthData';
+import AuthContext from "../components/AuthContext";
 import NdryshoServisinPerfunduar from './NdryshoServisinPerfunduar';
 import ShtoPagese from './ShtoPagese';
 
@@ -37,7 +37,7 @@ export default function Serviset() {
     const [modalPerUpdate,setModalPerUpdate] = useState(false)
     const [data,setData] = useState({})
     const [updateType,setUpdateType] = useState()
-    const {nderrimiID} = useAuthData()
+    const {authData} = useContext(AuthContext)
     const [dataPerAnulim,setDataPerAnulim] = useState({idPerAnulim:0 ,shifra:"",statusi:"",totaliPerPagese:0,totaliPageses:0})
     const [ndryshoServisinPerfunduar,setNdryshoServisinPerfunduar] = useState(false)
     const [dataPerShtoPagese,setDataPerShtoPagese] = useState()
@@ -138,7 +138,7 @@ export default function Serviset() {
                     statusi:'Aktiv',
                     shifraGarancionit,
                     perdoruesiID:1,
-                    nderrimiID,
+                    nderrimiID:authData.nderrimiID,
                     subjektiID:selectedSubjekti.subjektiID
                 }
                 try {
@@ -320,12 +320,14 @@ export default function Serviset() {
                                 <Form.Control className='mb-1'
                                     type="date"
                                     value={filterDataStart}
-                                    onChange={(e) => setFilterDataStart(e.target.value)}
+                                    readOnly = {authData.aKaUser != 'admin'}
+                                    onChange={(e) => {authData.aKaUser != 'admin' ? setFilterDataStart(e.target.value) : null}}
                                 />
                                 <Form.Control
                                     type="date"
                                     value={filterDataEnd}
-                                    onChange={(e) => setFilterDataEnd(e.target.value)}
+                                    readOnly = {authData.aKaUser != 'admin'}
+                                    onChange={(e) => {authData.aKaUser != 'admin' ? setFilterDataEnd(e.target.value) : null}}
                                 />
                             </Form.Group>                          
                         </Col>

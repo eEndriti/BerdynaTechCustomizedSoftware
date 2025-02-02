@@ -71,7 +71,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/detajePerProdukt/:produktiID',
-        element: <DetajePerProdukt />,
+        element: <ProtectedRoute element={<DetajePerProdukt />} requiredRole="admin" />,
       },
       {
         path: '/kategorite',

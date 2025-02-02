@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Container, Row, Col, Table, Form, Spinner,InputGroup } from "react-bootstrap";
 import KerkoSubjektin from "./KerkoSubjektin";
@@ -9,10 +9,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ShtoNjeProdukt from "./ShtoNjeProdukt";
 import AnimatedSpinner from "./AnimatedSpinner";
-import useAuthData from "../useAuthData";
 import { PrintoGarancion } from "./PrintoGarancion";
-import Cookies from 'js-cookie';
-
+import AuthContext ,{ formatCurrency } from "../components/AuthContext";
 
 export default function Shitje() {
   const navigate = useNavigate();  
@@ -31,7 +29,7 @@ export default function Shitje() {
   const [loading, setLoading] = useState(true); 
   const [aKaGarancion,setAKaGarancion] = useState(false)
   const [kohaGarancionit,setKohaGarancionit] = useState('6')
-  const {nderrimiID,perdoruesiID} = useAuthData()
+  const {authData, updateAuthData} = useContext(AuthContext)
   
   useEffect(() => {
     window.api.fetchTableMenyratPageses().then(receivedData => {
@@ -66,7 +64,7 @@ export default function Shitje() {
   const handleProductSelect = (product) => {
     const updatedProducts = [...products];
     updatedProducts[selectedRow] = product;
-
+    console.log('prd',product)
     if (selectedRow === products.length - 1) {
       updatedProducts.push({});
     }
@@ -123,8 +121,7 @@ export default function Shitje() {
   const handleRegjistro = async () => {
     let returnedShitjeID;
 
-    console.log(products)
-    if (!perdoruesiID || !menyraPagesesID || !selectedSubjekti?.subjektiID || !products?.length) {
+    if (!authData.perdoruesiID || !menyraPagesesID || !selectedSubjekti?.subjektiID || !products?.length) {
       toast.error('Të gjitha fushat e nevojshme duhet të plotësohen!');
       return;
     }
@@ -139,11 +136,11 @@ export default function Shitje() {
       mbetjaPerPagese: mbetjaPerPagese,
       nrPorosise: nrPorosise, 
       menyraPagesesID: menyraPagesesID,
-      perdoruesiID: perdoruesiID,
+      perdoruesiID: authData.perdoruesiID,
       subjektiID: selectedSubjekti.subjektiID,
       emertimiSubjektit:selectedSubjekti.emertimi,
       kontaktiSubjektit:selectedSubjekti.kontakti,
-      nderrimiID,
+      nderrimiID:authData.nderrimiID,
       kohaGarancionit:aKaGarancion ? kohaGarancionit:0,
       produktet:products.slice(0, products.length - 1).map((product,index) => ({
         nr:index+1,
@@ -155,13 +152,16 @@ export default function Shitje() {
         cmimiPerCope: product.cmimiShitjes,
         profiti: product.profiti,
         vleraTotaleProduktit: product.cmimiShitjes * product.sasiaShitjes,
-        komentiProduktit:product.komenti
+        komentiProduktit:product.komenti,
+        meFatureTeRregullt:product.meFatureTeRregullt,
+        tvsh:product.tvsh,
+        cmimiBlerjes:product.cmimiBlerjes,
+        sasiStatike:product.sasiStatike
       }))      
     };
   
     try {
       const result = await window.api.insertShitje(data);
-      console.log(result)
       if (result.success) {
         returnedShitjeID = result.shitjeID
         toast.success('Shitja u Regjistrua me Sukses!', {
@@ -171,15 +171,15 @@ export default function Shitje() {
         if(aKaGarancion){
           const shifra = result.shifra
           PrintoGarancion(data,shifra)
-        }
+        
       } else {
         toast.error('Gabim gjate regjistrimit: ' + result.error);
-      }
+      }}
     } catch (error) {
       toast.error('Gabim gjate komunikimit me server: ' + error.message);
     } finally {
       setLoading(false);
-      Cookies.set('shitjaFundit',returnedShitjeID)
+      updateAuthData({shitjeFunditID:returnedShitjeID})
       navigate('/faqjaKryesore')
     }
   };

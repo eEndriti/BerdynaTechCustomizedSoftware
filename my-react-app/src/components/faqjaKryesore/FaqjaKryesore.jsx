@@ -1,4 +1,4 @@
-import { useState,useEffect } from 'react'
+import { useState,useEffect, useContext } from 'react'
 import { Container,Button,Row,Col,Modal,Form, Spinner, InputGroup,Table,Card } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
@@ -7,9 +7,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UpdateServise from '../UpdateServise';
 import AnimatedSpinner from '../AnimatedSpinner';
-import useAuthData, { formatCurrency } from '../../useAuthData';
 import Transaksionet from './Transaksionet';
-
+import AuthContext,{formatCurrency} from '../AuthContext';
 function FaqjaKryesoreAdmin() {
   const [loading,setLoading] = useState(true)
   const [transaksionet,setTransaksionet] = useState([])
@@ -25,7 +24,7 @@ function FaqjaKryesoreAdmin() {
   const [modalPerServisUpdate,setModalPerServisUpdate] = useState()
   const [data,setData] = useState('')
   const [updateServisType,setUpdateServisType] = useState()
-  const { nderrimiID,perdoruesiID } = useAuthData()
+  const { authData } = useContext(AuthContext)
   const [aprovoShitjenOnlineModal,setAprovoShitjenOnlineModal] = useState(false)
   const [dataPerAprovim,setDataPerAprovim] = useState({kostoPostes:3,totaliIPranuar:0})
   const [buttonLoading,setButtonLoading] = useState(false)
@@ -60,9 +59,9 @@ function FaqjaKryesoreAdmin() {
   }, []);
   
   useEffect(() => {
-    const filteredTransaksionet = transaksionet.filter(item => item.nderrimiID === Number(nderrimiID));
+    const filteredTransaksionet = transaksionet.filter(item => item.nderrimiID === Number(authData.nderrimiID));
     setTransaksionetENderrimit(filteredTransaksionet);
-  }, [transaksionet, nderrimiID]);
+  }, [transaksionet, authData.nderrimiID]);
   
 
   const ndryshoTransaksionin = (lloji, transaksioniID) => {
@@ -156,8 +155,8 @@ function FaqjaKryesoreAdmin() {
 const handleAprovoShitjenOnline = async () => {
   const updatedDataPerAprovim = {
     ...dataPerAprovim,
-    perdoruesiID: perdoruesiID,
-    nderrimiID: nderrimiID
+    perdoruesiID: authData.perdoruesiID,
+    nderrimiID: authData.nderrimiID
   };
 
   setButtonLoading(true);

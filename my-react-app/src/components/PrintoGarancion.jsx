@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from "jspdf-autotable";
-import { formatCurrency } from '../useAuthData';
+import { formatCurrency } from "../components/AuthContext";
 
 export const PrintoGarancion = (data,shifra) => {
 

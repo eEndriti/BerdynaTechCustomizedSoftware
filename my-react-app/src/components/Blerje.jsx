@@ -1,4 +1,4 @@
-import { useState,useEffect } from "react";
+import { useState,useEffect, useContext } from "react";
 import { Container, Row,Col,Form, Button,Table,Spinner,InputGroup, Tooltip } from "react-bootstrap";
 import KerkoSubjektin from './KerkoSubjektin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -7,7 +7,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import KerkoProduktin from "./KerkoProduktin";
 import { useNavigate } from "react-router-dom";
-import useAuthData,{formatCurrency} from "../useAuthData";
+import AuthContext,{formatCurrency} from "../components/AuthContext";
 
 export default function Blerje() {
 
@@ -28,7 +28,7 @@ export default function Blerje() {
   const [loading,setLoading] = useState(false)
   const [blerjet,setBlerjet] = useState([])
   const [nukPranohetNrFatures,setNukPranohetNrFatures] = useState(false)
-  const { nderrimiID,perdoruesiID } = useAuthData()
+  const { authData } = useContext(AuthContext)
   
 
   useEffect(() => {
@@ -120,7 +120,7 @@ export default function Blerje() {
   const handleRegjistro = async () => {
     setLoading(true);
   
-    if (!perdoruesiID || !menyraPagesesID) {
+    if (!authData.perdoruesiID || !menyraPagesesID) {
       setLoading(false); 
       return toast.warn('Ju Lutem Plotesoni te Gjitha Fushat!', {
         position: "top-center",
@@ -135,10 +135,10 @@ export default function Blerje() {
       komenti: komentiBlerjes,
       fatureERregullt: meFatureTeRregullt,
       nrFatures,
-      perdoruesiID,
+      perdoruesiID:authData.perdoruesiID,
       subjektiID: selectedSubjekti.subjektiID,
       menyraPagesesID,
-      nderrimiID,
+      nderrimiID:authData.nderrimiID,
       produktet: products,
     };
   
@@ -291,15 +291,15 @@ export default function Blerje() {
           </div>
         </Col>
       </Row>
-            <hr/>
-      <Row>
+            
+      <Row className="border-top mt-2">
         <Col className="d-flex flex-row justify-content-center align-items-center">
             <Form.Group>
               <Form.Label>Fature e Rregullt</Form.Label>
               <Form.Check inline defaultChecked={meFatureTeRregullt} onChange={handleMeFatureTeRregullt} className="px-2" disabled={products.length > 1}/>
             </Form.Group>
         </Col>
-        <Col xs={12} md={6} className="d-flex justify-content-center">
+        <Col xs={12} md={6} className="d-flex justify-content-center mt-3">
           <Form.Control as="textarea" onChange={handleKomentiBlerjesChange} rows={3} className="p-3" placeholder="Shkruaj komentin..." />
         </Col>
       </Row>

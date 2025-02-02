@@ -1,4 +1,4 @@
-import {useState,useEffect} from 'react'
+import {useState,useEffect, useContext} from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import AnimatedSpinner from './AnimatedSpinner'
 import { Container,Row,Form,Button,Col, InputGroup,Table, Spinner, Toast, Alert, Modal } from 'react-bootstrap'
@@ -9,7 +9,7 @@ import KerkoProduktin from './KerkoProduktin'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje'
-import useAuthData, { formatCurrency } from '../useAuthData'
+import AuthContext, { formatCurrency } from "../components/AuthContext";
 
 export default function NdryshoBlerjen() {
     const { blerjeID } = useParams()
@@ -30,7 +30,7 @@ export default function NdryshoBlerjen() {
     const [totaliPageses,setTotaliPageses] = useState()
     const [mbetjaPerPagese,setMbetjaPerPagese] = useState()
     const [totaliTvsh,setTotaliTvsh] = useState()
-    const { nderrimiID,perdoruesiID } = useAuthData()
+    const { authData } = useContext(AuthContext)
     
     useEffect(() => {
         const fetchData = async () => {
@@ -213,8 +213,8 @@ export default function NdryshoBlerjen() {
       totaliPerPagese,
       totaliPageses,
       mbetjaPerPagese:totaliPerPagese - totaliPageses,
-      nderrimiID,
-      perdoruesiID
+      nderrimiID:authData.nderrimiID,
+      perdoruesiID:authData.perdoruesiID
     })
       
     try{

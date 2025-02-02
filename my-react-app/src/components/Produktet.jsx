@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Col, Container, Row, Button, Form, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan,faEdit } from '@fortawesome/free-solid-svg-icons';
@@ -8,7 +8,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import ShtoNjeProdukt from './ShtoNjeProdukt';
 import { useNavigate } from 'react-router-dom';
 import AnimatedSpinner from './AnimatedSpinner';
-import { formatCurrency } from '../useAuthData';
+import AuthContext,{ formatCurrency } from "./AuthContext";
+
 
 export default function Produktet() {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ export default function Produktet() {
   const [filterSasia, setFilterSasia] = useState('');
   const [filterKategoria, setFilterKategoria] = useState('');
   const [produkti,setProdukti] = useState({})
+  const {authData} = useContext(AuthContext);
 
   useEffect(() => {
 
@@ -179,7 +181,7 @@ export default function Produktet() {
                 <th scope="col">Emertimi</th>
                 <th scope="col">Pershkrimi</th>
                 <th scope="col">Sasia</th>
-                <th scope="col">CmimiBlerjes</th>
+                {authData.aKaUser == 'admin' ? <th scope="col">CmimiBlerjes</th>: null}
                 <th scope="col">CmimiShitjes</th>
                 <th scope="col">Komenti</th>
                 <th scope="col">me Fature te Rregullt</th>
@@ -195,15 +197,15 @@ export default function Produktet() {
                   <td>{item.shifra}</td>
                   <td>{item.emertimi}</td>
                   <td>{item.pershkrimi}</td>
-                  <td>{item.sasia}</td>
-                  <td>{formatCurrency(item.cmimiBlerjes)}</td>
+                  <td>{item.sasiStatike ? 'Sasi Statike' : item.sasia}</td>
+                  {authData.aKaUser == 'admin' ? <td>{formatCurrency(item.cmimiBlerjes)}</td> : null}
                   <td>{formatCurrency(item.cmimiShitjes)}</td>
                   <td>{item.komenti}</td>
                   <td>{item.meFatureTeRregullt}</td>
                   <td>{item.emertimiKategorise}</td>
                   <td>{item.tvsh} %</td>
                   <td className='d-flex flex-row justify-content-between'>
-
+                  
                     <Button  variant='outline-primary' onClick={() => thirreNdryshoProduktin(item)}><FontAwesomeIcon icon={faEdit}/></Button>
                       <Button variant='outline-danger' onClick={() => thirreModalPerPyetje(item.produktiID)} disabled = {item.sasia > 0}>
                         {loading && idPerAnulim === item.produktiID ? (
@@ -215,7 +217,7 @@ export default function Produktet() {
                         )}
                       </Button>
 
-                      <Button  variant='outline-dark' onClick={() => handleDetaje(item.produktiID)}>Detaje...</Button>
+                      {authData.aKaUser == 'admin' &&<Button  variant='outline-dark' onClick={() => handleDetaje(item.produktiID)}>Detaje... </Button>}
                   </td>
                 </tr>
               ))}

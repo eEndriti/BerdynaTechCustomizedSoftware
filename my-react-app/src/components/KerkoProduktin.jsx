@@ -38,21 +38,28 @@ export default function KerkoProduktin({ show, onHide, onSelect, meFatureProp })
   // Filter products based on search inputs
   useEffect(() => {
     const filterProducts = () => {
+      console.log('mefature',meFatureProp)
       const filtered = produktet.filter((product) => {
         const matchesShifra = product.shifra.toLowerCase().includes(searchFields.shifra.toLowerCase());
         const matchesEmertimi = product.emertimi.toLowerCase().includes(searchFields.emertimi.toLowerCase());
         const matchesPershkrimi = product.pershkrimi.toLowerCase().includes(searchFields.pershkrimi.toLowerCase());
         const matchesSasia = eliminoVleratZero ? product.sasia > 0 : true;
-
         if (meFatureProp != null) {
+          if(meFatureProp == 'ngaStoku'){
+            const matchesSasiStatike = product.sasiStatike == 0;
+            return matchesShifra && matchesEmertimi && matchesPershkrimi && matchesSasia && matchesSasiStatike;
+          }else{
           const matchesMeFature = meFatureProp
             ? product.meFatureTeRregullt === "po"
             : product.meFatureTeRregullt === "jo";
-          return matchesShifra && matchesEmertimi && matchesPershkrimi && matchesSasia && matchesMeFature;
+            const matchesSasiStatike = product.sasiStatike == 0;
+          return matchesShifra && matchesEmertimi && matchesPershkrimi && matchesSasia && matchesMeFature && matchesSasiStatike;
         }
+        } 
         return matchesShifra && matchesEmertimi && matchesPershkrimi && matchesSasia;
       });
       setResults(filtered);
+      setLoading(false)
     };
 
     filterProducts();
@@ -128,11 +135,11 @@ export default function KerkoProduktin({ show, onHide, onSelect, meFatureProp })
                 </thead>
                 <tbody>
                   {results.map((product, index) => (
-                    <tr key={index} onClick={() => handleProductSelect(product)}>
+                    <tr key={index} onClick={() =>  handleProductSelect(product)}>
                       <td >{product.shifra}</td>
                       <td>{product.emertimi}</td>
                       <td>{product.pershkrimi}</td>
-                      <td>{product.sasia}</td>
+                      <td>{product.sasiStatike ? 'Sasi Statike' : product.sasia}</td>
                     </tr>
                   ))}
                 </tbody>

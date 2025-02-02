@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje';
 import { useNavigate } from 'react-router-dom';
 import ShtoNdryshoSubjektin from './ShtoNdryshoSubjektin';
-import { formatCurrency } from '../useAuthData';
+import { formatCurrency } from "../components/AuthContext";
 
 export default function Klient() {
     const navigate = useNavigate();

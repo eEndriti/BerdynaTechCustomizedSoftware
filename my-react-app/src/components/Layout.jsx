@@ -1,24 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect,useContext } from 'react';
 import { Container, Row, Col,ProgressBar,Badge } from 'react-bootstrap';
 import logo from '../assets/BtechLogo.png';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import '../assets/css/Layout.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faExchangeAlt, faCoins, faGift } from '@fortawesome/free-solid-svg-icons';
-import AnimatedSpinner from './AnimatedSpinner'
-import useAuthData, { formatCurrency } from '../useAuthData';
+import AuthContext, { formatCurrency } from './AuthContext';
+
 import Cookies from 'js-cookie';
 
 function Layout() {
-  const location = useLocation(); // Hook to get the current location object
+  const location = useLocation(); 
   const navigate = useNavigate()
-  const {avansi,dataFillimit,numriPercjelles,emriPerdoruesit,aKaUser,nderrimiID} = useAuthData ()
+  const {authData} = useContext(AuthContext)
   const [perBonuse, setPerBonuse] = useState(0);
   const [profiti, setProfiti] = useState([]);
   const [totalShumaPerBonuse,setTotalShumaPerBonuse] = useState()
   const [totaliIArkes,setTotaliIArkes] = useState()
   const [totaliArkesResult,setTotaliArkesResult] = useState([])
-  
+  useEffect(() => {
+    console.log(authData.avansi)
+  }, []);
   useEffect(() => {
     const handleKeyPress = (event) => {
       switch (event.key) {
@@ -71,7 +73,7 @@ function Layout() {
         setProfiti((prevProfiti) => {
           return JSON.stringify(receivedData) !== JSON.stringify(prevProfiti) ? receivedData : prevProfiti;
         });
-        const totaliIArkesResult = await window.api.fetchTableQuery(`select totaliArkes from nderrimi t where t.nderrimiID = ${nderrimiID}`);
+        const totaliIArkesResult = await window.api.fetchTableQuery(`select totaliArkes from nderrimi t where t.nderrimiID = ${authData.nderrimiID}`);
         setTotaliArkesResult(totaliIArkesResult);
         kalkuloBonusetDitore();
       } catch (error) {
@@ -81,13 +83,13 @@ function Layout() {
    
     fetchData();
    
-  }, [profiti,nderrimiID]);
+  }, [profiti,authData.nderrimiID]);
   
   useEffect(() => {
 
     if(totaliArkesResult.length > 0){
       const totaliArkes = totaliArkesResult[0].totaliArkes || 0; 
-      const totalArkesWithAvansi = Number(totaliArkes) + Number(avansi); 
+      const totalArkesWithAvansi = Number(totaliArkes) + Number(authData.avansi); 
       setTotaliIArkes(totalArkesWithAvansi);
     }
   }, [totaliArkesResult]);
@@ -123,8 +125,17 @@ function Layout() {
 }
 
   const logOut = () => {
+    clearAllCookies();
     localStorage.clear();
     window.location.href = '/login';
+  };
+  
+  const clearAllCookies = () => {
+    const cookies = document.cookie.split(";");
+    cookies.forEach((cookie) => {
+      const name = cookie.split("=")[0].trim();
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    });
   };
 
     return (
@@ -137,14 +148,14 @@ function Layout() {
               <span className='me-3'>
                 <FontAwesomeIcon icon={faCoins} className='me-2 text-warning fs-4' />
                 Totali i Arkes: <strong>{formatCurrency(totaliIArkes)}</strong>
-                 <span className='d-block text-muted text-center'>Avansi: {formatCurrency(avansi,false)}</span>
+                 <span className='d-block text-muted text-center'>Avansi: {formatCurrency(authData.avansi,false)}</span>
               </span>
                 <span className='me-4'></span>
   
                 <FontAwesomeIcon icon={faExchangeAlt} className='me-2 text-success fs-5' />
-                <span className='me-4'>Nderrimi: <strong>{numriPercjelles}-{formatDate(dataFillimit)}</strong></span>
+                <span className='me-4'>Nderrimi: <strong>{authData.numriPercjelles}-{formatDate(authData.dataFillimit)}</strong></span>
   
-               {aKaUser === 'Admin' && <> <Col className='mt-2'>
+               {authData.aKaUser == 'admin' && <> <Col className='mt-2'>
                   <Col className='d-flex flex-row pb-2'>
                     <FontAwesomeIcon icon={faGift} className='me-2 text-info fs-5' />
                     <span>Bonuse: <strong>{formatCurrency(perBonuse)}</strong> <span className='d-inline mx-4 text-secondary'>{formatCurrency(totalShumaPerBonuse)}</span></span>
@@ -158,7 +169,7 @@ function Layout() {
             <Col xs={12} md={4} className='d-flex justify-content-end align-items-center'>
               <span className='me-3'>
                 <FontAwesomeIcon icon={faUser} className='me-2 text-success fs-4' />
-                {emriPerdoruesit} <span className='d-block text-muted'>Roli: {aKaUser}</span>
+                {authData.emriPerdoruesit} <span className='d-block text-muted'>Roli: {authData.aKaUser}</span>
               </span>
               <NavLink onClick={() => logOut()} className='btn btn-danger'>
                 <FontAwesomeIcon icon={faSignOutAlt} className='me-1' /> Dil
@@ -196,7 +207,7 @@ function Layout() {
                 <NavLink to='/klient' className='nav-link' activeClassName='active'>
                   Klient
                 </NavLink>
-                {aKaUser === 'Admin' && <>
+                {authData.aKaUser == 'admin' && <>
                   <NavLink exact to='/furnitor' className='nav-link' activeClassName='active'>
                   Furnitor
                 </NavLink>

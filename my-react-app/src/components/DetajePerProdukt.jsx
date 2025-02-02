@@ -4,7 +4,7 @@ import { Container, Row, Col, Form } from 'react-bootstrap';
 import AnimatedSpinner from './AnimatedSpinner';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserSecret } from '@fortawesome/free-solid-svg-icons';
-import { formatCurrency } from "../useAuthData";
+import { formatCurrency } from "../components/AuthContext";
 
 export default function DetajePerProdukt() {
   const { produktiID } = useParams();
@@ -110,7 +110,7 @@ export default function DetajePerProdukt() {
                 <h5 className="m-2">Emertimi: <span className="fs-5 fw-bold float-center">{produkti[0].emertimi}</span></h5>
                 <h5 className="m-2">Cmimi i Blerjes: <span className="fs-5 fw-bold float-center">{formatCurrency(produkti[0].cmimiBlerjes)}</span></h5>
                 <h5 className="m-2">Cmimi i Shitjes: <span className="fs-5 fw-bold float-center">{formatCurrency(produkti[0].cmimiShitjes)}</span></h5>
-                <h5 className="m-2">Sasia Aktuale: <span className="fs-5 fw-bold float-center">{produkti[0].sasia}</span></h5>
+                <h5 className="m-2">Sasia Aktuale: <span className="fs-5 fw-bold float-center">{produkti[0].sasiStatike ? 'Sasi Statike' : produkti[0].sasia}</span></h5>
                 <h5 className="m-2">Sasia e Shitur: <span className="fs-5 fw-bold float-center">{sasiaShitur}</span></h5>
                 {showProfiti &&                 <h5 className="m-2">Profiti nga ky Produkt: <span className="fs-5 fw-bold float-center">{formatCurrency(profiti)}</span></h5>
                 }

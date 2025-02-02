@@ -1,4 +1,4 @@
-import { useState,useEffect } from 'react'
+import { useState,useEffect, useContext } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { Container,Button,Row,Col,Modal,Form, Spinner, InputGroup,Table,Card } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,14 +8,14 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UpdateServise from '../UpdateServise';
 import AnimatedSpinner from '../AnimatedSpinner';
-import useAuthData, { formatCurrency } from '../../useAuthData';
+import AuthContext, { formatCurrency } from '../AuthContext';
 
 export default function Transaksionet() {
     const navigate = useNavigate()
     const [loading,setLoading] = useState(true)
     const [transaksionet,setTransaksionet] = useState([])
     const [transaksionetENderrimit,setTransaksionetENderrimit] = useState([])
-    const { nderrimiID,perdoruesiID,aKaUser } = useAuthData()
+    const { authData } = useContext(AuthContext)
     const [buttonLoading,setButtonLoading] = useState(false)
     const [showModalPerPyetje,setShowModalPerPyetje] = useState(false)
     const [dataPerPerdorim,setDataPerPerdorim] = useState({})
@@ -42,14 +42,14 @@ export default function Transaksionet() {
       
       useEffect(() => {
         const filteredTransaksionet = transaksionet.filter(item => {
-          const isMatchingShift = item.nderrimiID == Number(nderrimiID);
-          const isPublic = aKaUser == "perdorues" ? item.eshtePublik : true;
+          const isMatchingShift = item.nderrimiID == Number(authData.nderrimiID);
+          const isPublic = authData.aKaUser == "perdorues" ? item.eshtePublik : true;
           return isMatchingShift && isPublic;
         });
         setTransaksionetENderrimit(filteredTransaksionet);
         console.log(filteredTransaksionet)
 
-      }, [transaksionet, nderrimiID, aKaUser]);
+      }, [transaksionet, authData.nderrimiID, authData.aKaUser]);
       
     const ndryshoTransaksionin = async (item) => {
 

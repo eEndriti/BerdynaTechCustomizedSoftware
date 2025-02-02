@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Container, Spinner, Col, Row,Form,Button,Card } from 'react-bootstrap';
 import AnimatedSpinner from './AnimatedSpinner';
 import ChartComponent from './ChartComponent';
-import { formatCurrency } from '../useAuthData';
+import { formatCurrency } from "../components/AuthContext";
 
 export default function Evidenca() {
   const [loading, setLoading] = useState(true);

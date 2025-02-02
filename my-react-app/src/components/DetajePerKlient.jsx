@@ -1,9 +1,9 @@
-import { useState, useEffect,useMemo } from 'react';
+import { useState, useEffect,useMemo, useContext } from 'react';
 import { Container, Row, Col, Form, Spinner, Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronRight,faTrashCan,faEye } from '@fortawesome/free-solid-svg-icons';
-import useAuthData, { formatCurrency } from '../useAuthData';
+import AuthContext, { formatCurrency } from '../components/AuthContext';
 import AnimatedSpinner from './AnimatedSpinner';
 import ModalPerPyetje from './ModalPerPyetje'
 import { ToastContainer, toast } from 'react-toastify';
@@ -30,7 +30,8 @@ export default function DetajePerKlient() {
       });
     const [dataPerAnulimPagese,setDataPerAnulimPagese] = useState()
     const [modalPerPyetje,setModalPerPyetje] = useState(false)
-    const {nderrimiID,perdoruesiID} = useAuthData()
+    const {authData} = useContext(AuthContext)
+
       console.log('shitjet dhe serviset',combinedData,pagesat)
     useEffect(() => {
         const fetchData = async () => {
@@ -160,8 +161,8 @@ export default function DetajePerKlient() {
         setDataPerAnulimPagese({
             ...item,
             llojiDokumentit,
-            perdoruesiID,
-            nderrimiID
+            perdoruesiID:authData.perdoruesiID,
+            nderrimiID:authData.nderrimiID
         })
         setModalPerPyetje(true)
     }

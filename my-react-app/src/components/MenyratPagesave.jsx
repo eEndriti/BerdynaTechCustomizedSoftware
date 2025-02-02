@@ -5,7 +5,7 @@ import { faEdit, faTrashCan,faExchangeAlt } from '@fortawesome/free-solid-svg-ic
 import { toast, ToastContainer } from 'react-toastify';
 import AnimatedSpinner from './AnimatedSpinner';
 import ModalPerPyetje from './ModalPerPyetje'
-import { formatCurrency } from '../useAuthData';
+import { formatCurrency } from "../components/AuthContext";
 
 export default function MenyratPagesave() {
     const [loading,setLoading] = useState(true)

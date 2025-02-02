@@ -1,4 +1,4 @@
-import {useState,useEffect} from 'react'
+import {useState,useEffect, useContext} from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import AnimatedSpinner from './AnimatedSpinner'
 import { Container,Row,Form,Button,Col, InputGroup,Table, Spinner } from 'react-bootstrap'
@@ -9,7 +9,7 @@ import KerkoProduktin from './KerkoProduktin'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje'
-import useAuthData, { formatCurrency } from '../useAuthData'
+import AuthContext, { formatCurrency } from "../components/AuthContext";
 
 export default function NdryshoShitjen() {
     const { shitjeID } = useParams()
@@ -37,7 +37,7 @@ export default function NdryshoShitjen() {
     const [nrPorosise,setNrPorosise] = useState()
     const [modalPerPyetje,setModalPerPyetje] = useState(false)
     const [inputDisabled,setInputDisabled] = useState(false)
-    const {nderrimiID, perdoruesiID} = useAuthData()
+    const {authData} = useContext(AuthContext)
     const [shitjeProdukti,setShitjeProdukti] = useState()
     const [llojiFillestarIShitjes,setLlojiFillestarIShitjes] = useState()
 
@@ -215,7 +215,7 @@ export default function NdryshoShitjen() {
         setInputDisabled(true)
 
 
-        if (!perdoruesiID || !menyraPagesesID || !selectedSubjekti?.subjektiID || !products?.length) {
+        if (!authData.perdoruesiID || !menyraPagesesID || !selectedSubjekti?.subjektiID || !products?.length) {
           toast.error('Të gjitha fushat e nevojshme duhet të plotësohen!');
           return;
         }
@@ -236,9 +236,9 @@ export default function NdryshoShitjen() {
           mbetjaPerPagese,
           nrPorosise,
           menyraPagesesID,
-          perdoruesiID,
+          perdoruesiID:authData.perdoruesiID,
           subjektiID: selectedSubjekti.subjektiID,
-          nderrimiID,
+          nderrimiID:authData.nderrimiID,
           dataShitjes,
           llojiFillestarIShitjes,
           profitiID:shitje[0].profitiID,

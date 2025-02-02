@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Modal, Table, Form, Card, Badge, Container,Row,Col,Alert, InputGroup, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHandHoldingDollar, faArrowsRotate, faCheck, faBan, faHistory,faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { formatCurrency } from '../useAuthData';
+import { formatCurrency } from "../components/AuthContext";
 import Cookies from 'js-cookie';
 
 export default function Nderrimet() {

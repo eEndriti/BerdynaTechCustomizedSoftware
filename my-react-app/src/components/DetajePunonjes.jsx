@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Container, Row, Col, Button, Table, Modal, Form, Spinner, Card, Toast,InputGroup,Alert, FormControl} from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faEdit, faTrashCan,faUmbrellaBeach,faGift, faCoins,faTriangleExclamation,faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
@@ -8,7 +8,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje'
 import MenyratPagesesExport from './MenyratPagesesExport';
-import useAuthData , {formatCurrency} from '../useAuthData';
+import AuthContext , {formatCurrency} from '../components/AuthContext';
 
 export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     const [loading, setLoading] = useState(true);
@@ -35,7 +35,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     const [idPerPerdorim,setIdPerPerdorim] = useState()
     const [perNdryshim,setPerNdryshim] = useState()
     const [dataPerPushim,setDataPerPushim] = useState({dataFillimit:'',dataMbarimit:'',nrDiteve:'',lloji:'',arsyeja:''})
-    const {nderrimiID,perdoruesiID} = useAuthData()
+    const {authData} = useContext(AuthContext)
     const albanianMonths = [
         "Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor",
         "Korrik", "Gusht", "Shtator", "Tetor", "Nëntor", "Dhjetor"
@@ -168,8 +168,8 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                 ...activeSalary,
                 punonjesID,
                 menyraPagesesID:selectedMenyraPageses.menyraPagesesID,
-                nderrimiID,
-                perdoruesiID
+                nderrimiID:authData.nderrimiID,
+                perdoruesiID:authData.perdoruesiID
             }  
 
           await window.api.paguajPagen(data)
@@ -239,8 +239,8 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
             menyraPagesesID:selectedMenyraPageses.menyraPagesesID,
             bonusetPerPunonjes,
             totalBonuset,
-            perdoruesiID,
-            nderrimiID
+            perdoruesiID:authData.perdoruesiID,
+            nderrimiID:authData.nderrimiID
         }
         console.log(data)
         try{
