@@ -46,7 +46,7 @@ function NdryshoServisinPerfunduar({ show, handleClose,data = {}}) {
               });
 
             const queryProduktetResponse = await window.api.fetchTableQuery(`
-                 select  p.shifra,p.emertimi,p.pershkrimi,p.sasia,p.cmimiBlerjes,p.cmimiShitjes,p.dataKrijimit,p.komenti,p.meFatureTeRregullt,p.cpu,p.ram,p.gpu,p.disku,k.emertimi as 'emertimiKategorise',k.tvsh,k.kategoriaID,
+                 select  p.shifra,p.emertimi,p.pershkrimi,p.sasia,p.cmimiBlerjes,p.cmimiShitjes,p.dataKrijimit,p.sasiStatike,p.komenti,p.meFatureTeRregullt,p.cpu,p.ram,p.gpu,p.disku,k.emertimi as 'emertimiKategorise',k.tvsh,k.kategoriaID,
                 sp.produktiID,sp.sasia as 'sasiaShitjes',sp.cmimiShitjesPerCope as 'cmimiPerCope',sp.profitiProduktit from produkti p
                 join servisProdukti sp on sp.produktiID = p.produktiID
                 join kategoria k on k.kategoriaID = p.kategoriaID
@@ -245,7 +245,7 @@ function NdryshoServisinPerfunduar({ show, handleClose,data = {}}) {
                                         }}
                                         />
                                     </td>
-                                    <td>{product.sasia}</td>
+                                    <td>{(product.sasia + product.sasiaShitjes) || ''}</td>
                                     <td>
                                         <Form.Control className="bg-light border-0"
                                         type="number"

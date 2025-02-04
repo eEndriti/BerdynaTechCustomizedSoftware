@@ -80,7 +80,7 @@ export default function KerkoProduktin({ show, onHide, onSelect, meFatureProp })
   return (
     <>
       {loading ? (
-        <AnimatedSpinner />
+       ' <AnimatedSpinner />'
       ) : (
         <Modal show={show} onHide={onHide} size="lg">
           <Modal.Header closeButton>

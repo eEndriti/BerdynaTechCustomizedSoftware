@@ -212,7 +212,7 @@ const kontrolloValidetin = () => {
 
   return (
     <>
-    {menyratPageses.length < 1 ? <AnimatedSpinner /> : 
+    {menyratPageses.length < 1 ? '<AnimatedSpinner />' : 
 
     <Container fluid className="mt-5 d-flex flex-column" style={{ minHeight: "95vh" }}>
       <Row className="d-flex flex-row justify-content-between">

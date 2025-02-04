@@ -83,7 +83,7 @@ export default function NdryshoShitjen() {
                     handleSelectSubjekti(subjectData[0]);
     
                     const productData = await window.api.fetchTableQuery(
-                        `select p.produktiID, p.shifra, p.emertimi, p.pershkrimi, shp.cmimiShitjesPerCope as 'cmimiPerCope', p.sasia, shp.sasia as 'sasiaShitjes', shp.totaliProduktit, shp.komenti
+                        `select p.produktiID, p.shifra, p.emertimi, p.pershkrimi, shp.cmimiShitjesPerCope as 'cmimiPerCope', p.sasia, shp.sasia as 'sasiaShitjes', shp.totaliProduktit, shp.komenti , p.sasiStatike
                         from produkti p
                         join shitjeProdukti shp on shp.produktiID = p.produktiID
                         where shp.shitjeID = ${shitjeID}`
@@ -247,7 +247,9 @@ export default function NdryshoShitjen() {
             produktiID: product.produktiID,
             sasiaShitjes: product.sasiaShitjes,
             cmimiPerCope: product.cmimiPerCope,
-            profiti:product.profiti
+            komenti: product.komenti,
+            profiti:product.profiti,
+            sasiStatike:product.sasiStatike
           }))
        };
   

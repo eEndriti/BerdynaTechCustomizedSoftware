@@ -194,7 +194,7 @@ const handleAprovoShitjenOnline = async () => {
   return (
     <Container fluid className="pt-3 modern-container">
       {loading ? (
-        <AnimatedSpinner />
+        ' '
       ) : (
         <div>
           <Transaksionet/>

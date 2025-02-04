@@ -1,8 +1,9 @@
-import React from 'react';
 import { Spinner } from 'react-bootstrap';
 import '../assets/css/animatedSpinner.css';
 
 const AnimatedSpinner = () => {
+  console.log('AnimatedSpinner rendered');
+
   return (
     <div className="spinner-container">
       

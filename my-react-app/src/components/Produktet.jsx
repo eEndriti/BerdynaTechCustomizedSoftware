@@ -107,7 +107,7 @@ export default function Produktet() {
     setShowModal(true)
   }
   const thirreShtoProduktin = () => {
-    setProdukti(null)
+    setProdukti('')
     setShowModal(true)
   }
   
