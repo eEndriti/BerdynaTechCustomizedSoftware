@@ -6,7 +6,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from '../ModalPerPyetje'
 import KerkoProduktin from '../KerkoProduktin';
-import AuthContext, { normalizoDaten , localTodayDate } from '../AuthContext';
+import AuthContext, { normalizoDaten , localTodayDate, formatLongDateToAlbanian } from '../AuthContext';
 
 export default function Shpenzim() {
   const [shpenzimet, setShpenzimet] = useState([]);
@@ -315,7 +315,7 @@ export default function Shpenzim() {
               <Form.Control
                 type='date'
                 value={startDate}
-                onChange={authData.aKaUser != 'admin' ? handleStartDateChange : null}
+                onChange={authData.aKaUser == 'admin' ? handleStartDateChange : null}
                 readOnly = {authData.aKaUser != 'admin'}
               />
             </Form.Group>
@@ -323,11 +323,12 @@ export default function Shpenzim() {
               <Form.Control
                 type='date'
                 value={endDate}
-                onChange={authData.aKaUser != 'admin' ? handleEndDateChange : null}
+                onChange={authData.aKaUser == 'admin' ? handleEndDateChange : null}
                 readOnly = {authData.aKaUser != 'admin'}
               />
             </Form.Group>
           </div>
+
           {filteredShpenzimet.length > 0 ? (
             <div className='tabelaShpenzimeve'>
             <div className="table-responsive tabeleMeMaxHeight">
@@ -337,6 +338,7 @@ export default function Shpenzim() {
                     <th scope="col">Nr</th>
                     <th scope="col">Shifra</th>
                     <th scope="col">Emertimi</th>
+                    <th scope="col">Data dhe Ora</th>
                     <th scope="col">Shuma</th>
                     <th scope="col">Komenti</th>
                     <th scope="col">Perdoruesi</th>
@@ -344,12 +346,13 @@ export default function Shpenzim() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredShpenzimet.map((item, index) => (
+                  {filteredShpenzimet.slice().reverse().map((item, index) => (
                     
                     <tr key={index}>
-                      <th scope="row">{index + 1}</th>
+                      <th scope="row">{filteredShpenzimet.length - index}</th>
                       <td>{item.shifra}</td>
                       <td>{item.emertimi}</td>
+                      <td>{formatLongDateToAlbanian(item.dataShpenzimit)} / {item.dataShpenzimit.toLocaleTimeString() } </td>
                       <td>{item.shumaShpenzimit.toFixed(2)} €</td>
                       <td>{item.komenti}</td>
                       <td>{item.perdoruesi}</td>
@@ -370,6 +373,7 @@ export default function Shpenzim() {
           )}
         </Col>
       </Row>
+
       <hr/>
 
       <Row >
@@ -447,9 +451,9 @@ export default function Shpenzim() {
                 </tr>
               </thead>
               <tbody>
-                {llojetShpenzimeve.map((item, index) => (
+                {llojetShpenzimeve.slice().reverse().map((item, index) => (
                   <tr key={index}>
-                    <th scope="row">{index + 1}</th>
+                    <th scope="row">{llojetShpenzimeve.length - index}</th>
                     <td>{item.emertimi}</td>
                     <td>{item.shumaStandarde.toFixed(2)} €</td>
                     <td>

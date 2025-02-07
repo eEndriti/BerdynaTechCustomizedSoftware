@@ -3103,8 +3103,9 @@ ipcMain.handle('anuloPorosineOnline', async (event, idPerAnulim) => {
 
       // Step 1: Retrieve sold products from shitjeProdukti for the specified transaksioniID
       const getShitjeProduktiQuery = `
-        SELECT produktiID, sasia 
-        FROM shitjeProdukti 
+        SELECT sp.produktiID, sp.sasia,p.sasiStatike
+        FROM shitjeProdukti sp
+		    join produkti p on p.produktiID = sp.produktiID
         WHERE shitjeID IN (
           SELECT shitjeID 
           FROM shitje 
@@ -3129,7 +3130,7 @@ ipcMain.handle('anuloPorosineOnline', async (event, idPerAnulim) => {
         if(!produkt.sasiStatike){
           await connection.request()
           .input('produktiID', sql.Int, produkt.produktiID)
-          .input('sasia', sql.Int, produkt.sasiaShitjes)
+          .input('sasia', sql.Int, produkt.sasia)
           .query(updateProduktiQuery);
         }
       }
@@ -3167,8 +3168,9 @@ ipcMain.handle('anuloShitjen', async (event, data) => {
 
       // Hapi 1: i marrim produktet e shitura nga tabela shitjeProdukti ne baze te transaksioniID 
       const getShitjeProduktiQuery = `
-        SELECT produktiID, sasia 
-        FROM shitjeProdukti 
+        SELECT sp.produktiID, sp.sasia, p.sasiStatike 
+        FROM shitjeProdukti sp
+        join produkti p on p.produktiID = sp.produktiID
         WHERE shitjeID IN (
           SELECT shitjeID 
           FROM shitje 
@@ -3196,14 +3198,12 @@ ipcMain.handle('anuloShitjen', async (event, data) => {
         if(!produkt.sasiStatike){
           await connection.request()
           .input('produktiID', sql.Int, produkt.produktiID)
-          .input('sasia', sql.Int, produkt.sasiaShitjes)
+          .input('sasia', sql.Int, produkt.sasia)
           .query(updateProduktiQuery);
         }
       }
 
       // Hapi 3: i fshijme te dhenat nga tabelat  shitjeProdukti,profiti,pagesa, shitje, dhe transaksioni 
-     
-
       const deleteProfiti = `
       DELETE FROM profiti 
       WHERE  transaksioniID = @transaksioniID
@@ -3242,7 +3242,7 @@ ipcMain.handle('anuloShitjen', async (event, data) => {
         .input('transaksioniID', sql.Int, data.transaksioniID)
         .query(getShumaMenyraPageses)
 
-        const shumaMenyraPageses = getShumaMenyraPagesesResult.recordset
+        const shumaMenyraPageses = getShumaMenyraPagesesResult.recordset[0]
 
         //ktu e marrim shifren e shitjes qe dojm me anulu
         const getShifraShitjes = ` 
@@ -3255,16 +3255,12 @@ ipcMain.handle('anuloShitjen', async (event, data) => {
         .input('transaksioniID', sql.Int, data.transaksioniID)
         .query(getShifraShitjes)
 
-        const shifraShitjes = shifraShitjesResult.recordset[0].shifra;
+        const shifraShitjes = shifraShitjesResult.recordset[0];
         const nderrimiID = shifraShitjesResult.recordset[0].nderrimiID;
 
-      for (const shmn of shumaMenyraPageses) {
+      await ndryshoBalancin(shumaMenyraPageses.menyraPagesesID,shumaMenyraPageses.totaliPageses,'-',connection)
+      await ndryshoGjendjenEArkes(shumaMenyraPageses.menyraPagesesID,shumaMenyraPageses.totaliPageses,'-',nderrimiID,connection)// tested ok
 
-        await ndryshoBalancin
-(shmn.menyraPagesesID,shmn.totaliPageses,'-',connection)
-await ndryshoGjendjenEArkes(shmn.menyraPagesesID,shmn.totaliPageses,'-',nderrimiID,connection)// tested ok
-
-      }
       await connection.request().input('shifra', sql.VarChar, shifraShitjes.shifra).query(deletePagesaQuery);
       await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteProfiti);
       await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShitjeProduktiQuery);
@@ -3311,7 +3307,6 @@ const updateProduktiQuery = `
 `;
 
 for (const produkt of soldProducts) {
-  console.log('nje produkt aktual',produkt)
   if(!produkt.sasiStatike){
     await connection.request()
     .input('produktiID', sql.Int, produkt.produktiID)
@@ -3600,8 +3595,9 @@ ipcMain.handle('anuloShpenzimin', async (event, data) => {
           // ktu menagjohet nje produkt qe osht hi shpenzim prej stokit
               // Hapi 1: Marrim produktin qe e kemi regjistru si shpenzim
               const getShpenzimProduktQuery = `
-              SELECT produktiID, sasia 
-              FROM shpenzimProdukti 
+              SELECT sp.produktiID, sp.sasia , p.sasiStatike
+              FROM shpenzimProdukti sp
+              join produkti p on p.produktiID = sp.produktiID
               WHERE shpenzimiID IN (
                 SELECT shpenzimiID 
                 FROM shpenzimi 
@@ -3625,7 +3621,7 @@ ipcMain.handle('anuloShpenzimin', async (event, data) => {
               if(!produkt.sasiStatike){
                 await connection.request()
                 .input('produktiID', sql.Int, produkt.produktiID)
-                .input('sasia', sql.Int, produkt.sasiaShitjes)
+                .input('sasia', sql.Int, produkt.sasia)
                 .query(updateProduktiQuery);
               }
             }

@@ -231,7 +231,7 @@ export default function Serviset() {
     }
   return (
     <Container fluid className='mt-5'>
-        <Row className='bg-light'>
+        <Row className='bg-light border-bottom border-1 border-dark'>
             <Form className=" rounded-3 ">
                 <h4 className="text-center mb-3 fw-bold border-bottom">Prano Servisin:</h4>
             
@@ -310,7 +310,7 @@ export default function Serviset() {
                 
             </Form>
         </Row>
-        <hr/>
+
         <Row className="mt-4">
                 <Form className="p-3 bg-light rounded">
                     <Row>
@@ -389,6 +389,7 @@ export default function Serviset() {
                     </Row>
                 </Form>
             </Row>
+
         <Row className='mt-5'>
             <div className="table-responsive tableHeight50 mb-5">
             <Table className="table table-sm table-striped border table-hover ">
@@ -415,7 +416,7 @@ export default function Serviset() {
                 <tr key={index}>
                     {item.transaksioniID != 0 ? (
                     <>
-                        <th scope="row">{serviset.length - index}</th>
+                        <th scope="row">{filteredServiset.length - index}</th>
                         <td>{item.shifra}</td>
                         <td>{item.subjekti}</td>
                         <td>{item.kontakti}</td>

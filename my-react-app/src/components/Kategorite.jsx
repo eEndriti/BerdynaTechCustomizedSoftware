@@ -18,6 +18,7 @@ import { faTrashCan, faEdit } from '@fortawesome/free-solid-svg-icons';
 import 'react-toastify/dist/ReactToastify.css';
 import 'animate.css';
 import ModalPerPyetje from './ModalPerPyetje';
+import AnimatedSpinner from './AnimatedSpinner';
 
 export default function Kategorite() {
   const [kategorite, setKategorite] = useState([]);
@@ -176,7 +177,7 @@ export default function Kategorite() {
               <Card.Title className="text-center">Lista e Kategorive</Card.Title>
               {loading ? (
                 <div className="d-flex justify-content-center py-5">
-                  <ClipLoader color="#36D7B7" loading={loading} size={50} />
+                  <AnimatedSpinner/>
                 </div>
               ) : kategorite.length > 0 ? (
                 <Table responsive striped bordered hover className="text-center">
@@ -191,9 +192,9 @@ export default function Kategorite() {
                     </tr>
                   </thead>
                   <tbody>
-                    {kategorite.map((item, index) => (
+                    {kategorite.slice().reverse().map((item, index) => (
                       <tr key={index}>
-                        <td>{index + 1}</td>
+                        <td>{kategorite.length - index}</td>
                         <td>{item.emertimi}</td>
                         <td>
                           <Badge bg="secondary">{item.tvsh}%</Badge>

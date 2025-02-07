@@ -178,9 +178,9 @@ export default function Nderrimet() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredNderrimi.map((nderrimi, index) => (
+                            {filteredNderrimi.slice().reverse().map((nderrimi, index) => (
                                 <tr key={index}>
-                                    <td>{index + 1}</td>
+                                    <td>{filteredNderrimi.length - index}</td>
                                     <td>{formatLongDateToAlbanian(nderrimi.dataFillimit)}</td>
                                     <td>{nderrimi.dataMbarimit ? formatLongDateToAlbanian(nderrimi.dataMbarimit) : '-'}</td>
                                     <td>

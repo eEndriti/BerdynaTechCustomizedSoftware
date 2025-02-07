@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { Col, Container, Row, Button, Form, Spinner } from 'react-bootstrap';
+import { Col, Container, Row, Button, Form, Spinner,Card,Table } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan,faEdit } from '@fortawesome/free-solid-svg-icons';
 import ModalPerPyetje from './ModalPerPyetje';
@@ -171,60 +171,60 @@ export default function Produktet() {
       </Row>
 
       <Row>
-        {loading ? <AnimatedSpinner /> : 
-          <div className="table-responsive tableHeight50 mt-4">
-          <table className="table table-sm table-striped border table-hover ">
-            <thead className="table-secondary sticky-top">
-              <tr className='fs-5 '>
-                <th scope="col">Nr</th>
-                <th scope="col">Shifra</th>
-                <th scope="col">Emertimi</th>
-                <th scope="col">Pershkrimi</th>
-                <th scope="col">Sasia</th>
-                {authData.aKaUser == 'admin' ? <th scope="col">CmimiBlerjes</th>: null}
-                <th scope="col">CmimiShitjes</th>
-                <th scope="col">Komenti</th>
-                <th scope="col">me Fature te Rregullt</th>
-                <th scope="col">Kategoria</th>
-                <th scope="col">TVSH %</th>
-                <th scope="col">Opsionet</th>
-              </tr>
-            </thead>
-            <tbody className=' text-nowrap'>
-              {filteredProduktet.map((item, index) => (
-                <tr key={index}>
-                  <th scope="row">{index + 1}</th>
-                  <td>{item.shifra}</td>
-                  <td>{item.emertimi}</td>
-                  <td>{item.pershkrimi}</td>
-                  <td>{item.sasiStatike ? 'Sasi Statike' : item.sasia}</td>
-                  {authData.aKaUser == 'admin' ? <td>{formatCurrency(item.cmimiBlerjes)}</td> : null}
-                  <td>{formatCurrency(item.cmimiShitjes)}</td>
-                  <td>{item.komenti}</td>
-                  <td>{item.meFatureTeRregullt}</td>
-                  <td>{item.emertimiKategorise}</td>
-                  <td>{item.tvsh} %</td>
-                  <td className='d-flex flex-row justify-content-between'>
-                  
-                    <Button  variant='outline-primary' onClick={() => thirreNdryshoProduktin(item)}><FontAwesomeIcon icon={faEdit}/></Button>
-                      <Button variant='outline-danger' onClick={() => thirreModalPerPyetje(item.produktiID)} disabled = {item.sasia > 0}>
-                        {loading && idPerAnulim === item.produktiID ? (
-                          <Spinner animation="border" role="status" size="sm">
-                            <span className="visually-hidden">Loading...</span>
-                          </Spinner>
-                        ) : (
-                          <FontAwesomeIcon icon={faTrashCan} />
-                        )}
-                      </Button>
-
-                      {authData.aKaUser == 'admin' &&<Button  variant='outline-dark' onClick={() => handleDetaje(item.produktiID)}>Detaje... </Button>}
-                  </td>
+      {loading ? <AnimatedSpinner /> : 
+            <div className="table-responsive tableHeight50 mt-4">
+                <Table responsive striped bordered hover className="text-center">
+                <thead className="table-light">
+                <tr className='fs-5 '>
+                  <th scope="col">Nr</th>
+                  <th scope="col">Shifra</th>
+                  <th scope="col">Emertimi</th>
+                  <th scope="col">Pershkrimi</th>
+                  <th scope="col">Sasia</th>
+                  {authData.aKaUser == 'admin' ? <th scope="col">CmimiBlerjes</th>: null}
+                  <th scope="col">CmimiShitjes</th>
+                  <th scope="col">Komenti</th>
+                  <th scope="col">me Fature te Rregullt</th>
+                  <th scope="col">Kategoria</th>
+                  <th scope="col">TVSH %</th>
+                  <th scope="col">Opsionet</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        }
+              </thead>
+              <tbody className=' text-nowrap'>
+                {filteredProduktet.slice().reverse().map((item, index) => (
+                  <tr key={index}>
+                    <th scope="row">{filteredProduktet.length - index}</th>
+                    <td>{item.shifra}</td>
+                    <td>{item.emertimi}</td>
+                    <td>{item.pershkrimi}</td>
+                    <td>{item.sasiStatike ? 'Sasi Statike' : item.sasia}</td>
+                    {authData.aKaUser == 'admin' ? <td>{formatCurrency(item.cmimiBlerjes)}</td> : null}
+                    <td>{formatCurrency(item.cmimiShitjes)}</td>
+                    <td>{item.komenti}</td>
+                    <td>{item.meFatureTeRregullt}</td>
+                    <td>{item.emertimiKategorise}</td>
+                    <td>{item.tvsh} %</td>
+                    <td className='d-flex flex-row justify-content-between'>
+                    
+                      <Button  variant='outline-primary' onClick={() => thirreNdryshoProduktin(item)}><FontAwesomeIcon icon={faEdit}/></Button>
+                        <Button variant='outline-danger' onClick={() => thirreModalPerPyetje(item.produktiID)} disabled = {item.sasia > 0}>
+                          {loading && idPerAnulim === item.produktiID ? (
+                            <Spinner animation="border" role="status" size="sm">
+                              <span className="visually-hidden">Loading...</span>
+                            </Spinner>
+                          ) : (
+                            <FontAwesomeIcon icon={faTrashCan} />
+                          )}
+                        </Button>
+
+                        {authData.aKaUser == 'admin' &&<Button  variant='outline-dark' onClick={() => handleDetaje(item.produktiID)}>Detaje... </Button>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              </Table>
+              </div>
+          }
       </Row>
 
       <ShtoNjeProdukt show={showModal} prejardhja={'meRefresh'} handleClose={handleCloseModal} produkti = {produkti}/>

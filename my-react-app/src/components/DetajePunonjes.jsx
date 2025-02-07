@@ -471,9 +471,9 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {pushimet.map((pushimi, index) => (
+                                                    {pushimet.slice().reverse().map((pushimi, index) => (
                                                         <tr key={index}>
-                                                            <td>{index+1}</td>
+                                                            <td>{pushimet.length - index}</td>
                                                             <td>{formatLongDateToAlbanian(pushimi.dataFillimit)}</td>
                                                             <td>{pushimi.nrDiteve}</td>
                                                             <td>{formatLongDateToAlbanian(pushimi.dataMbarimit)}</td>
@@ -532,7 +532,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                         <tbody>
                                             {bonusetNeDetaje.slice().reverse().map((bonus, index) => (
                                                 <tr key={index}>
-                                                    <td>{index+1}</td>
+                                                    <td>{bonusetNeDetaje.length - index}</td>
                                                     <td>{bonus.shifra}</td>
                                                     <td>{formatCurrency(bonus.shuma)}</td>
                                                     <td>{formatLongDateToAlbanian(bonus.dataPageses)} / {bonus.dataPageses.toLocaleTimeString() }

@@ -2,6 +2,19 @@ import { createContext, useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 
 const AuthContext = createContext();
+const albanianMonths = [
+  "Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor",
+  "Korrik", "Gusht", "Shtator", "Tetor", "Nëntor", "Dhjetor"
+];
+
+export const formatLongDateToAlbanian = (dateString) => {
+  const date = new Date(dateString);  
+  const day = date.getDate()    
+  const month = albanianMonths[date.getMonth()];
+  const year = date.getFullYear();
+  
+  return `${day}-${month}-${year}`;
+};
 
 export const formatCurrency = (value,kushti) => {
   if (value == null || isNaN(value)) return `0.00 ${!kushti ? '€':''}`;
@@ -40,7 +53,7 @@ export const AuthProvider = ({ children }) => {
     const emriPerdoruesit = Cookies.get('emriPerdoruesit');
     const aKaUser = Cookies.get('aKaUser');
     const nderrimiID = Cookies.get('nderrimiID');
-    const avansi = formatCurrency(Cookies.get('avansi'), true);
+    const avansi = Cookies.get('avansi')
     const numriPercjelles = Cookies.get('numriPercjelles');
     const dataFillimit = Cookies.get('dataFillimit');
     const folderPathGarancionet = 'C:\\Users\\BerdynaTech\\Documents\\btechPDFtest';
