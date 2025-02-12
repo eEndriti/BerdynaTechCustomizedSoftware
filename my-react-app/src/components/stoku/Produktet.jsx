@@ -2,13 +2,13 @@ import { useState, useEffect, useContext } from 'react';
 import { Col, Container, Row, Button, Form, Spinner,Card,Table } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan,faEdit } from '@fortawesome/free-solid-svg-icons';
-import ModalPerPyetje from './ModalPerPyetje';
+import ModalPerPyetje from '../ModalPerPyetje';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ShtoNjeProdukt from './ShtoNjeProdukt';
 import { useNavigate } from 'react-router-dom';
-import AnimatedSpinner from './AnimatedSpinner';
-import AuthContext,{ formatCurrency } from "./AuthContext";
+import AnimatedSpinner from '../AnimatedSpinner';
+import AuthContext,{ formatCurrency } from "../AuthContext";
 
 
 export default function Produktet() {

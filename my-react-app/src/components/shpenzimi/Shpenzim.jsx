@@ -5,7 +5,7 @@ import { Row, Col, Button, Form,Spinner,Modal, Container, InputGroup} from 'reac
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from '../ModalPerPyetje'
-import KerkoProduktin from '../KerkoProduktin';
+import KerkoProduktin from '../stoku/KerkoProduktin';
 import AuthContext, { normalizoDaten , localTodayDate, formatLongDateToAlbanian } from '../AuthContext';
 
 export default function Shpenzim() {

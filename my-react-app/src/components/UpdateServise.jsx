@@ -3,7 +3,7 @@ import { Modal, Button, Form,Spinner, Toast,InputGroup,Row,Col,Table } from 'rea
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AuthContext, { formatCurrency } from "../components/AuthContext";
-import KerkoProduktin from './KerkoProduktin'
+import KerkoProduktin from './stoku/KerkoProduktin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import AnimatedSpinner from './AnimatedSpinner';

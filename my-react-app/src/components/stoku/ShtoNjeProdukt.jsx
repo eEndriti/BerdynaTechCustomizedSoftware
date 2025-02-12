@@ -2,8 +2,8 @@ import { useState, useEffect, useContext, useCallback } from 'react';
 import { Modal, Button, Form, InputGroup, Spinner, Col } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import AuthContext from "../components/AuthContext";
-import AnimatedSpinner from './AnimatedSpinner';
+import AuthContext from "../AuthContext";
+import AnimatedSpinner from '../AnimatedSpinner';
 
 const ShtoNjeProdukt = ({ show, handleClose, prejardhja, produkti = {} }) => {
   const [kategorite, setKategorite] = useState([]);
@@ -47,6 +47,11 @@ const ShtoNjeProdukt = ({ show, handleClose, prejardhja, produkti = {} }) => {
       if (produkti.kategoriaID) {
         handleCategoryChange(produkti.kategoriaID);
       }
+    }else{
+      setProductDetails(null)
+      setSelectedKategoria(null)
+      setMeFature(false)
+      setSasiStatike(false)
     }
   }, [produkti, aKa]);
 

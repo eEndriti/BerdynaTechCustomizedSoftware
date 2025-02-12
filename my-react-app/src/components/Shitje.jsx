@@ -2,12 +2,11 @@ import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Container, Row, Col, Table, Form, Spinner,InputGroup } from "react-bootstrap";
 import KerkoSubjektin from "./KerkoSubjektin";
-import KerkoProduktin from "./KerkoProduktin";
+import KerkoProduktin from "./stoku/KerkoProduktin";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import ShtoNjeProdukt from "./ShtoNjeProdukt";
 import AnimatedSpinner from "./AnimatedSpinner";
 import { PrintoGarancion } from "./PrintoGarancion";
 import AuthContext ,{ formatCurrency } from "../components/AuthContext";
@@ -498,7 +497,6 @@ const kontrolloValidetin = () => {
 
       
 
-      <ShtoNjeProdukt show={showShtoProduktinModal} handleClose={handleCloseShtoProduktinModal} />
       <ToastContainer/>
     </Container> }
     </>

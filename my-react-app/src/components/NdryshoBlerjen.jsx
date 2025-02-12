@@ -5,7 +5,7 @@ import { Container,Row,Form,Button,Col, InputGroup,Table, Spinner, Toast, Alert,
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEdit, faUndo,faTrashCan,faWarning, faL } from '@fortawesome/free-solid-svg-icons';
 import KerkoSubjektin from './KerkoSubjektin'
-import KerkoProduktin from './KerkoProduktin'
+import KerkoProduktin from './stoku/KerkoProduktin'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje'

@@ -94,7 +94,7 @@ const ShtoPagese = ({ show, handleClose,data = {} }) => {
         });
       }, 2000);
     }finally{
-      //window.location.reload()
+      window.location.reload()
     }
     
   }

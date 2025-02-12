@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Container, Row, Col, Form } from 'react-bootstrap';
-import AnimatedSpinner from './AnimatedSpinner';
+import AnimatedSpinner from '../AnimatedSpinner';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserSecret } from '@fortawesome/free-solid-svg-icons';
-import { formatCurrency } from "../components/AuthContext";
+import { formatCurrency } from "../AuthContext";
 
 export default function DetajePerProdukt() {
   const { produktiID } = useParams();

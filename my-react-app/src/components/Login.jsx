@@ -83,7 +83,6 @@ export default function Login() {
           setSessionCookie('avansi', currentShift.avansi);
           setSessionCookie('numriPercjelles', currentShift.numriPercjelles);
           setSessionCookie('dataFillimit', currentShift.dataFillimit);
-
           if (currentDate !== shiftDate) {
             await window.api.mbyllNderriminAktual();
             setShowAdvanceModal(true);

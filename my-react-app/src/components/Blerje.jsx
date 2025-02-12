@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import KerkoProduktin from "./KerkoProduktin";
+import KerkoProduktin from "./stoku/KerkoProduktin";
 import { useNavigate } from "react-router-dom";
 import AuthContext,{formatCurrency} from "../components/AuthContext";
 

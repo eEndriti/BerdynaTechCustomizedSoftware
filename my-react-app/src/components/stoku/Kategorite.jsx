@@ -17,8 +17,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan, faEdit } from '@fortawesome/free-solid-svg-icons';
 import 'react-toastify/dist/ReactToastify.css';
 import 'animate.css';
-import ModalPerPyetje from './ModalPerPyetje';
-import AnimatedSpinner from './AnimatedSpinner';
+import ModalPerPyetje from '../ModalPerPyetje';
+import AnimatedSpinner from '../AnimatedSpinner';
 
 export default function Kategorite() {
   const [kategorite, setKategorite] = useState([]);

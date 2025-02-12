@@ -95,7 +95,7 @@ function Layout() {
   }, [totaliArkesResult]);
 
   function kalkuloBonusetDitore() {
-    const totalShuma = profiti.reduce((accumulator, current) => accumulator + current.shuma, 0);
+    const totalShuma = profiti.reduce((accumulator, current) => accumulator + current.shumaPerBonuse, 0);
     setTotalShumaPerBonuse(totalShuma)
     let bonus = 0;
 

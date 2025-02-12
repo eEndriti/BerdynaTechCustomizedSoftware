@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Container, Spinner, Col, Row,Form,Button,Card } from 'react-bootstrap';
 import AnimatedSpinner from './AnimatedSpinner';
 import ChartComponent from './ChartComponent';
-import { formatCurrency } from "../components/AuthContext";
+import { formatCurrency, normalizoDaten } from "../components/AuthContext";
 
 export default function Evidenca() {
   const [loading, setLoading] = useState(true);
@@ -65,38 +65,41 @@ export default function Evidenca() {
 
   useEffect(() => {
     if (!startDate || !endDate) return;  
-  
+    console.log(startDate,endDate)
+    const startDateNormale = `${startDate} 00:00:00`
+    const endDateNormale = `${endDate} 23:59:59`
+
     const fetchData = async () => {
       setLoading2(true);
       try {
         const query1 = `
           SELECT SUM(b.totaliPerPagese) as totaliPagesesBlerje
           FROM blerje b 
-          WHERE b.dataBlerjes BETWEEN '${startDate}' AND '${endDate}'
+          WHERE b.dataBlerjes BETWEEN '${startDateNormale}' AND '${endDateNormale}'
         `;
         const data1 = await window.api.fetchTableQuery(query1);
 
         const query2 = `
            select sum(s.totaliPerPagese) as totaliPagesesShitje from shitje s
-            where s.dataShitjes BETWEEN '${startDate}' AND '${endDate}'
+            where s.dataShitjes BETWEEN '${startDateNormale}' AND '${endDateNormale}'
           `;
         const data2 = await window.api.fetchTableQuery(query2);
 
         const query3 = `
           select sum(sh.shumaShpenzimit) as totaliPagesesShpenzim from shpenzimi sh
-          where sh.dataShpenzimit BETWEEN '${startDate}' AND '${endDate}'
+          where sh.dataShpenzimit BETWEEN '${startDateNormale}' AND '${endDateNormale}'
         `;
         const data3 = await window.api.fetchTableQuery(query3);
 
         const query4 = `
           select ISNULL(SUM(s.totaliPageses), 0) as totaliPagesesServisim  from servisimi s
-          where statusi = 'perfunduar' and s.dataPerfundimit BETWEEN '${startDate}' AND '${endDate}'
+          where statusi = 'perfunduar' and s.dataPerfundimit BETWEEN '${startDateNormale}' AND '${endDateNormale}'
         `;
         const data4 = await window.api.fetchTableQuery(query4);
 
         const query5 = `
            select sum(p.shuma) as totalHyrje from profiti p
-          where p.statusi = 0 AND p.dataProfitit BETWEEN '${startDate}' AND '${endDate}'
+          where p.statusi = 0 AND p.dataProfitit BETWEEN '${startDateNormale}' AND '${endDateNormale}'
         `;
         const data5 = await window.api.fetchTableQuery(query5);
         
@@ -188,6 +191,7 @@ export default function Evidenca() {
                   { label: 'Totali i Blerjeve', value: totalBlerje },
                   { label: 'Totali i Servisimeve', value: totalServisime },
                   { label: 'Totali i Shpenzimeve', value: totalShpenzime },
+                  { label: 'Klient te Rinje', value: totalShpenzime },
                 ].map((item, index) => (
                   <Card
                     key={index}

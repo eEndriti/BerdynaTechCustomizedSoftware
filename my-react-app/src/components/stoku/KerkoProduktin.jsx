@@ -3,7 +3,7 @@ import { Modal, Form, Table, Button, Spinner, Alert } from "react-bootstrap";
 import ShtoNjeProdukt from "./ShtoNjeProdukt";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import AnimatedSpinner from "./AnimatedSpinner";
+import AnimatedSpinner from "../AnimatedSpinner";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 

@@ -4,7 +4,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AuthContext, { formatCurrency } from "../components/AuthContext";
 import MenyratPagesesExport from './MenyratPagesesExport';
-import KerkoProduktin from './KerkoProduktin'
+import KerkoProduktin from './stoku/KerkoProduktin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import AnimatedSpinner from './AnimatedSpinner';

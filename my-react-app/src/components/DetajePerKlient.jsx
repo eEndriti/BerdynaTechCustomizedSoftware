@@ -3,7 +3,7 @@ import { Container, Row, Col, Form, Spinner, Button, OverlayTrigger, Tooltip } f
 import { useParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronRight,faTrashCan,faEye } from '@fortawesome/free-solid-svg-icons';
-import AuthContext, { formatCurrency } from '../components/AuthContext';
+import AuthContext, { formatCurrency, normalizoDaten } from '../components/AuthContext';
 import AnimatedSpinner from './AnimatedSpinner';
 import ModalPerPyetje from './ModalPerPyetje'
 import { ToastContainer, toast } from 'react-toastify';
@@ -101,7 +101,7 @@ export default function DetajePerKlient() {
         const data = lloji === 'klient' ? combinedData : blerjet;
         return data.filter(item => {
             const itemDate = new Date(item.dataShitjes || item.dataPerfundimit || item.dataBlerjes);
-            return itemDate >= new Date(startDate) && itemDate <= new Date(endDate);
+            return itemDate >= normalizoDaten(startDate) && itemDate <= normalizoDaten(endDate)
         });
     }, [lloji, combinedData, blerjet, startDate, endDate]);
     

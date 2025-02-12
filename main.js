@@ -245,9 +245,8 @@ ipcMain.handle('kontrolloNderriminAktual', async () => {
 });
 
 async function filloNderriminERi(perdoruesiID, avans) {
-  const currentDate = new Date();
-  const formattedDate = currentDate.toISOString().split('T')[0]; 
-
+  const currentDate = await getDateTime()
+  
   try {
     await sql.connect(config);
 
@@ -255,7 +254,7 @@ async function filloNderriminERi(perdoruesiID, avans) {
     const result = await sql.query`
       SELECT COUNT(*) AS shiftCount
       FROM nderrimi
-      WHERE CONVERT(date, dataFillimit) = ${formattedDate}`;
+      WHERE CONVERT(datetime, dataFillimit) = ${currentDate}`;
 
     // e Llogaritim numri Percjelles
     const shiftCount = result.recordset[0].shiftCount;
@@ -723,13 +722,13 @@ ipcMain.handle('fetchTableProfiti', async () => {
 });
 
 async function fetchTableProfitiDitor() {
-  const dataSot = new Date().toISOString().split('T')[0];
+  const dataSot = await getDateTime()
   
   try {
     await sql.connect(config);
 
     const result = await sql.query`
-     SELECT p.profitiID, p.shuma, p.nderrimiID, p.transaksioniID, t.lloji,t.dataTransaksionit,t.nderrimiID
+     SELECT p.profitiID, p.shuma, p.nderrimiID, p.transaksioniID, t.lloji,t.dataTransaksionit,t.nderrimiID,p.shumaPerBonuse
       FROM profiti p
       JOIN transaksioni t ON t.transaksioniID = p.transaksioniID
       LEFT JOIN shitje sh ON sh.transaksioniID = t.transaksioniID AND t.lloji = 'Shitje'
@@ -1923,7 +1922,8 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
       UPDATE profiti
       SET 
         shuma = @shuma,
-        statusi = @statusi
+        statusi = @statusi,
+        dataProfitit = @dataProfitit
       WHERE 
         transaksioniID = @transaksioniID
     `;
@@ -1931,6 +1931,7 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
     await connection.request()
       .input('shuma', sql.Decimal(18, 2), profitiShitjes) 
       .input('transaksioniID', sql.Int, data.transaksioniIDFillestar) 
+      .input('dataProfitit', sql.DateTime, dataDheOra) 
       .input('statusi', sql.Int, statusi) 
       .query(updateProfitiShitjes);
 
@@ -2215,7 +2216,8 @@ ipcMain.handle('ndryshoServisinPerfunduar', async (event, data) => {
       UPDATE profiti
       SET 
         shuma = @shuma,
-        statusi = @statusi
+        statusi = @statusi,
+        dataProfitit = @dataProfitit
       WHERE 
         transaksioniID = @transaksioniID
     `;
@@ -2223,6 +2225,7 @@ ipcMain.handle('ndryshoServisinPerfunduar', async (event, data) => {
     await connection.request()
       .input('shuma', sql.Decimal(18, 2), profitiShitjes) 
       .input('transaksioniID', sql.Int, data.transaksioniIDFillestar) 
+      .input('dataProfitit', sql.DateTime, dataDheOra) 
       .input('statusi', sql.Int, statusi) 
       .query(updateProfitiShitjes);
 
@@ -2452,9 +2455,9 @@ ipcMain.handle('paguajBonuset', async (event, data) => {
         `;
         console.log('asdsadsadsadasd',data)
         console.log('asdsadsadsadasd2222222',fetchedData)
-
-        const totaliIPageses =  - data.shumaPageses
         const mbetjaPerPagese = fetchedData.mbetjaPerPagese + data.shumaPageses
+        const totaliIPageses = fetchedData.totaliPerPagese - mbetjaPerPagese
+
         console.log('vlerat',totaliIPageses,'/',mbetjaPerPagese)
 
          await connection.request()
@@ -2490,6 +2493,30 @@ ipcMain.handle('paguajBonuset', async (event, data) => {
       .input('transaksioniID',sql.Int,data.transaksioniID)
       .query(deletePagesaQuery)
 
+      if(llojiDokumentit == 'shitje' || llojiDokumentit == 'servisimi'){ // pasi qe fshihet pagesa i bjen qe shitja sosht pagu plotesisht edhe e hek llogaritjen e bonuseve!
+          let statusi;
+        if (mbetjaPerPagese <= 0) {
+          statusi =  0;
+        } else {
+          statusi =  1;
+        }
+
+        const updateProfiti = `
+        UPDATE profiti
+        SET 
+          statusi = @statusi,
+          dataProfitit = @dataProfitit
+        WHERE 
+          transaksioniID = @transaksioniID
+      `;
+
+      await connection.request()
+        .input('transaksioniID', sql.Int, data.transaksioniID) 
+        .input('dataProfitit', sql.DateTime, dataDheOra) 
+        .input('statusi', sql.Int, statusi) 
+        .query(updateProfiti);
+      }
+
       await ndryshoBalancin(data.menyraPagesesID,data.shumaPageses,'-',connection)
       await ndryshoGjendjenEArkes(data.menyraPagesesID,data.shumaPageses,'-',data.nderrimiID,connection) //tested ok
 
@@ -2504,6 +2531,7 @@ ipcMain.handle('paguajBonuset', async (event, data) => {
     let connection;
     let llojiDokumentit = data.llojiDokumentit
     let llojiDokumentit2 
+    const dataDheOra = await getDateTime()
     if(llojiDokumentit != null){
       llojiDokumentit2 = llojiDokumentit.charAt(0).toUpperCase() + data.llojiDokumentit.slice(1).toLowerCase()
     }
@@ -2552,6 +2580,29 @@ ipcMain.handle('paguajBonuset', async (event, data) => {
           veprimi =  '+'
         }
       
+        if(llojiDokumentit == 'shitje' || llojiDokumentit == 'servisimi'){ // pasi qe shtohet pagesa e kontrollon nese pagesa osht e plote me rregullu statusin!
+          let statusi;
+        if (data.mbetjaPerPagese <= 0) {
+          statusi =  0;
+        } else {
+          statusi =  1;
+        }
+
+        const updateProfiti = `
+        UPDATE profiti
+        SET 
+          statusi = @statusi,
+          dataProfitit = @dataProfitit
+        WHERE 
+          transaksioniID = @transaksioniID
+      `;
+
+      await connection.request()
+        .input('transaksioniID', sql.Int, data.transaksioniID) 
+        .input('dataProfitit', sql.DateTime, dataDheOra) 
+        .input('statusi', sql.Int, statusi) 
+        .query(updateProfiti);
+      }
 
       await insertPagesa(data2,connection)
       await ndryshoBalancin(data2.menyraPagesesID,data2.totaliPageses,veprimi,connection)
@@ -2950,15 +3001,21 @@ ipcMain.handle('perfundoShitjenOnline', async (event, data) => {
             SET totaliPerPagese = @totaliPerPagese,
                 totaliPageses = @totaliPageses,       
                 mbetjaPerPagese = @mbetjaPerPagese,
-                transaksioniID = @transaksioniID
+                transaksioniID = @transaksioniID,
+                dataShitjes = @dataShitjes,
+                perdoruesiID = @perdoruesiID,
+                nderrimiID = @nderrimiID
             WHERE shitjeID = @shitjeID
       `;
 
       await connection.request()
-          .input('totaliPerPagese', sql.Decimal(18, 2), data.totaliIPranuar)
+          .input('totaliPerPagese', sql.Decimal(18, 2), data.totaliPerPagese)
           .input('totaliPageses', sql.Decimal(18, 2), data.totaliIPranuar)
           .input('mbetjaPerPagese', sql.Decimal(18, 2), 0)
           .input('transaksioniID', sql.Int, transaksioniID)
+          .input('dataShitjes', sql.DateTime, dataDheOra)
+          .input('perdoruesiID', sql.Int, data.perdoruesiID)
+          .input('nderrimiID', sql.Int, data.nderrimiID)
           .input('shitjeID', sql.Int, data.shitjeID)
           .query(updateShitjeQuery);
 
@@ -2983,7 +3040,8 @@ ipcMain.handle('perfundoShitjenOnline', async (event, data) => {
               UPDATE profiti
               SET 
                 statusi = @statusi,
-                transaksioniID = @transaksioniID
+                transaksioniID = @transaksioniID,
+                dataProfitit = @dataProfitit
               WHERE 
                 profitiID = @profitiID
             `;
@@ -2991,6 +3049,7 @@ ipcMain.handle('perfundoShitjenOnline', async (event, data) => {
             await connection.request()
               .input('transaksioniID', sql.Int, transaksioniID) 
               .input('statusi', sql.Int, 0) 
+              .input('dataProfitit', sql.DateTime, dataDheOra) 
               .input('profitiID', sql.Int, data.profitiID) 
               .query(updateProfitiShitjes);
 
@@ -3005,7 +3064,7 @@ ipcMain.handle('perfundoShitjenOnline', async (event, data) => {
 
             await insertPagesa(dataPerPagesa,connection)
             await ndryshoBalancin(data.menyraPagesesID,data.totaliIPranuar,'+',connection)
-          await ndryshoGjendjenEArkes(data.menyraPagesesID,data.totaliIPranuar,'+',data.nderrimiID,connection)//tested ok
+            await ndryshoGjendjenEArkes(data.menyraPagesesID,data.totaliIPranuar,'+',data.nderrimiID,connection)//tested ok
 
     return { success: true };
   } catch (error) {
