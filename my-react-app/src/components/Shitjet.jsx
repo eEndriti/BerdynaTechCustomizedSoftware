@@ -86,7 +86,7 @@ export default function Shitjet() {
         if(llojiShitjes == 'dyqan'){
              result = await window.api.anuloShitjen(data);
         }else if (llojiShitjes == 'online'){
-            result = await window.api.anuloPorosineOnline(shitjeIDPerAnulim)
+            result = await window.api.anuloPorosineOnlineTePranuar(shitjeIDPerAnulim)
         }
         if (result.success) {
             toast.success(`Shitja u Anulua me Sukses !`, {

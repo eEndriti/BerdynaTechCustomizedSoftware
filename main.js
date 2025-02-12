@@ -3153,7 +3153,6 @@ const kalkuloBonuset = async () => {
   } 
 };
 
-
 ipcMain.handle('anuloPorosineOnline', async (event, idPerAnulim) => {
   let connection;
 
@@ -3209,8 +3208,114 @@ ipcMain.handle('anuloPorosineOnline', async (event, idPerAnulim) => {
         WHERE shitjeID = @shitjeID
       `;
 
+      const deleteShitjeOnlineQuery = `
+      DELETE FROM shitjeOnline
+      WHERE shitjeID = @shitjeID
+    `;
+
+      await connection.request().input('shitjeID', sql.Int, idPerAnulim).query(deleteShitjeProduktiQuery);
+      await connection.request().input('shitjeID', sql.Int, idPerAnulim).query(deleteShitjeOnlineQuery);
+      await connection.request().input('shitjeID', sql.Int, idPerAnulim).query(deleteShitjeQuery);
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  }  
+});
+
+ipcMain.handle('anuloPorosineOnlineTePranuar', async (event, idPerAnulim) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+
+      // Step 1: Retrieve sold products from shitjeProdukti for the specified transaksioniID
+      const getShitjeProduktiQuery = `
+        SELECT sp.produktiID, sp.sasia,p.sasiStatike
+        FROM shitjeProdukti sp
+		    join produkti p on p.produktiID = sp.produktiID
+        WHERE shitjeID IN (
+          SELECT shitjeID 
+          FROM shitje 
+          WHERE shitjeID = @shitjeID
+        )
+      `;
+
+      const getTransaksioniID = `
+       SELECT transaksioniID from shitje where shitjeID = @shitjeID
+      `;
+      const transaksioniIDResult = await connection.request()
+      .input('shitjeID', sql.Int, idPerAnulim)
+      .query(getTransaksioniID);
+
+      const transaksioniID = transaksioniIDResult.recordset[0].transaksioniID
+
+      const shitjeProduktiResult = await connection.request()
+        .input('shitjeID', sql.Int, idPerAnulim)
+        .query(getShitjeProduktiQuery);
+
+      const soldProducts = shitjeProduktiResult.recordset;
+
+      // Step 2: Update product quantities in produkti table
+      const updateProduktiQuery = `
+        UPDATE produkti
+        SET sasia = sasia + @sasia
+        WHERE produktiID = @produktiID
+      `;
+
+      for (const produkt of soldProducts) {
+        if(!produkt.sasiStatike){
+          await connection.request()
+          .input('produktiID', sql.Int, produkt.produktiID)
+          .input('sasia', sql.Int, produkt.sasia)
+          .query(updateProduktiQuery);
+        }
+      }
+
+      // Step 3: Delete records from shitjeProdukti, shitje, and transaksioni tables
+      const deleteShitjeProduktiQuery = `
+        DELETE FROM shitjeProdukti 
+        WHERE shitjeID IN (
+          SELECT shitjeID 
+          FROM shitje 
+          WHERE shitjeID = @shitjeID
+        )
+      `;
+
+      const deleteShitjeQuery = `
+        DELETE FROM shitje 
+        WHERE shitjeID = @shitjeID
+      `;
+
+      const deletePagesaQuery = `
+      DELETE FROM pagesa 
+      WHERE transaksioniID = @transaksioniID
+    `;
+
+      const deleteShitjeOnlineQuery = `
+        DELETE FROM shitjeOnline 
+        WHERE shitjeID = @shitjeID
+      `;
+
+      const deleteProfitiQuery = `
+        DELETE FROM profiti 
+        WHERE transaksioniID = @transaksioniID
+      `;
+
+     
+
+      const deleteTransaksioniQuery = `
+        DELETE FROM transaksioni 
+        WHERE transaksioniID = @transaksioniID
+      `;
+      await connection.request().input('transaksioniID', sql.Int, transaksioniID).query(deletePagesaQuery);
+      await connection.request().input('shitjeID', sql.Int, idPerAnulim).query(deleteShitjeOnlineQuery);
+      await connection.request().input('transaksioniID', sql.Int, transaksioniID).query(deleteProfitiQuery);
       await connection.request().input('shitjeID', sql.Int, idPerAnulim).query(deleteShitjeProduktiQuery);
       await connection.request().input('shitjeID', sql.Int, idPerAnulim).query(deleteShitjeQuery);
+      await connection.request().input('transaksioniID', sql.Int, transaksioniID).query(deleteTransaksioniQuery);
+
       return { success: true };
 
   } catch (error) {

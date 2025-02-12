@@ -5,16 +5,23 @@ import { Container,Row } from 'react-bootstrap';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
-const ChartComponent = ({ totalShitje, totalBlerje, totalShpenzime, totalServisime, totalHyrje }) => {
-
+const ChartComponent = ({ diferencat = {} }) => {
+  console.log('chart df',diferencat)
   // Data for Bar Chart
   const barChartData = {
     labels: ['Shitje', 'Blerje', 'Shpenzime', 'Servisime', 'Hyrje'],
     datasets: [
       {
-        label: 'Totali (€)',
-        data: [totalShitje, totalBlerje, totalShpenzime, totalServisime, totalHyrje],
-        backgroundColor: ['#3e95cd', '#8e5ea2', '#3cba9f', '#ffcc00', '#ff5733'],
+        label: 'Nga Periudha Aktuale',
+        data: [diferencat.totaliPagesesShitje, diferencat.totaliPagesesBlerje, diferencat.totaliPagesesShpenzim, diferencat.totaliPagesesServisim, diferencat.totalHyrje],
+        backgroundColor:['#3e95cd', '#ffcc00', '#ff5733', '#8e5ea2', '#3cba9f']        ,
+        borderColor: '#fff',
+        borderWidth: 1,
+      },
+      {
+        label: 'Nga Periudha Paraprake',
+        data: [diferencat.totaliPagesesShitjeDiff, diferencat.totaliPagesesBlerjeDiff, diferencat.totaliPagesesShpenzimDiff, diferencat.totaliPagesesServisimDiff, diferencat.totalHyrjeDiff],
+        backgroundColor: ['#d9e8fb', '#fff4b3', '#ffcdc2', '#e6c9e6', '#c1f2e6'],
         borderColor: '#fff',
         borderWidth: 1,
       },
@@ -26,7 +33,7 @@ const ChartComponent = ({ totalShitje, totalBlerje, totalShpenzime, totalServisi
     labels: ['Shitje', 'Blerje', 'Shpenzime', 'Servisime', 'Hyrje'],
     datasets: [
       {
-        data: [totalShitje, totalBlerje, totalShpenzime, totalServisime, totalHyrje],
+        data: [diferencat.totaliPagesesShitje, diferencat.totaliPagesesBlerje, diferencat.totaliPagesesShpenzim, diferencat.totaliPagesesServisim, diferencat.totalHyrje],
         backgroundColor: ['#3e95cd', '#8e5ea2', '#3cba9f', '#ffcc00', '#ff5733'],
       },
     ],

@@ -3,6 +3,9 @@ import { Container, Spinner, Col, Row,Form,Button,Card } from 'react-bootstrap';
 import AnimatedSpinner from './AnimatedSpinner';
 import ChartComponent from './ChartComponent';
 import { formatCurrency, normalizoDaten } from "../components/AuthContext";
+import DashboardStats from './DashboardStats';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMoneyBill } from '@fortawesome/free-solid-svg-icons';
 
 export default function Evidenca() {
   const [loading, setLoading] = useState(true);
@@ -13,14 +16,11 @@ export default function Evidenca() {
   const [error, setError] = useState(null);
   const [startDate, setStartDate] = useState();
   const [endDate, setEndDate] = useState();
-  const [totalQarkullimi,setTotalQarkullimi] = useState(0)
-  const [totalBlerje,setTotalBlerje] = useState(0)
-  const [totalShitje,setTotalShitje] = useState(0)
-  const [totalHyrje,setTotalHyrje] = useState(0)
-  const [totalServisime,setTotalServisime] = useState(0)
-  const [totalShpenzime,setTotalShpenzime] = useState(0)
   const [loading2,setLoading2] = useState(false)
   const [tregoGrafikun,setTregoGrafikun] = useState(false)
+  const [diferencaDitore,setDiferencaDitore] = useState()
+  const [startDate2,setStartDate2] = useState()
+  const [diferencat,setDiferencat] = useState('') 
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,49 +69,83 @@ export default function Evidenca() {
     const startDateNormale = `${startDate} 00:00:00`
     const endDateNormale = `${endDate} 23:59:59`
 
+   
+
+
     const fetchData = async () => {
       setLoading2(true);
-      try {
-        const query1 = `
-          SELECT SUM(b.totaliPerPagese) as totaliPagesesBlerje
-          FROM blerje b 
-          WHERE b.dataBlerjes BETWEEN '${startDateNormale}' AND '${endDateNormale}'
-        `;
-        const data1 = await window.api.fetchTableQuery(query1);
 
-        const query2 = `
-           select sum(s.totaliPerPagese) as totaliPagesesShitje from shitje s
-            where s.dataShitjes BETWEEN '${startDateNormale}' AND '${endDateNormale}'
-          `;
-        const data2 = await window.api.fetchTableQuery(query2);
+      const startDate2Normale = `${startDate2} 00:00:00`
 
-        const query3 = `
-          select sum(sh.shumaShpenzimit) as totaliPagesesShpenzim from shpenzimi sh
-          where sh.dataShpenzimit BETWEEN '${startDateNormale}' AND '${endDateNormale}'
-        `;
-        const data3 = await window.api.fetchTableQuery(query3);
+      const queries = [
+        `SELECT SUM(b.totaliPerPagese) as totaliPagesesBlerje FROM blerje b WHERE b.dataBlerjes BETWEEN '${startDateNormale}' AND '${endDateNormale}'`,
+        `SELECT SUM(s.totaliPerPagese) as totaliPagesesShitje FROM shitje s WHERE s.dataShitjes BETWEEN '${startDateNormale}' AND '${endDateNormale}'`,
+        `SELECT SUM(sh.shumaShpenzimit) as totaliPagesesShpenzim FROM shpenzimi sh WHERE sh.dataShpenzimit BETWEEN '${startDateNormale}' AND '${endDateNormale}'`,
+        `SELECT ISNULL(SUM(s.totaliPageses), 0) as totaliPagesesServisim FROM servisimi s WHERE statusi = 'perfunduar' AND s.dataPerfundimit BETWEEN '${startDateNormale}' AND '${endDateNormale}'`,
+        `SELECT SUM(p.shuma) as totalHyrje FROM profiti p WHERE p.statusi = 0 AND p.dataProfitit BETWEEN '${startDateNormale}' AND '${endDateNormale}'`,
 
-        const query4 = `
-          select ISNULL(SUM(s.totaliPageses), 0) as totaliPagesesServisim  from servisimi s
-          where statusi = 'perfunduar' and s.dataPerfundimit BETWEEN '${startDateNormale}' AND '${endDateNormale}'
-        `;
-        const data4 = await window.api.fetchTableQuery(query4);
+        `SELECT SUM(b.totaliPerPagese) as totaliPagesesBlerjeDiff FROM blerje b WHERE b.dataBlerjes BETWEEN '${startDate2Normale}' AND '${startDateNormale}'`,
+        `SELECT SUM(s.totaliPerPagese) as totaliPagesesShitjeDiff FROM shitje s WHERE s.dataShitjes BETWEEN '${startDate2Normale}' AND '${startDateNormale}'`,
+        `SELECT SUM(sh.shumaShpenzimit) as totaliPagesesShpenzimDiff FROM shpenzimi sh WHERE sh.dataShpenzimit BETWEEN '${startDate2Normale}' AND '${startDateNormale}'`,
+        `SELECT ISNULL(SUM(s.totaliPageses), 0) as totaliPagesesServisimDiff FROM servisimi s WHERE statusi = 'perfunduar' AND s.dataPerfundimit BETWEEN '${startDate2Normale}' AND '${startDateNormale}'`,
+        `SELECT SUM(p.shuma) as totalHyrjeDiff FROM profiti p WHERE p.statusi = 0 AND p.dataProfitit BETWEEN '${startDate2Normale}' AND '${startDateNormale}'`,
 
-        const query5 = `
-           select sum(p.shuma) as totalHyrje from profiti p
-          where p.statusi = 0 AND p.dataProfitit BETWEEN '${startDateNormale}' AND '${endDateNormale}'
-        `;
-        const data5 = await window.api.fetchTableQuery(query5);
+    ];
+
+         try {
+        const responses = await Promise.all(queries.map(query => window.api.fetchTableQuery(query)));
+          console.log('res',responses)
+          console.log(startDate2Normale,startDateNormale)
+
+        const resultData = {
+            totaliPagesesBlerje: responses[0][0]?.totaliPagesesBlerje || 0,
+            totaliPagesesShitje: responses[1][0]?.totaliPagesesShitje || 0,
+            totaliPagesesShpenzim: responses[2][0]?.totaliPagesesShpenzim || 0,
+            totaliPagesesServisim: responses[3][0]?.totaliPagesesServisim || 0,
+            totalHyrje: responses[4][0]?.totalHyrje || 0,
+
+            totaliPagesesBlerjeDiff: responses[5][0]?.totaliPagesesBlerjeDiff || 0,
+            totaliPagesesShitjeDiff: responses[6][0]?.totaliPagesesShitjeDiff || 0,
+            totaliPagesesShpenzimDiff: responses[7][0]?.totaliPagesesShpenzimDiff || 0,
+            totaliPagesesServisimDiff: responses[8][0]?.totaliPagesesServisimDiff || 0,
+            totalHyrjeDiff: responses[9][0]?.totalHyrjeDiff || 0,
+
+        };
+
+        const totalQarkullimi = resultData.totaliPagesesBlerje + resultData.totaliPagesesShitje + resultData.totaliPagesesShpenzim + resultData.totaliPagesesServisim;
+        const totalQarkullimiDiff = resultData.totaliPagesesBlerjeDiff + resultData.totaliPagesesShitjeDiff + resultData.totaliPagesesShpenzimDiff + resultData.totaliPagesesServisimDiff;
         
-        setTotalBlerje(data1[0].totaliPagesesBlerje)
-        setTotalShitje(data2[0].totaliPagesesShitje)
-        setTotalShpenzime(data3[0].totaliPagesesShpenzim)
-        setTotalServisime(data4[0].totaliPagesesServisim)
-        setTotalHyrje(data5[0].totalHyrje)
+        const resultDataWithQarkullimi = ({
+          ...resultData,
+          totalQarkullimi,
+          totalQarkullimiDiff
+        })
 
-        const totalQarkullimi = (data1[0].totaliPagesesBlerje || 0) + (data2[0].totaliPagesesShitje || 0) + (data3[0].totaliPagesesShpenzim || 0) + (data4[0].totaliPagesesServisim || 0);
-        setTotalQarkullimi(totalQarkullimi);
-                
+        const calculatePercentageDifference = (newValue, oldValue) => {
+          if (oldValue === 0) return newValue === 0 ? 0 : (newValue > 0 ? 100 : -100); 
+          return Math.round(((newValue - oldValue) / oldValue) * 100);
+        };
+        
+        const calculatedDifferences = Object.keys(resultDataWithQarkullimi)
+          .filter(key => key.endsWith('Diff'))
+          .reduce((acc, diffKey) => {
+            const valueKey = diffKey.replace('Diff', '');
+            const percentageDiff = calculatePercentageDifference(resultDataWithQarkullimi[valueKey], resultDataWithQarkullimi[diffKey]);
+            acc[`${valueKey}PercentageDiff`] = percentageDiff;
+            return acc;
+          }, {});
+        
+        const resultDataWithPercentage = {
+          ...resultDataWithQarkullimi,
+          ...calculatedDifferences, // Merge calculated differences into the resultData
+        };
+        
+        // Update state with the new data including percentage differences
+        setDiferencat({ ...diferencat, ...resultDataWithPercentage});
+        
+        // If you want to log the results
+        console.log('f',resultDataWithPercentage);
+
       } catch (error) {
         console.error(error);
       } finally {
@@ -120,8 +154,50 @@ export default function Evidenca() {
     };
   
     fetchData();
-  }, [startDate, endDate]);  
+  }, [startDate2]);  
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const dd = await kalkuloDiferencenDitore(startDate,endDate)
+      setDiferencaDitore(dd)
+    }
+
+    fetchData()
+  },[startDate, endDate])
   
+  const kalkuloDiferencenDitore = async (startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    const diffInMs = start - end;
+    
+    const diffInDays = diffInMs / (24 * 60 * 60 * 1000);
+  
+    const newStartDate = await kalkuloPeriudhenEKaluar(startDate, diffInDays);
+    
+    setStartDate2(newStartDate);
+  
+    return Math.abs(diffInDays);  
+  };
+
+  const kalkuloPeriudhenEKaluar = async (startDate, daysBack) => {
+
+    const end = new Date(startDate);
+  
+    if (isNaN(end)) {
+      throw new Error("Invalid end date provided.");
+    }
+  
+    end.setDate(end.getDate() + daysBack);
+    console.log('end 2', end);
+  
+    const year = end.getFullYear();
+    const month = (end.getMonth() + 1).toString().padStart(2, '0');  
+    const day = end.getDate().toString().padStart(2, '0');
+    console.log('year', year);
+  
+    return `${year}-${month}-${day}`;
+  }
 
   if (loading) {
     return (
@@ -145,6 +221,8 @@ export default function Evidenca() {
 
   return (
     <Container fluid className='mt-5'>
+    <Row>
+    </Row>
       <Row>
         <Col className='d-flex flex-row'>
           {menyratEPageses.map((menyra, index) => (
@@ -181,28 +259,22 @@ export default function Evidenca() {
          {loading2 ? <AnimatedSpinner/> : 
             <Col>
               {tregoGrafikun ?   
-              <ChartComponent totalShitje={totalShitje} totalBlerje={totalBlerje} totalShpenzime={totalShpenzime} totalServisime={totalServisime} totalHyrje={totalHyrje}/>     
+              <ChartComponent diferencat = {diferencat}/>     
               :
+              
               <Col className="d-flex flex-wrap justify-content-start align-items-center gap-3 p-3">
                 {[
-                  { label: 'Totali i Qarkullimit', value: totalQarkullimi },
-                  { label: 'Totali i Shitjeve', value: totalShitje },
-                  { label: 'Totali i Hyrjeve', value: totalHyrje },
-                  { label: 'Totali i Blerjeve', value: totalBlerje },
-                  { label: 'Totali i Servisimeve', value: totalServisime },
-                  { label: 'Totali i Shpenzimeve', value: totalShpenzime },
-                  { label: 'Klient te Rinje', value: totalShpenzime },
+                  { label: 'Totali i Qarkullimit', value: diferencat.totalQarkullimi,diff: diferencat.totalQarkullimiPercentageDiff },
+                  { label: 'Totali i Shitjeve', value: diferencat.totaliPagesesShitje ,diff: diferencat.totaliPagesesShitjePercentageDiff || ''},
+                  { label: 'Totali i Hyrjeve', value: diferencat.totalHyrje,diff: diferencat.totalHyrjePercentageDiff || ''},
+                  { label: 'Totali i Blerjeve', value: diferencat.totaliPagesesBlerje,diff: diferencat.totaliPagesesBlerjePercentageDiff || ''},
+                  { label: 'Totali i Servisimeve', value: diferencat.totaliPagesesServisim,diff: diferencat.totaliPagesesServisimPercentageDiff|| '' },
+                  { label: 'Totali i Shpenzimeve', value: diferencat.totaliPagesesShpenzim,diff: diferencat.totaliPagesesShpenzimPercentageDiff|| '' },
+                  { label: 'Klient te Rinje', value: diferencat.totalShpenzime,diff: diferencat.totaliPagesesShitjeDiff || ''},
                 ].map((item, index) => (
-                  <Card
-                    key={index}
-                    className="shadow-sm p-3 d-flex flex-column align-items-center text-center bg-light border border-0 rounded"
-                    style={{ minWidth: '200px', flex: '1 1 calc(33.333% - 1rem)' }}
-                  >
-                    <Card.Body>
-                      <h5 className="text-secondary">{item.label}</h5>
-                      <span className="fs-4 fw-bold text-dark">{formatCurrency(item.value)}</span>
-                    </Card.Body>
-                  </Card>
+                  <>
+                    <DashboardStats title = {item.label} value = {formatCurrency(item.value)}  diff = {item.diff} periudhaKohore={diferencaDitore} />
+                  </>
                 ))}
               </Col>}
             </Col>     
@@ -210,6 +282,7 @@ export default function Evidenca() {
         }
       </Row>
           <hr/><br/>
+
           <Row>
             <h4 className="text-center mb-4">Evidenca e Pergjithshme:</h4>
             <Col className="d-flex flex-wrap justify-content-start align-items-center gap-3 p-3">

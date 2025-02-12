@@ -20,6 +20,9 @@ const ShtoPagese = ({ show, handleClose,data = {} }) => {
 
   useEffect(() => {
       setMbetjaPageses(data.mbetjaPerPagese - shumaPerPagese)
+      if(shumaPerPagese > data.mbetjaPerPagese){
+        setShumaPerPagese(data.mbetjaPerPagese)
+      }
   }, [shumaPerPagese]);
 
   const updateMenyraPageses = (menyraPageses) => {

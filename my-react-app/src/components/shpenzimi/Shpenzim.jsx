@@ -1,7 +1,7 @@
 import  { useState, useEffect, useContext } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan,faEdit,faChevronDown, faChevronRight,faExchangeAlt } from '@fortawesome/free-solid-svg-icons'; 
-import { Row, Col, Button, Form,Spinner,Modal, Container, InputGroup} from 'react-bootstrap';
+import { Row, Col, Button, Form,Spinner,Modal, Container, InputGroup, FormGroup} from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from '../ModalPerPyetje'
@@ -36,6 +36,9 @@ export default function Shpenzim() {
   const [kategoriaID,setKategoriaID] = useState() // kjo perdoret per me selektu kategorine me kalu stokin ne shpenzim
   const {authData} = useContext(AuthContext)
   const [buttonLoading,setButtonLoading] = useState(false)
+  const [shifraShpenzimSearch,setShifraShpenzimSearch] = useState()
+  const [emertimiShpenzimSearch,setEmertimiShpenzimSearch] = useState()
+  const [shumaShpenzimSearch,setShumaShpenzimSearch] = useState()
 
   useEffect(() => {
 
@@ -61,14 +64,17 @@ export default function Shpenzim() {
 
     const normalizedStartDate = normalizoDaten(startDate);
     const normalizedEndDate = normalizoDaten(endDate);
+
     const filtered = shpenzimet.filter(shpenzim => {
     const shpenzimDate = normalizoDaten(shpenzim.dataShpenzimit);
-      return shpenzimDate >= normalizedStartDate && shpenzimDate <= normalizedEndDate;
+      return (shpenzimDate >= normalizedStartDate && shpenzimDate <= normalizedEndDate) || shpenzim.shifra.includes(shifraShpenzimSearch);
     });
     setFilteredShpenzimet(filtered);
 
-  }, [startDate, endDate, shpenzimet]);
+  }, [startDate, endDate, shpenzimet,shifraShpenzimSearch,emertimiShpenzimSearch,shumaShpenzimSearch]);
 
+
+  
   const handleSelectChange = (event) => {
     const selectedValue = event.target.value;
     setLlojiShpenzimeveSelektuarID(selectedValue);
@@ -328,7 +334,17 @@ export default function Shpenzim() {
               />
             </Form.Group>
           </div>
-
+          <div className='d-flex flex-row justify-content-around m-3'>
+            <FormGroup>
+              <Form.Control placeholder='Kerko me Shifer...'  onChange={(e) => setShifraShpenzimSearch(e.target.value)}/>
+            </FormGroup>
+            <FormGroup>
+              <Form.Control  placeholder='Kerko me Emertim...'  onChange={(e) => setEmertimiShpenzimSearch(e.target.value)}/>
+            </FormGroup>
+            <FormGroup>
+              <Form.Control  placeholder='Kerko me Shumen e Shpenzuar...' onChange={(e) => setShumaShpenzimSearch(e.target.value)}/>
+            </FormGroup>
+          </div>
           {filteredShpenzimet.length > 0 ? (
             <div className='tabelaShpenzimeve'>
             <div className="table-responsive tabeleMeMaxHeight">

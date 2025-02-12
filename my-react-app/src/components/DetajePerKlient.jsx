@@ -31,6 +31,7 @@ export default function DetajePerKlient() {
     const [dataPerAnulimPagese,setDataPerAnulimPagese] = useState()
     const [modalPerPyetje,setModalPerPyetje] = useState(false)
     const {authData} = useContext(AuthContext)
+    const [pagesaAktiveOnline,setPagesaAktiveOnline] = useState()
 
       console.log('shitjet dhe serviset',combinedData,pagesat)
     useEffect(() => {
@@ -122,11 +123,16 @@ export default function DetajePerKlient() {
         setEndDate(e.target.value);
       };
 
-    const detajetEPagesave = (shifra) => {
-        if (activeShifra === shifra) {
+    const detajetEPagesave = (item) => {
+        if(item.lloji == 'online'){
+            setPagesaAktiveOnline(true)
+        }else {
+            setPagesaAktiveOnline(false)
+        }
+        if (activeShifra === item.shifra) {
             setActiveShifra(null); 
         } else {
-            setActiveShifra(shifra); 
+            setActiveShifra(item.shifra); 
         }
     };
     const formatDate = (date) => {
@@ -270,7 +276,7 @@ export default function DetajePerKlient() {
                                                         {nrPagesave > 0 && (
                                                             <FontAwesomeIcon 
                                                                 className={`px-3 ${activeShifra === item.shifra ? 'text-primary' : 'text-secondary'}`}
-                                                                onClick={() => detajetEPagesave(item.shifra)} 
+                                                                onClick={() => detajetEPagesave(item)} 
                                                                 icon={activeShifra === item.shifra ? faChevronDown : faChevronRight} 
                                                             />
                                                         )}
@@ -320,7 +326,7 @@ export default function DetajePerKlient() {
                                         <td>{new Date(item.dataPageses).toLocaleDateString()}</td>
                                         <td>{item.menyraPageses}</td>
                                         <td>
-                                            <Button  variant='btn btn-outline-danger' onClick={() => deletePagesa(item)}>
+                                            <Button  variant='btn btn-outline-danger' disabled = {pagesaAktiveOnline} onClick={() => deletePagesa(item)}>
                                                 <FontAwesomeIcon icon={faTrashCan}/>
                                             </Button>
                                         </td>
