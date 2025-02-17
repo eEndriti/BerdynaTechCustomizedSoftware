@@ -83,12 +83,15 @@ export default function Evidenca() {
         `SELECT SUM(sh.shumaShpenzimit) as totaliPagesesShpenzim FROM shpenzimi sh WHERE sh.dataShpenzimit BETWEEN '${startDateNormale}' AND '${endDateNormale}'`,
         `SELECT ISNULL(SUM(s.totaliPageses), 0) as totaliPagesesServisim FROM servisimi s WHERE statusi = 'perfunduar' AND s.dataPerfundimit BETWEEN '${startDateNormale}' AND '${endDateNormale}'`,
         `SELECT SUM(p.shuma) as totalHyrje FROM profiti p WHERE p.statusi = 0 AND p.dataProfitit BETWEEN '${startDateNormale}' AND '${endDateNormale}'`,
+        `SELECT COUNT(*) as klientTeRinje FROM subjekti s WHERE s.dataKrijimit BETWEEN '${startDateNormale}' AND '${endDateNormale}'`,
+
 
         `SELECT SUM(b.totaliPerPagese) as totaliPagesesBlerjeDiff FROM blerje b WHERE b.dataBlerjes BETWEEN '${startDate2Normale}' AND '${startDateNormale}'`,
         `SELECT SUM(s.totaliPerPagese) as totaliPagesesShitjeDiff FROM shitje s WHERE s.dataShitjes BETWEEN '${startDate2Normale}' AND '${startDateNormale}'`,
         `SELECT SUM(sh.shumaShpenzimit) as totaliPagesesShpenzimDiff FROM shpenzimi sh WHERE sh.dataShpenzimit BETWEEN '${startDate2Normale}' AND '${startDateNormale}'`,
         `SELECT ISNULL(SUM(s.totaliPageses), 0) as totaliPagesesServisimDiff FROM servisimi s WHERE statusi = 'perfunduar' AND s.dataPerfundimit BETWEEN '${startDate2Normale}' AND '${startDateNormale}'`,
         `SELECT SUM(p.shuma) as totalHyrjeDiff FROM profiti p WHERE p.statusi = 0 AND p.dataProfitit BETWEEN '${startDate2Normale}' AND '${startDateNormale}'`,
+        `SELECT COUNT(*) as klientTeRinje FROM subjekti s WHERE s.dataKrijimit BETWEEN '${startDate2Normale}' AND '${startDateNormale}'`,
 
     ];
 
@@ -103,12 +106,15 @@ export default function Evidenca() {
             totaliPagesesShpenzim: responses[2][0]?.totaliPagesesShpenzim || 0,
             totaliPagesesServisim: responses[3][0]?.totaliPagesesServisim || 0,
             totalHyrje: responses[4][0]?.totalHyrje || 0,
+            klientTeRinje:responses[5][0]?.klientTeRinje || 0,
 
-            totaliPagesesBlerjeDiff: responses[5][0]?.totaliPagesesBlerjeDiff || 0,
-            totaliPagesesShitjeDiff: responses[6][0]?.totaliPagesesShitjeDiff || 0,
-            totaliPagesesShpenzimDiff: responses[7][0]?.totaliPagesesShpenzimDiff || 0,
-            totaliPagesesServisimDiff: responses[8][0]?.totaliPagesesServisimDiff || 0,
-            totalHyrjeDiff: responses[9][0]?.totalHyrjeDiff || 0,
+            totaliPagesesBlerjeDiff: responses[6][0]?.totaliPagesesBlerjeDiff || 0,
+            totaliPagesesShitjeDiff: responses[7][0]?.totaliPagesesShitjeDiff || 0,
+            totaliPagesesShpenzimDiff: responses[8][0]?.totaliPagesesShpenzimDiff || 0,
+            totaliPagesesServisimDiff: responses[9][0]?.totaliPagesesServisimDiff || 0,
+            totalHyrjeDiff: responses[10][0]?.totalHyrjeDiff || 0,
+            klientTeRinjeDiff:responses[11][0]?.klientTeRinje || 0,
+
 
         };
 
@@ -189,12 +195,10 @@ export default function Evidenca() {
     }
   
     end.setDate(end.getDate() + daysBack);
-    console.log('end 2', end);
   
     const year = end.getFullYear();
     const month = (end.getMonth() + 1).toString().padStart(2, '0');  
     const day = end.getDate().toString().padStart(2, '0');
-    console.log('year', year);
   
     return `${year}-${month}-${day}`;
   }
@@ -270,10 +274,10 @@ export default function Evidenca() {
                   { label: 'Totali i Blerjeve', value: diferencat.totaliPagesesBlerje,diff: diferencat.totaliPagesesBlerjePercentageDiff || ''},
                   { label: 'Totali i Servisimeve', value: diferencat.totaliPagesesServisim,diff: diferencat.totaliPagesesServisimPercentageDiff|| '' },
                   { label: 'Totali i Shpenzimeve', value: diferencat.totaliPagesesShpenzim,diff: diferencat.totaliPagesesShpenzimPercentageDiff|| '' },
-                  { label: 'Klient te Rinje', value: diferencat.totalShpenzime,diff: diferencat.totaliPagesesShitjeDiff || ''},
+                  { label: 'Klient te Rinje', value: diferencat.klientTeRinje,diff: diferencat.klientTeRinjePercentageDiff || ''},
                 ].map((item, index) => (
                   <>
-                    <DashboardStats title = {item.label} value = {formatCurrency(item.value)}  diff = {item.diff} periudhaKohore={diferencaDitore} />
+                    <DashboardStats title = {item.label} value = {item.label == 'Klient te Rinje' ? item.value :formatCurrency(item.value)}  diff = {item.diff} periudhaKohore={diferencaDitore} />
                   </>
                 ))}
               </Col>}

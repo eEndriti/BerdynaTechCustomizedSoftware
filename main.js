@@ -1292,21 +1292,23 @@ ipcMain.handle('insertKategorine', async (event, data) => {
 
 ipcMain.handle('insertSubjekti', async (event, data) => {
   let connection;
+  let dataDheOra = await getDateTime()
   try {
     // Connect to the database
     connection = await sql.connect(config);
 
     const insertSubjektiQuery = `
       INSERT INTO subjekti (
-        emertimi, kontakti, lloji
+        emertimi, kontakti, lloji,dataKrijimit
       ) VALUES (
-        @emertimi, @kontakti, @lloji
+        @emertimi, @kontakti, @lloji,@dataKrijimit
       )
     `;
     const subjektiResult = await connection.request()
       .input('emertimi', sql.VarChar, data.emertimi)
       .input('kontakti', sql.Int, data.kontakti)
       .input('lloji',sql.VarChar,data.lloji)
+      .input('dataKrijimit',sql.DateTime,dataDheOra)
       .query(insertSubjektiQuery);
 
     return { success: true };
@@ -3737,7 +3739,7 @@ ipcMain.handle('anuloBonusin', async (event, data) => {
   }  
 });
 
-ipcMain.handle('anuloShpenzimin', async (event, data) => {
+ipcMain.handle('anuloShpenzimin', async (event, transaksioniID) => {
   let connection;
 
   try {
@@ -3749,7 +3751,7 @@ ipcMain.handle('anuloShpenzimin', async (event, data) => {
         const getNenLloji = `SELECT nenLloji FROM shpenzimi WHERE transaksioniID = @transaksioniID`;
 
         const result = await connection.request()
-          .input('transaksioniID', sql.Int, data.transaksioniID)
+          .input('transaksioniID', sql.Int, transaksioniID)
           .query(getNenLloji);
 
         const nenLloji = result.recordset.length > 0 ? result.recordset[0].nenLloji : null;
@@ -3769,7 +3771,7 @@ ipcMain.handle('anuloShpenzimin', async (event, data) => {
               )
             `;
               const shpenzimProduktiResult = await connection.request()
-              .input('transaksioniID', sql.Int, data.transaksioniID)
+              .input('transaksioniID', sql.Int, transaksioniID)
               .query(getShpenzimProduktQuery);
 
             const Products = shpenzimProduktiResult.recordset;
@@ -3794,7 +3796,7 @@ ipcMain.handle('anuloShpenzimin', async (event, data) => {
             DELETE FROM shpenzimProdukti 
             WHERE transaksioniID = @transaksioniID
           `
-          await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShpenzimiFromShpenzimProdukt);
+          await connection.request().input('transaksioniID', sql.Int, transaksioniID).query(deleteShpenzimiFromShpenzimProdukt);
 
          }else{
                     //ktu fillon pjesa per menaxhim bilanci
@@ -3804,12 +3806,12 @@ ipcMain.handle('anuloShpenzimin', async (event, data) => {
               where transaksioniID = @transaksioniID
             `
             const getShumaResult = await connection.request()
-              .input('transaksioniID', sql.Int, data.transaksioniID)
+              .input('transaksioniID', sql.Int, transaksioniID)
               .query(getShuma)
 
               const shuma = getShumaResult.recordset[0]
               console.log('shuma',shuma)
-              const nderrimiID = await getNderrimiID(data.transaksioniID,connection)
+              const nderrimiID = await getNderrimiID(transaksioniID,connection)
               await ndryshoBalancin(1,shuma.shumaShpenzimit,'+',connection)
               await ndryshoGjendjenEArkes(1,shuma.shumaShpenzimit,'+',nderrimiID,connection)  
          }
@@ -3822,8 +3824,8 @@ ipcMain.handle('anuloShpenzimin', async (event, data) => {
             DELETE FROM shpenzimi 
             WHERE transaksioniID = @transaksioniID
           `;
-          await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShpenzimiQuery);
-          await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShpenzimiFromTransaksioni);
+          await connection.request().input('transaksioniID', sql.Int, transaksioniID).query(deleteShpenzimiQuery);
+          await connection.request().input('transaksioniID', sql.Int, transaksioniID).query(deleteShpenzimiFromTransaksioni);
 
           return { success: true };
 

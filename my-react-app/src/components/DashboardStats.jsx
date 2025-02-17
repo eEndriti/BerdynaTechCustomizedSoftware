@@ -10,7 +10,7 @@ export default function StatisticCard ({ title, value, diff,periudhaKohore }){
   const diffColor = isPositive ? "text-success" : "text-danger";
   const diffIcon = isPositive ? faArrowCircleUp : faArrowDown;
   const bgColor = "bg-light text-dark border-secondary"; 
-
+    console.log(diff)
   return (
     <Row >
         <Col >
@@ -35,11 +35,17 @@ export default function StatisticCard ({ title, value, diff,periudhaKohore }){
                     }
                 >
                     <Col className="d-flex" name={'test2'}>
-                    <span className={`fw-bold ${diffColor}`}>{diff}%</span>
+                    <span className={`fw-bold ${diffColor}`}>{diff ? diff : 0}%</span>
                         <FontAwesomeIcon icon={diffIcon} className={`ms-2 ${diffColor}`} />
-                        <span className="text-muted small ms-2" >
-                            {isPositive ? "Rritje" : "Ulje"} krahasur me periudhen e kaluar!
-                        </span>
+                        {!diff &&  value == '0.00 €' ? 
+                            <span className="text-muted small ms-2" >
+                                Nuk ka Transaksione!
+                            </span> 
+                        :
+                            <span className="text-muted small ms-2" >
+                                {isPositive ? "Rritje" : "Ulje"} krahasur me periudhen e kaluar!
+                            </span>
+                        }
                     </Col>
                 </OverlayTrigger>
                     

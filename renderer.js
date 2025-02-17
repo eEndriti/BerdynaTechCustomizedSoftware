@@ -51,7 +51,7 @@ contextBridge.exposeInMainWorld('api', {
     
     anuloShitjen: (data) => ipcRenderer.invoke('anuloShitjen', data) ,
     anuloBlerjen: (data) => ipcRenderer.invoke('anuloBlerjen', data) ,
-    anuloShpenzimin: (data) => ipcRenderer.invoke('anuloShpenzimin', data) ,
+    anuloShpenzimin: (transaksioniID) => ipcRenderer.invoke('anuloShpenzimin', transaksioniID) ,
     anuloPorosineOnline: (idPerAnulim) => ipcRenderer.invoke('anuloPorosineOnline', idPerAnulim) ,
     fshijeProduktin: (idPerAnulim) => ipcRenderer.invoke('fshijeProduktin', idPerAnulim) ,
     fshijePunonjesin: (idPerAnulim) => ipcRenderer.invoke('fshijePunonjesin', idPerAnulim) ,
