@@ -37,7 +37,10 @@ export const localTodayDate = () => {
   return localDate
 }
 
-
+export const formatDate = (date) => {
+  const data = new Date(date).toISOString().split('T')[0]
+  console.log('dataprejformat',data)
+} 
 export const AuthProvider = ({ children }) => {
   const [authData, setAuthData] = useState({});
 

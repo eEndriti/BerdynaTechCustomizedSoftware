@@ -8,7 +8,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UpdateServise from '../UpdateServise';
 import AnimatedSpinner from '../AnimatedSpinner';
-import AuthContext, { formatCurrency } from '../AuthContext';
+import AuthContext, { formatCurrency, formatDate, formatLongDateToAlbanian, normalizoDaten } from '../AuthContext';
+import Charts from './Charts';
 
 export default function Transaksionet() {
     const navigate = useNavigate()
@@ -19,16 +20,23 @@ export default function Transaksionet() {
     const [buttonLoading,setButtonLoading] = useState(false)
     const [showModalPerPyetje,setShowModalPerPyetje] = useState(false)
     const [dataPerPerdorim,setDataPerPerdorim] = useState({})
+    const [nderrimet,setNderrimet] = useState([])
+    const [selectedNderrimi,setSelectedNderrimi] = useState()
+    const [selectedNderrimiData,setSelectedNderrimiData] = useState()
+    const [tregoGrafikun,setTregoGrafikun] = useState(false)
 
     useEffect(() => {
 
         const fetchData = async () => {
           try{
-            const [transaksionetData] = await Promise.all([
+            const [transaksionetData,nderrimetData] = await Promise.all([
               window.api.fetchTableTransaksionet(),
+              window.api.fetchTableNderrimi(),
             ]);
 
             setTransaksionet(transaksionetData);
+            setNderrimet(nderrimetData)
+
           }catch(e){
             console.log(e)
           }finally{
@@ -41,13 +49,25 @@ export default function Transaksionet() {
       }, []);
       
       useEffect(() => {
+        if(selectedNderrimi){
+          setTregoGrafikun(true)
+          const filterResult = nderrimet.find(item => item.nderrimiID = selectedNderrimi )
+        console.log(filterResult)
+        const dataFormatuar = formatLongDateToAlbanian(filterResult.dataFillimit)
+        setSelectedNderrimiData({
+          nrPercjelles:filterResult.numriPercjelles,
+          dataFillimit:dataFormatuar
+        })
+        }
+      },[selectedNderrimi])
+
+      useEffect(() => {
         const filteredTransaksionet = transaksionet.filter(item => {
           const isMatchingShift = item.nderrimiID == Number(authData.nderrimiID);
           const isPublic = authData.aKaUser == "perdorues" ? item.eshtePublik : true;
           return isMatchingShift && isPublic;
         });
         setTransaksionetENderrimit(filteredTransaksionet);
-        console.log(filteredTransaksionet)
 
       }, [transaksionet, authData.nderrimiID, authData.aKaUser]);
       
@@ -202,6 +222,35 @@ export default function Transaksionet() {
         </div>
         </Row>
     )}
+
+    {authData.aKaUser == 'admin' && 
+      <Row className='d-flex flex-column align-items-center '>
+        <Col lg={3} className='mb-3 d-flex'>
+          <Col className='mx-2'>
+            <Form.Select 
+              value={selectedNderrimi || ""} // Ensures default is selected
+              onChange={(e) => setSelectedNderrimi(e.target.value)}
+            >
+              <option value="" disabled>
+                Selekto Nderrimin
+              </option>
+              {nderrimet.slice(0, -1).reverse().map((item) => (
+                <option key={item.nderrimiID} value={item.nderrimiID}>
+                  {item.numriPercjelles} - {formatLongDateToAlbanian(item.dataFillimit)}
+                </option>
+              ))}
+            </Form.Select>
+
+          </Col>
+          <Col>
+              {selectedNderrimi &&               <Button variant='outline-primary' onClick={() => {setTregoGrafikun(false);setSelectedNderrimi('')}}>{tregoGrafikun ? 'Mbyll Grafikun' : 'Krahaso Nderrimet'}</Button>
+            }
+          </Col>
+        </Col>
+        <Col lg={10} className='mb-3'>
+          {selectedNderrimiData && tregoGrafikun && <Charts transaksionet={transaksionet} nderrimiAktual={authData.nderrimiID} nderrimiSelektuar={selectedNderrimi} nrPercjelles={selectedNderrimiData.nrPercjelles} dataNderrimitSelektuar={selectedNderrimiData.dataFillimit}/>}
+        </Col>
+      </Row>}
     <ModalPerPyetje show={showModalPerPyetje} handleClose={()=> setShowModalPerPyetje(false)} handleConfirm={confirmModalPerPyetje} />
     <ToastContainer/>
   </Container>

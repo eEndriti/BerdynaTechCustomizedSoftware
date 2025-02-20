@@ -14,26 +14,30 @@ export default function Furnitor() {
     const navigate = useNavigate();
     const [furnitoret, setFurnitoret] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [emertimiSearch, setEmertimiSearch] = useState('');
+    const [kontaktiSearch, setKontaktiSearch] = useState('');
     const [showModalPerPyetje, setShowModalPerPyetje] = useState(false);
     const [idPerAnulim, setIdPerAnulim] = useState();
     const [modalShow, setModalShow] = useState(false);
     const [data, setData] = useState({ inputEmertimi: '', inputKontakti: '', ndrysho: false, idPerNdryshim: null, lloji: 'furnitor' });
+    const [filteredFurnitoret,setFilteredFurnitoret] = useState([])
 
     useEffect(() => {
         setLoading(true);
         window.api.fetchTableSubjekti('furnitor').then((receivedData) => {
             const filteredData = receivedData.filter(item => item.lloji == 'furnitor');
             setFurnitoret(filteredData);
+            setFilteredFurnitoret(filteredData)
             setLoading(false);
         });
     }, []);
 
-    const handleSearchChange = (e) => setSearchTerm(e.target.value);
-
-    const filteredFurnitoret = furnitoret.filter(item => {
-        return item.emertimi.toLowerCase().includes(searchTerm.toLowerCase());
-    });
+    useEffect(() => {
+        const filterResult = furnitoret.filter((furnitor) => {
+            return furnitor.emertimi.toLowerCase().includes(emertimiSearch.toLowerCase()) && furnitor.kontakti.includes(kontaktiSearch)
+        })
+        setFilteredFurnitoret(filterResult)
+    },[emertimiSearch,kontaktiSearch])
 
     const thirreModalPerPyetje = (idPerAnulim) => {
         setShowModalPerPyetje(true);
@@ -109,8 +113,16 @@ export default function Furnitor() {
                     <Form.Control
                         type="text"
                         placeholder="Kërko sipas emërtimit"
-                        value={searchTerm}
-                        onChange={handleSearchChange}
+                        value={emertimiSearch}
+                        onChange={(e) => setEmertimiSearch(e.target.value)}
+                    />
+                </Col>
+                <Col md={4} className="">
+                    <Form.Control
+                        type="text"
+                        placeholder="Kërko sipas emërtimit"
+                        value={kontaktiSearch}
+                        onChange={(e) => setKontaktiSearch(e.target.value)}
                     />
                 </Col>
             </Row>
@@ -130,7 +142,7 @@ export default function Furnitor() {
                             <Card className="my-3">
                                 <Card.Body>
                                     <div className="table-responsive tableHeight50">
-                                        <table className="table table-bordered table-hover text-center">
+                                        <table className="table table-bordered table-hover text-center ">
                                             <thead className="table-secondary">
                                                 <tr className="fs-5">
                                                     <th scope="col">Nr</th>

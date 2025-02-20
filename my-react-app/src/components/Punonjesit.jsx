@@ -7,10 +7,12 @@ import 'react-toastify/dist/ReactToastify.css';
 import AnimatedSpinner from './AnimatedSpinner';
 import ModalPerPyetje from './ModalPerPyetje'
 import DetajePunonjes from './DetajePunonjes';
+import StatusToggle from "./StatusToggle";
 
 export default function Punonjesit() {
     const [loading, setLoading] = useState(true);
     const [punonjesit, setPunonjesit] = useState([]);
+    const [filteredPunonjesit, setFilteredPunonjesit] = useState([]);
     const [shtoPunonjesModal, setShtoPunonjesModal] = useState(false);
     const [buttonLoading, setButtonLoading] = useState(false);
     const [dataPerPunonjes, setDataPerPunonjes] = useState({ emri: '', mbiemri: '', pagaBaze: '', nrTelefonit: '',aktiv:1 ,punonjesID:'' });
@@ -19,12 +21,13 @@ export default function Punonjesit() {
     const [perNdryshim,setPerNdryshim] = useState()
     const [showDetaje,setShowDetaje] = useState(false)
     const [reload,setReload] = useState(false)
-
+    const [searchTerms , setSearchTerms] = useState({emri:'', nrTelefonit:'', statusi:true})
     useEffect(() => {
         const fetchData = async () => {
             try {
                 await window.api.fetchTablePunonjesit().then((receivedData) => {
                     setPunonjesit(receivedData);
+                    setFilteredPunonjesit(receivedData)
                 });
             } catch (error) {
                 console.log(error);
@@ -47,6 +50,18 @@ export default function Punonjesit() {
             }, 1000)
         }
     }, [reload]);
+
+    useEffect(() => {
+        setLoading(true)
+        const filtered = punonjesit.filter(punonjesi => {
+            return punonjesi.emri.toLowerCase().includes(searchTerms.emri.toLowerCase())&&
+                   punonjesi.nrTelefonit.includes(searchTerms.nrTelefonit) &&
+                   punonjesi.aktiv == searchTerms.statusi
+        })
+
+        setFilteredPunonjesit(filtered)
+        setLoading(false)
+    },[searchTerms,punonjesit])
 
     const handleChangeShtoPunonjes = (event) => {
         const { name, value } = event.target;
@@ -131,16 +146,28 @@ export default function Punonjesit() {
                 <AnimatedSpinner />
             ) : (
                 <Container>
-                    
-                    <Row>
-                        
-                        <Button variant="success" className="w-25" onClick={() => {emptyDataPerPunonjes(); setShtoPunonjesModal(true)}}>
-                            Shto Punonjës të Ri
-                        </Button>
+                    <hr/>
+
+                    <Row className='d-flex flex-row justify-content-start align-items-end'>
+                        <Col lg = {3}>
+                            <Form.Control placeholder='Kerko me Emer...' value={searchTerms.emri} onChange={(e) => setSearchTerms({...searchTerms,emri:e.target.value})} />
+                        </Col>
+                        <Col lg = {3}>
+                            <Form.Control placeholder='Kerko me Nr.Telefonit...'  value={searchTerms.nrTelefonit} onChange={(e) => setSearchTerms({...searchTerms,nrTelefonit:e.target.value})}/>
+                        </Col>
+                        <Col lg = {3}>
+                            <StatusToggle
+                                label="Statusi i Punonjësit"
+                                status={searchTerms.statusi}
+                                onToggle={() =>
+                                    setSearchTerms(prevData => ({ ...prevData, statusi: !prevData.statusi }))
+                                }
+                            />                        
+                        </Col>
                     </Row>
-                    <Row>
-                        <Table striped bordered hover className="mt-3">
-                            <thead>
+                    <Row className='tabeleMeMaxHeight '>
+                        <Table striped bordered hover className="mt-3" >
+                            <thead >
                                 <tr>
                                     <th>Nr.</th>
                                     <th>Emri</th>
@@ -153,7 +180,7 @@ export default function Punonjesit() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {punonjesit.slice().reverse().map((item, index) => (
+                                {filteredPunonjesit.slice().reverse().map((item, index) => (
                                     <tr key={index}>
                                         {item.punonjesit != 0 ? (
                                             <>
@@ -199,6 +226,11 @@ export default function Punonjesit() {
                                 ))}
                             </tbody>
                         </Table>
+                            <Row className='justify-content-end'>
+                                <Button variant="success" className="w-25" onClick={() => {emptyDataPerPunonjes(); setShtoPunonjesModal(true)}}>
+                                    Shto Punonjës të Ri
+                                </Button>
+                            </Row>
                     </Row>
                     <hr/>
                     {showDetaje && 
@@ -273,31 +305,13 @@ export default function Punonjesit() {
                                         </Form.Group>
                                     </Col>
                                     {perNdryshim ? <Col>
-                                    <Form.Group controlId="employeeStatus" className="d-flex flex-column align-items-center">
-                                      <Form.Label>Statusi i Punonjësit</Form.Label>
-                                      <div
-                                         onClick={() => setDataPerPunonjes(prevData => ({
-                                          ...prevData,
-                                          aktiv: !prevData.aktiv
-                                      }))}
-                                        style={{
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          cursor: 'pointer',
-                                          backgroundColor: dataPerPunonjes.aktiv ? '#24AD5D' : '#d9534f',
-                                          color: '#fff',
-                                          padding: '8px 20px',
-                                          borderRadius: '25px',
-                                          fontWeight: '500',
-                                          fontSize: '0.9rem',
-                                          transition: 'background-color 0.3s',
-                                          gap: '10px',
-                                        }}
-                                      >
-                                        <FontAwesomeIcon icon={dataPerPunonjes.aktiv ? faCheckCircle : faTimesCircle} />
-                                        <span>{dataPerPunonjes.aktiv ? 'Aktiv' : 'Jo Aktiv'}</span>
-                                      </div>
-                                    </Form.Group>
+                                        <StatusToggle
+                                        label="Statusi i Punonjësit"
+                                        status={dataPerPunonjes.aktiv}
+                                        onToggle={() =>
+                                            setDataPerPunonjes(prevData => ({ ...prevData, aktiv: !prevData.aktiv }))
+                                        }
+                                    />
                                     </Col>:null}
                                 </Row>
                             </Form>

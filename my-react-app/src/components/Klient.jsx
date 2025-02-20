@@ -13,11 +13,13 @@ export default function Klient() {
     const navigate = useNavigate();
     const [klientet, setKlientet] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [emertimiSearch, setEmertimiSearch] = useState('');
+    const [kontaktiSearch, setKontaktiSearch] = useState('');
     const [showModalPerPyetje, setShowModalPerPyetje] = useState(false);
     const [idPerAnulim, setIdPerAnulim] = useState();
     const [modalShow, setModalShow] = useState(false);
     const [data, setData] = useState({inputEmertimi: '', inputKontakti: '', ndrysho: false, idPerNdryshim: null, lloji: 'klient'});
+    const [filteredKlientet,setFilteredKlientet] = useState([])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -53,6 +55,7 @@ export default function Klient() {
 
                 const filteredData = aggregatedData.filter(item => item.lloji === 'klient');
                 setKlientet(filteredData);
+                setFilteredKlientet(filteredData)
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
@@ -62,13 +65,13 @@ export default function Klient() {
 
         fetchData();
     }, []);
-    const handleSearchChange = (e) => setSearchTerm(e.target.value);
 
-    const filteredKlientet = klientet.filter(item => {
-        return (
-            item.emertimi.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    });
+    useEffect(() => {
+        const filterResult = klientet.filter((klienti)=>{
+            return klienti.emertimi.toLowerCase().includes(emertimiSearch.toLowerCase()) && klienti.kontakti.includes(kontaktiSearch)
+        })
+        setFilteredKlientet(filterResult)
+    },[emertimiSearch,kontaktiSearch])
 
     const thirreModalPerPyetje = (idPerAnulim) => {
         setShowModalPerPyetje(true);
@@ -149,8 +152,16 @@ export default function Klient() {
                     <Form.Control
                         type="text"
                         placeholder="Kërko sipas emertimit"
-                        value={searchTerm}
-                        onChange={handleSearchChange}
+                        value={emertimiSearch}
+                        onChange={(e) => setEmertimiSearch(e.target.value)}
+                    />
+                </Col>
+                <Col md={4}>
+                    <Form.Control
+                        type="text"
+                        placeholder="Kërko sipas Kontakti"
+                        value={kontaktiSearch}
+                        onChange={(e) => setKontaktiSearch(e.target.value)}
                     />
                 </Col>
             </Row>

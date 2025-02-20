@@ -11,6 +11,7 @@ export default function MenyratPagesave() {
     const [loading,setLoading] = useState(true)
     const [buttonLoading,setButtonLoading] = useState(false)
     const [menyratPagesave,setMenyratPagesave] = useState([])
+    const [menyratPagesaveFiltered,setMenyratPagesaveFiltered] = useState([])
     const [data,setData] = useState({emertimi:'',shuma:''})
     const [perNdryshim,setPerNdryshim] = useState(false)
     const [modal,setModal] = useState(false)
@@ -20,7 +21,8 @@ export default function MenyratPagesave() {
     const [ngaOpsioni, setngaOpsioni] = useState("");
     const [neOpsionin, setneOpsionin] = useState("");
     const [shuma, setshuma] = useState("");
-  
+    const [emertimiSearch,setEmertimiSearch] = useState('')
+
     const handleFromChange = (e) => {
       setngaOpsioni(e.target.value);
     };
@@ -55,6 +57,7 @@ export default function MenyratPagesave() {
                         balanci b ON b.menyraPagesesID = m.menyraPagesesID;`
                 );
                 setMenyratPagesave(receivedData);
+                setMenyratPagesaveFiltered(receivedData)
             } catch (error) {
                 console.log(error);
             } finally {
@@ -74,6 +77,14 @@ export default function MenyratPagesave() {
         }
     }, []);
 
+    useEffect(() =>{
+        if(menyratPagesave){
+            const filterResult = menyratPagesave.filter(m => {
+                return m.emertimi.toLowerCase().includes(emertimiSearch.toLowerCase())
+            })
+            setMenyratPagesaveFiltered(filterResult)
+        }
+    },[menyratPagesave,emertimiSearch])
     const handleChangeData = (event) => {
         const { name, value } = event.target;
         setData({
@@ -161,11 +172,10 @@ export default function MenyratPagesave() {
   return (
   <>
     {loading ? <AnimatedSpinner/> : <Container>
-        <Row>  
-            <Col className='d-flex flex-row flex-wrap justify-content-between mt-3'>
-                <Button variant="success" className='w-25' onClick={() => {emptyData();setModal(true)}}>Shto Opsion të Ri Pagese</Button>
-                <Button variant='secondary' onClick={() => setLevizjeModal(true)}>Levizje Interne ( Deponim / Terheqje )</Button>
-            </Col>            
+        <Row>
+            <Col lg={4} >
+                <Form.Control placeholder='Kerko me Emertim...' value={emertimiSearch} onChange={(e) => setEmertimiSearch(e.target.value)} />
+            </Col>
         </Row>
         <Row>
             <Table striped bordered hover className="mt-3">
@@ -178,11 +188,13 @@ export default function MenyratPagesave() {
                 </tr>
                 </thead>
                 <tbody>
-                {menyratPagesave.slice().reverse().map((item, index) => (
+                {loading ? <AnimatedSpinner/> :<>
+                
+                    {menyratPagesaveFiltered.slice().reverse().map((item, index) => (
                 <tr key={index}>
-                    {menyratPagesave.length != 0 ? (
+                    {menyratPagesaveFiltered.length != 0 ? (
                     <>  {console.log(item)}
-                        <th scope="row">{menyratPagesave.length - index}</th>
+                        <th scope="row">{menyratPagesaveFiltered.length - index}</th>
                         <td>{item.asociuarMeArken ? <>{item.emertimi} (Asociuar me Arken!)</> : item.emertimi }</td>
                         <td>{formatCurrency(item.shuma)}</td>
                         <td>
@@ -203,9 +215,16 @@ export default function MenyratPagesave() {
                     ) : 'Nuk ka te dhena!'}
                 </tr>
                 ))}
+                </>}
 
                 </tbody>
             </Table>
+            <Row>  
+            <Col className='d-flex flex-row flex-wrap justify-content-between mt-3'>
+                <Button variant="success" className='w-25' onClick={() => {emptyData();setModal(true)}}>Shto Opsion të Ri Pagese</Button>
+                <Button variant='secondary' onClick={() => setLevizjeModal(true)}>Levizje Interne ( Deponim / Terheqje )</Button>
+            </Col>            
+        </Row>
         </Row>
         
         <ToastContainer/>

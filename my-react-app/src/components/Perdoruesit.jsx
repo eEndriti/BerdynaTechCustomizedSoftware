@@ -7,11 +7,14 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AuthContext from "../components/AuthContext";
 import ModalPerPyetje from './ModalPerPyetje'
+import StatusToggle from './StatusToggle';
+import FilterPerdorues from './FilterPerdorues';
 
 export default function Perdoruesit() {
     
     const [loading,setLoading] = useState(true)
     const [perdoruesit,setPerdoruesit] = useState([])
+    const [filteredPerdoruesit,setFilteredPerdoruesit] = useState([])
     const [buttonLoading,setButtonLoading] = useState(false)
     const [dataPerPerdorues,setDataPerPerdorues] = useState({emri:'',fjalekalimi:'',roli:''})
     const [shtoPerdoruesModal,setShtoPerdoruesModal] = useState(false)
@@ -19,6 +22,7 @@ export default function Perdoruesit() {
     const { authData } = useContext(AuthContext)
     const [idPerPerdorim,setIdPerPerdorim] = useState()
     const [modalPerPyetje,setModalPerPyetje] = useState(false)
+    const [searchTerms,setSearchTerms] = useState({emertimi:'',roli:'all'})
 
     useEffect(() =>{
         const fetchData = async () => {
@@ -39,7 +43,10 @@ export default function Perdoruesit() {
                             perdoruesi;
 `
                 )
+                setFilteredPerdoruesit(receivedData)
                 setPerdoruesit(receivedData)
+                console.log(receivedData)
+
             }catch(error){
                 console.log(error)
             }finally{
@@ -58,9 +65,22 @@ export default function Perdoruesit() {
               setTimeout((localStorage.removeItem('sukses'),localStorage.removeItem('msg')) , 1500)
             }, 1000)
         }
-
-        
     },[])
+
+    useEffect(() => { // perFiltrim
+       if(perdoruesit){
+         const filterResult = perdoruesit.filter(perdoruesi => {
+
+            if(searchTerms.roli != 'all'){
+                return perdoruesi.roli == searchTerms.roli && perdoruesi.emri.toLowerCase().includes(searchTerms.emertimi.toLowerCase())
+            }
+
+            return perdoruesi.emri.toLowerCase().includes(searchTerms.emertimi.toLowerCase())
+        })
+
+        setFilteredPerdoruesit(filterResult)
+       }
+    },[perdoruesit,searchTerms])
 
     const handleChangeShtoPerdorues = (event) => {
         const { name, value } = event.target;
@@ -136,50 +156,68 @@ export default function Perdoruesit() {
         } 
     }
 
+    const handleFilterSelect = (e) =>{
+        console.log('eeeja',e)
+        setSearchTerms({
+            ...searchTerms,
+            roli:e
+        })
+    }
   return (
   <>
     {loading ? <AnimatedSpinner/> : <Container>
-        <Row>    
-            <Button variant="success" className='w-25' onClick={()=> {emptyDataPerPerdorues(); setShtoPerdoruesModal(true)}}>Shto Perdorues të Ri</Button>
+        <Row className='d-flex flex-row align-items-center'>
+            <Col lg={4}>
+                <Form.Control placeholder='Kerko me Emertim...' value={searchTerms.emertimi} onChange={(e) => setSearchTerms({...searchTerms,emertimi:e.target.value})}/>
+            </Col>
+            <Col lg={4}>
+                <FilterPerdorues  filter={searchTerms.roli} onSelect={handleFilterSelect}/>
+            </Col>
         </Row>
-        <Row>
-        <Table striped bordered hover className="mt-3">
-            <thead>
-            <tr>
-                <th>Nr.</th>
-                <th>Emri i Perdoruesit</th>
-                <th>Roli</th>
-                <th>Veprime</th>
-            </tr>
-            </thead>
-            <tbody>
-            {perdoruesit.slice().reverse().map((item, index) => (
-            <tr key={index}>
-                {item.punonjesit != 0 ? (
-                <>
-                    <th scope="row">{perdoruesit.length - index}</th>
-                    <td>{item.emri}</td>
-                    <td>{item.roli}</td>
-                    <td>
-                        {authData.perdoruesiID != item.perdoruesiID ? <>
-                            <Button variant="outline-primary" className="me-2" onClick={() => {setDataPerPerdorues(item);setPerNdryshim(true);setShtoPerdoruesModal(true)}}>
-                              <FontAwesomeIcon icon={faEdit} /> Ndrysho
-                            </Button>
-                            <Button 
-                                    variant="outline-danger"
-                                    onClick={() => thirreModalPerPyetje(item.perdoruesiID)}
-                                    disabled={item.DataExists}>
-                                    <FontAwesomeIcon icon={faTrashCan} /> Fshij
-                            </Button>
-                        </>:'Nuk Mund te Veprohet me Perdoruesin Aktual'}
-                    </td>
-                </>
-                ) : 'Nuk ka te dhena!'}
-            </tr>
-            ))}
+        <Row className='tabeleMeMaxHeight50'> 
+            {loading ? <AnimatedSpinner/>:
+            <>
+                <Table striped bordered hover className="mt-3">
+                <thead>
+                <tr>
+                    <th>Nr.</th>
+                    <th>Emri i Perdoruesit</th>
+                    <th>Roli</th>
+                    <th>Veprime</th>
+                </tr>
+                </thead>
+                <tbody>
+                {filteredPerdoruesit.slice().reverse().map((item, index) => (
+                <tr key={index}>
+                    {item.punonjesit != 0 ? (
+                    <>
+                        <th scope="row">{perdoruesit.length - index}</th>
+                        <td>{item.emri}</td>
+                        <td>{item.roli}</td>
+                        <td>
+                            {authData.perdoruesiID != item.perdoruesiID ? <>
+                                <Button variant="outline-primary" className="me-2" onClick={() => {setDataPerPerdorues(item);setPerNdryshim(true);setShtoPerdoruesModal(true)}}>
+                                <FontAwesomeIcon icon={faEdit} /> Ndrysho
+                                </Button>
+                                <Button 
+                                        variant="outline-danger"
+                                        onClick={() => thirreModalPerPyetje(item.perdoruesiID)}
+                                        disabled={item.DataExists}>
+                                        <FontAwesomeIcon icon={faTrashCan} /> Fshij
+                                </Button>
+                            </>:'Nuk Mund te Veprohet me Perdoruesin Aktual'}
+                        </td>
+                    </>
+                    ) : 'Nuk ka te dhena!'}
+                </tr>
+                ))}
 
-            </tbody>
-        </Table>
+                </tbody>
+            </Table>
+            <Row className='justify-content-end'>    
+                <Button variant="success" className='w-25' onClick={()=> {emptyDataPerPerdorues(); setShtoPerdoruesModal(true)}}>Shto Perdorues të Ri</Button>
+            </Row>
+            </>}
         </Row>
         <ToastContainer/>
 

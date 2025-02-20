@@ -8,16 +8,19 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalPerPyetje from './ModalPerPyetje'
 import MenyratPagesesExport from './MenyratPagesesExport';
-import AuthContext , {formatCurrency} from '../components/AuthContext';
+import AuthContext , {formatCurrency, normalizoDaten} from '../components/AuthContext';
 
 export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     const [loading, setLoading] = useState(true);
     const [showData,setShowData] = useState(null)
     const [pushimet, setPushimet] = useState([]);
     const [bonuset, setBonuset] = useState([]);
+    const [pagat, setPagat] = useState([]);
+    const [filteredPushimet, setFilteredPushimet] = useState([]);
+    const [filteredBonuset, setFilteredBonuset] = useState([]);
+    const [filteredPagat, setFilteredPagat] = useState([]);
     const [bonusetNeDetaje, setBonusetNeDetaje] = useState([]);
     const [bonusetPerPunonjes, setBonusetPerPunonjes] = useState([]);
-    const [pagat, setPagat] = useState([]);
     const [buttonLoading,setButtonLoading] = useState(false)
     const [modalPerBonuset,setModalPerBonuse] = useState(false)
     const [totalBonuset,setTotalBonuset] = useState()
@@ -36,6 +39,9 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     const [perNdryshim,setPerNdryshim] = useState()
     const [dataPerPushim,setDataPerPushim] = useState({dataFillimit:'',dataMbarimit:'',nrDiteve:'',lloji:'',arsyeja:''})
     const {authData} = useContext(AuthContext)
+    const [startDate, setStartDate] = useState();
+    const [endDate, setEndDate] = useState();
+
     const albanianMonths = [
         "Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor",
         "Korrik", "Gusht", "Shtator", "Tetor", "Nëntor", "Dhjetor"
@@ -43,20 +49,30 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
 
     useEffect(() => {
         const fetchData = async () => {
-            const fetchedPushimet = await window.api.fetchTablePushimet();
-            const fetchedBonuset = await window.api.fetchTableBonuset();
-            const fetchedPaga = await window.api.fetchTablePagat();
-            const fetchedBonusetNeDetaje = await window.api.fetchTableQuery(`
-                SELECT b.bonusetID,  b.dataBonuseve,  b.shuma,  bp.dataPageses,  bp.menyraPagesesID,  bp.punonjesiID,  bp.statusi, bp.shifra,bp.transaksioniID,  m.emertimi 
-            FROM bonuset b
-            JOIN bonusetPunonjesit bp ON bp.bonusetID = b.bonusetID
-            LEFT JOIN menyraPageses m ON m.menyraPagesesID = bp.menyraPagesesID
-            `)
-                        setPushimet(fetchedPushimet.filter(item => punonjesID == item.punonjesID));
-            setBonuset(fetchedBonuset);
-            setPagat(fetchedPaga.filter(item => punonjesID == item.punonjesID));
-            setBonusetNeDetaje(fetchedBonusetNeDetaje)
-            setLoading(false);
+            try {
+                const fetchedPushimet = await window.api.fetchTablePushimet();
+                const fetchedBonuset = await window.api.fetchTableBonuset();
+                const fetchedPaga = await window.api.fetchTablePagat();
+                const fetchedBonusetNeDetaje = await window.api.fetchTableQuery(`
+                    SELECT b.bonusetID,  b.dataBonuseve,  b.shuma,  bp.dataPageses,  bp.menyraPagesesID,  bp.punonjesiID,  bp.statusi, bp.shifra,bp.transaksioniID,  m.emertimi 
+                FROM bonuset b
+                JOIN bonusetPunonjesit bp ON bp.bonusetID = b.bonusetID
+                LEFT JOIN menyraPageses m ON m.menyraPagesesID = bp.menyraPagesesID
+                `)
+                setPushimet(fetchedPushimet.filter(item => punonjesID == item.punonjesID));
+                setBonuset(fetchedBonuset);
+                setPagat(fetchedPaga.filter(item => punonjesID == item.punonjesID));
+                setFilteredPushimet(fetchedPushimet.filter(item => punonjesID == item.punonjesID));
+                setFilteredPagat(fetchedPaga.filter(item => punonjesID == item.punonjesID));
+                setBonusetNeDetaje(fetchedBonusetNeDetaje)
+                setFilteredBonuset(fetchedBonusetNeDetaje);
+                setStartDate(`${new Date().getFullYear()}-01-01`)
+                setEndDate(new Date().toISOString().substring(0, 10))
+            } catch (error) {
+                console.log(error)
+            }finally{
+                setLoading(false);
+            }
             
         };
         fetchData();
@@ -72,7 +88,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
               setTimeout((localStorage.removeItem('sukses'),localStorage.removeItem('msg')) , 1500)
             }, 1000)
         }
-    }, []);
+    }, [punonjesID]);
 
     useEffect(() => {
         const total = bonusetPerPunonjes.reduce((acc, item) => acc + item.shuma, 0);
@@ -83,6 +99,35 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
         setShowData(null)
     }, [punonjesID]);
 
+    useEffect(() => { //per filtrim te bonuseve,pagave,pushimeve ne baz te dates
+        const normalizedStart = normalizoDaten(startDate)
+        const normalizedEnd = normalizoDaten(endDate)
+
+        const pagatFiltered = pagat.filter(paga => {
+            const pagaDate = normalizoDaten(new Date(paga.dataPageses)) 
+            
+            return pagaDate >= normalizedStart && pagaDate <= normalizedEnd;
+        });
+       setFilteredPagat(pagatFiltered)
+        console.log(bonusetNeDetaje)
+        const bonusetFiltered = bonusetNeDetaje.filter(bonusi => {
+            const pagaDate = normalizoDaten( new Date(bonusi.dataPageses)); 
+        
+            return pagaDate >= normalizedStart && pagaDate <= normalizedEnd;
+        })
+        setFilteredBonuset(bonusetFiltered)
+
+       const pushimetFiltered = pushimet.filter(pushim => {
+        const pushimStart = normalizoDaten(new Date(pushim.dataFillimit));
+        const pushimEnd = normalizoDaten(new Date(pushim.dataMbarimit));
+       
+    
+    
+        return pushimStart <= normalizedEnd && pushimEnd >= normalizedStart;
+    });
+    
+        setFilteredPushimet(pushimetFiltered)
+    },[startDate,endDate])
       const updateMenyraPageses = (menyraPageses) => {
         setSelectedMenyraPageses(menyraPageses);
       };
@@ -376,7 +421,31 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     }
     return (
         <Container className="py-5">
-            <h4 className="text-center mb-4">Menaxho Punonjësin: <span className='d-inline fw-bold fs-5 border-bottom border-1 border-dark '>{emri} / ID:{punonjesID}</span></h4>
+            <Row className='text-center mb-4 d-flex flex-row justify-content-center'>
+                <Col>
+                    <h4 className="text-center mb-4">Menaxho Punonjësin: 
+                        <span className='d-inline fw-bold fs-5 border-bottom border-1 border-dark mx-1'>{emri}</span>
+                    </h4>
+                </Col>
+                <Col className='d-flex'>
+                    <h5 className='m-2'>Ne Periudhen: </h5>
+                    <Form.Group className='mx-1'>
+                    <Form.Control
+                    type='date'
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    />
+                </Form.Group>
+
+                <Form.Group className='mx-1'>
+                    <Form.Control
+                    type='date'
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    />
+                </Form.Group>
+                </Col>
+            </Row>
             {loading ? (
                 <AnimatedSpinner/>
             ) : (
@@ -414,7 +483,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {pagat.slice().reverse().map((paga, index) => (
+                                                {filteredPagat.slice().reverse().map((paga, index) => (
                                                     <tr key={index}>
                                                         <td>{pagat.length -index}</td>
                                                         <td>{formatLongDateToAlbanian(paga.dataPageses)} / {paga.dataPageses.toLocaleTimeString() } </td>
@@ -471,7 +540,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {pushimet.slice().reverse().map((pushimi, index) => (
+                                                    {filteredPushimet.slice().reverse().map((pushimi, index) => (
                                                         <tr key={index}>
                                                             <td>{pushimet.length - index}</td>
                                                             <td>{formatLongDateToAlbanian(pushimi.dataFillimit)}</td>
@@ -516,7 +585,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                             <Card className="mb-4 shadow">
                                 <Card.Body>
                                 <Card.Title className='fs-3 pb-2'>Menaxho Bonuset:</Card.Title>
-                                {bonusetNeDetaje && 
+                                {filteredBonuset && 
                                     <div className='tableHeight50'>
                                      <Table striped bordered hover className='text-center' variant="light" >
                                         <thead>
@@ -530,7 +599,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {bonusetNeDetaje.slice().reverse().map((bonus, index) => (
+                                            {filteredBonuset.slice().reverse().map((bonus, index) => (
                                                 <tr key={index}>
                                                     <td>{bonusetNeDetaje.length - index}</td>
                                                     <td>{bonus.shifra}</td>
@@ -576,7 +645,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
-                        <Row className="mb-3 d-flex justify-content-start">
+                        <Row className="mb-3 d-flex justify-content-start ">
                             <Col md={3}>
                                 <Form.Group controlId="formFirstName">
                                     <Form.Label>Muaji</Form.Label>

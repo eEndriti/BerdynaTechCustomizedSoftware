@@ -8,6 +8,8 @@ import AnimatedSpinner from './AnimatedSpinner';
 import ModalPerPyetje from './ModalPerPyetje'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import PerfomancaKlientit from './PerfomancaKlientit'
+import DetajePerKlientCharts from './DetajePerKlientCharts';
 
 export default function DetajePerKlient() {
     const { subjektiID, lloji } = useParams();
@@ -32,29 +34,55 @@ export default function DetajePerKlient() {
     const [modalPerPyetje,setModalPerPyetje] = useState(false)
     const {authData} = useContext(AuthContext)
     const [pagesaAktiveOnline,setPagesaAktiveOnline] = useState()
+    const [shifraSearch,setShifraSearch] = useState()
+    const [totaliIPagesave,setTotaliIPagesave] = useState() // kjo osht mbledhja e pagesave ne tabelen pagesat per klient vetem
+    const [paymentPercentage,setPaymentPercentage] = useState()
+    const [totalsFormatiMujore,setTotalsFormatiMujor] = useState() //kjo i ndan pagesat qe jon ne muaj per klient vetem
 
-      console.log('shitjet dhe serviset',combinedData,pagesat)
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [subjektiData, shitjeData, blerjeData, servisiData, profitiResult, pagesaData] = await Promise.all([
+                const [subjektiData, shitjeData, blerjeData, servisiData, profitiResult, pagesaData,totalsFormatiMujorReceived] = await Promise.all([
                     window.api.fetchTableSubjekti(lloji),
                     window.api.fetchTableShitje(),
                     window.api.fetchTableBlerje(),
                     window.api.fetchTableServisi(),
                     window.api.fetchTableQuery(`SELECT SUM(p.shuma) AS TotalProfiti FROM profiti p JOIN shitje s ON p.transaksioniID = s.transaksioniID WHERE s.subjektiID = ${subjektiID};`),
-                    window.api.fetchTablePagesa()
-                ]);
+                    window.api.fetchTablePagesa(),
+                        window.api.fetchTableQuery(
+                            `SELECT month, SUM(totaliBorgjit) AS totaliBorgjit,SUM(totaliPageses) as 'totaliPagesave'
+                                FROM (
+                                    -- Borxhi nga shitjet
+                                    SELECT FORMAT(dataShitjes, 'yyyy-MM') AS month, 
+                                        SUM(mbetjaPerPagese) AS totaliBorgjit,
+                                        SUM(totaliPageses) AS totaliPageses
+                                    FROM shitje
+                                    WHERE subjektiID = ${subjektiID} AND transaksioniID IS NOT NULL
+                                    GROUP BY FORMAT(dataShitjes, 'yyyy-MM')
 
-                console.log(combinedData)
-                // Process and filter data
+                                    UNION ALL
+
+                                    -- Borxhi nga servisimi
+                                    SELECT FORMAT(dataPerfundimit, 'yyyy-MM') AS month, 
+                                        SUM(mbetjaPageses) AS totaliBorgjit,
+                                        SUM(totaliPageses) AS totaliPageses
+                                    FROM servisimi
+                                    WHERE subjektiID = ${subjektiID} AND dataPerfundimit IS NOT NULL
+                                    GROUP BY FORMAT(dataPerfundimit, 'yyyy-MM')
+                                ) AS combined
+                                GROUP BY month
+                                ORDER BY month;`)
+                    ]);
+
+               
                 const filteredSubjekti = subjektiData.filter(item => item.subjektiID == subjektiID);
                 const filteredShitjet = shitjeData.filter(item => item.subjektiID == subjektiID);
                 const filteredBlerjet = blerjeData.filter(item => item.subjektiID == subjektiID);
                 const filteredServiset = servisiData.filter(item => item.subjektiID == subjektiID);
                 const filteredPagesa = pagesaData.filter(item => item.subjektiID == subjektiID);
-        
+                setTotalsFormatiMujor(totalsFormatiMujorReceived)
+
                 let combined 
 
                 if(lloji == 'klient') {
@@ -62,6 +90,8 @@ export default function DetajePerKlient() {
                         ...item,
                         mbetjaPerPagese: item.mbetjaPerPagese ?? item.mbetjaPageses
                     })).sort((a, b) => new Date(a.dataShitjes || a.dataPerfundimit) - new Date(b.dataShitjes || b.dataPerfundimit));
+
+                    setTotaliIPagesave(filteredPagesa.reduce((total, pagesa) => total + pagesa.shumaPageses, 0));
             
                 }else{
                     combined = [...filteredBlerjet].map(item => ({
@@ -76,8 +106,8 @@ export default function DetajePerKlient() {
                     acc.totalMbetjaPerPagese += item.mbetjaPerPagese || 0;
                     return acc;
                 }, { totalTotaliPerPagese: 0, totalTotaliPageses: 0, totalMbetjaPerPagese: 0 });
-                console.log('as',combined)
 
+                setPaymentPercentage(calculatePaymentPercentage(totals.totalTotaliPerPagese,totals.totalTotaliPageses))
                 // Update state
                 setSubjekti(filteredSubjekti);
                 setShitjet(filteredShitjet);
@@ -95,17 +125,26 @@ export default function DetajePerKlient() {
         };
         
         fetchData();
-    }, [subjektiID, lloji]); // Include `lloji` since it's used in the API call
+    }, [subjektiID, lloji]); 
     
 
     const filteredTransaksionet = useMemo(() => {
         const data = lloji === 'klient' ? combinedData : blerjet;
-        return data.filter(item => {
-            const itemDate = new Date(item.dataShitjes || item.dataPerfundimit || item.dataBlerjes);
-            return itemDate >= normalizoDaten(startDate) && itemDate <= normalizoDaten(endDate)
-        });
-    }, [lloji, combinedData, blerjet, startDate, endDate]);
     
+        return data
+            .filter(item => {
+                const itemDate = new Date(item.dataShitjes || item.dataPerfundimit || item.dataBlerjes);
+                return itemDate >= normalizoDaten(startDate) && itemDate <= normalizoDaten(endDate);
+            })
+            .filter(tr => shifraSearch ? tr.shifra.toLowerCase().includes(shifraSearch.toLowerCase()) : true);
+    }, [lloji, combinedData, blerjet, startDate, endDate, shifraSearch]); 
+    
+    
+    const calculatePaymentPercentage = (totaliPerPagese, totaliPageses) => {
+        if (!totaliPerPagese || totaliPerPagese === 0) return 0; 
+        return ((totaliPageses / totaliPerPagese) * 100).toFixed(2); 
+      };
+      
 
     useEffect(() => {
         window.api.fetchTablePagesa().then((receivedData) => {
@@ -173,7 +212,6 @@ export default function DetajePerKlient() {
         setModalPerPyetje(true)
     }
     const handleConfirmModal = async () => {
-        console.log('fshijePagesen',dataPerAnulimPagese)
         setButtonLoading(true)
 
         try{
@@ -211,7 +249,9 @@ export default function DetajePerKlient() {
                     <FontAwesomeIcon icon={faEye} style={{ cursor: 'pointer',opacity:0.03 }} />
                 </OverlayTrigger>
             </Col>
-
+            <Col>
+                <PerfomancaKlientit totaliPerPagese = {totals.totalTotaliPerPagese} totaliPageses = {totals.totalTotaliPageses} lloji={lloji}/>
+            </Col>
             <Col className='d-flex flex-column align-items-end'>
                 <h4 className='px-3 mb-3'>Transaksionet brenda Periudhes:</h4>
 
@@ -236,12 +276,20 @@ export default function DetajePerKlient() {
             </Row>
 
            
-            <Row>
+           
+            <Row className='d-flex flex-column'>
+                <Col lg={2} >
+                    <Form.Control
+                        type="text"
+                        placeholder="Kërko sipas Shifres"
+                        value={shifraSearch}
+                        onChange={(e) => setShifraSearch(e.target.value)}
+                    />
+                </Col>
                 <Col>
-                   
-                        <div className="container my-3">
+                        <div className=" my-3">
                             <div className="table-responsive tableHeight50">
-                                <table className="table table-sm table-striped border table-hover text-center">
+                                <table className="table table-lg table-striped border table-hover text-center">
                                     <thead className="table-secondary">
                                         <tr className="fs-5">
                                             <th scope="col">Nr</th>
@@ -351,8 +399,13 @@ export default function DetajePerKlient() {
                <Button variant='danger' className='p-3 m-3 w-25 rounded fs-4'>Mbetja per Pagese :<span className='fs-2'>{formatCurrency(totals.totalMbetjaPerPagese)}</span></Button> 
             </Col>                                           
         </Row>
+        <Row>
+        </Row>
         <ToastContainer />
 
+        <Row>
+            <DetajePerKlientCharts totals = {totals} nrTransaksioneve={combinedData.length} totalsFormatiMujore={totalsFormatiMujore} lloji = {lloji}/>
+        </Row>
 
         <ModalPerPyetje show={modalPerPyetje} handleClose={() => setModalPerPyetje(false)} handleConfirm={handleConfirmModal}/>
         </Container>
