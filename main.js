@@ -1832,7 +1832,7 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
           totaliIPageses:data.totaliPageses,
           dataDheOra,
           pershkrimi,
-          lloji:'Shitje',
+          lloji:'Modifikim Shitje',
           eshtePublik:1,
           mbetjaPerPagese:data.totaliPerPagese - data.totaliPageses,
         })
@@ -1992,7 +1992,7 @@ ipcMain.handle('ndryshoBlerje', async (event, data) => {
           totaliIPageses:data.totaliPageses,
           dataDheOra,
           pershkrimi,
-          lloji:'Blerje',
+          lloji:'Modifikim Blerje',
           eshtePublik:0
         })
     
@@ -2134,7 +2134,7 @@ ipcMain.handle('ndryshoServisinPerfunduar', async (event, data) => {
           ...data,
           dataDheOra,
           pershkrimi,
-          lloji:'Servisim',
+          lloji:'Modifikim Servisi',
           eshtePublik:1
         })
     
@@ -2545,7 +2545,7 @@ ipcMain.handle('paguajBonuset', async (event, data) => {
       const dataPerTransaksion = ({
             ...data,
             pershkrimi:'Totali i Paguar është rritur, ndërsa Totali për Pagesë ka mbetur i pandryshuar. Pagesë shtesë është bërë.',
-            lloji:llojiDokumentit2,
+            lloji:`Pagese per ${llojiDokumentit2}`,
             eshtePublik:0,
             totaliIPageses:data.totaliPageses,
           })
