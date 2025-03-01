@@ -6,8 +6,8 @@ import { faChevronDown, faChevronRight,faTrashCan,faEye } from '@fortawesome/fre
 import AuthContext, { formatCurrency, normalizoDaten } from '../components/AuthContext';
 import AnimatedSpinner from './AnimatedSpinner';
 import ModalPerPyetje from './ModalPerPyetje'
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import PerfomancaKlientit from './PerfomancaKlientit'
 import DetajePerKlientCharts from './DetajePerKlientCharts';
 
@@ -38,95 +38,97 @@ export default function DetajePerKlient() {
     const [totaliIPagesave,setTotaliIPagesave] = useState() // kjo osht mbledhja e pagesave ne tabelen pagesat per klient vetem
     const [paymentPercentage,setPaymentPercentage] = useState()
     const [totalsFormatiMujore,setTotalsFormatiMujor] = useState() //kjo i ndan pagesat qe jon ne muaj per klient vetem
-
+    const [triggerReload,setTriggerReload] = useState(false)
+    const showToast = useToast()
     useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                const [subjektiData, shitjeData, blerjeData, servisiData, profitiResult, pagesaData,totalsFormatiMujorReceived] = await Promise.all([
-                    window.api.fetchTableSubjekti(lloji),
-                    window.api.fetchTableShitje(),
-                    window.api.fetchTableBlerje(),
-                    window.api.fetchTableServisi(),
-                    window.api.fetchTableQuery(`SELECT SUM(p.shuma) AS TotalProfiti FROM profiti p JOIN shitje s ON p.transaksioniID = s.transaksioniID WHERE s.subjektiID = ${subjektiID};`),
-                    window.api.fetchTablePagesa(),
-                        window.api.fetchTableQuery(
-                            `SELECT month, SUM(totaliBorgjit) AS totaliBorgjit,SUM(totaliPageses) as 'totaliPagesave'
-                                FROM (
-                                    -- Borxhi nga shitjet
-                                    SELECT FORMAT(dataShitjes, 'yyyy-MM') AS month, 
-                                        SUM(mbetjaPerPagese) AS totaliBorgjit,
-                                        SUM(totaliPageses) AS totaliPageses
-                                    FROM shitje
-                                    WHERE subjektiID = ${subjektiID} AND transaksioniID IS NOT NULL
-                                    GROUP BY FORMAT(dataShitjes, 'yyyy-MM')
-
-                                    UNION ALL
-
-                                    -- Borxhi nga servisimi
-                                    SELECT FORMAT(dataPerfundimit, 'yyyy-MM') AS month, 
-                                        SUM(mbetjaPageses) AS totaliBorgjit,
-                                        SUM(totaliPageses) AS totaliPageses
-                                    FROM servisimi
-                                    WHERE subjektiID = ${subjektiID} AND dataPerfundimit IS NOT NULL
-                                    GROUP BY FORMAT(dataPerfundimit, 'yyyy-MM')
-                                ) AS combined
-                                GROUP BY month
-                                ORDER BY month;`)
-                    ]);
-
-               
-                const filteredSubjekti = subjektiData.filter(item => item.subjektiID == subjektiID);
-                const filteredShitjet = shitjeData.filter(item => item.subjektiID == subjektiID);
-                const filteredBlerjet = blerjeData.filter(item => item.subjektiID == subjektiID);
-                const filteredServiset = servisiData.filter(item => item.subjektiID == subjektiID);
-                const filteredPagesa = pagesaData.filter(item => item.subjektiID == subjektiID);
-                setTotalsFormatiMujor(totalsFormatiMujorReceived)
-
-                let combined 
-
-                if(lloji == 'klient') {
-                    combined = [...filteredShitjet, ...filteredServiset].map(item => ({
-                        ...item,
-                        mbetjaPerPagese: item.mbetjaPerPagese ?? item.mbetjaPageses
-                    })).sort((a, b) => new Date(a.dataShitjes || a.dataPerfundimit) - new Date(b.dataShitjes || b.dataPerfundimit));
-
-                    setTotaliIPagesave(filteredPagesa.reduce((total, pagesa) => total + pagesa.shumaPageses, 0));
-            
-                }else{
-                    combined = [...filteredBlerjet].map(item => ({
-                        ...item,
-                        mbetjaPerPagese: item.mbetjaPerPagese ?? item.mbetjaPageses
-                    })).sort((a, b) => new Date(a.dataShitjes || a.dataPerfundimit) - new Date(b.dataShitjes || b.dataPerfundimit));
-            
-                }
-                const totals = combined.reduce((acc, item) => {
-                    acc.totalTotaliPerPagese += item.totaliPerPagese || 0;
-                    acc.totalTotaliPageses += item.totaliPageses || 0;
-                    acc.totalMbetjaPerPagese += item.mbetjaPerPagese || 0;
-                    return acc;
-                }, { totalTotaliPerPagese: 0, totalTotaliPageses: 0, totalMbetjaPerPagese: 0 });
-
-                setPaymentPercentage(calculatePaymentPercentage(totals.totalTotaliPerPagese,totals.totalTotaliPageses))
-                // Update state
-                setSubjekti(filteredSubjekti);
-                setShitjet(filteredShitjet);
-                setBlerjet(filteredBlerjet);
-                setServiset(filteredServiset);
-                setProfiti(profitiResult[0]?.TotalProfiti || 0);
-                setPagesat(filteredPagesa);
-                setCombinedData(combined);
-                setTotals(totals);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+       
         
         fetchData();
-    }, [subjektiID, lloji]); 
+    }, [subjektiID, lloji,triggerReload]); 
     
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [subjektiData, shitjeData, blerjeData, servisiData, profitiResult, pagesaData,totalsFormatiMujorReceived] = await Promise.all([
+                window.api.fetchTableSubjekti(lloji),
+                window.api.fetchTableShitje(),
+                window.api.fetchTableBlerje(),
+                window.api.fetchTableServisi(),
+                window.api.fetchTableQuery(`SELECT SUM(p.shuma) AS TotalProfiti FROM profiti p JOIN shitje s ON p.transaksioniID = s.transaksioniID WHERE s.subjektiID = ${subjektiID};`),
+                window.api.fetchTablePagesa(),
+                    window.api.fetchTableQuery(
+                        `SELECT month, SUM(totaliBorgjit) AS totaliBorgjit,SUM(totaliPageses) as 'totaliPagesave'
+                            FROM (
+                                -- Borxhi nga shitjet
+                                SELECT FORMAT(dataShitjes, 'yyyy-MM') AS month, 
+                                    SUM(mbetjaPerPagese) AS totaliBorgjit,
+                                    SUM(totaliPageses) AS totaliPageses
+                                FROM shitje
+                                WHERE subjektiID = ${subjektiID} AND transaksioniID IS NOT NULL
+                                GROUP BY FORMAT(dataShitjes, 'yyyy-MM')
+
+                                UNION ALL
+
+                                -- Borxhi nga servisimi
+                                SELECT FORMAT(dataPerfundimit, 'yyyy-MM') AS month, 
+                                    SUM(mbetjaPageses) AS totaliBorgjit,
+                                    SUM(totaliPageses) AS totaliPageses
+                                FROM servisimi
+                                WHERE subjektiID = ${subjektiID} AND dataPerfundimit IS NOT NULL
+                                GROUP BY FORMAT(dataPerfundimit, 'yyyy-MM')
+                            ) AS combined
+                            GROUP BY month
+                            ORDER BY month;`)
+                ]);
+
+           
+            const filteredSubjekti = subjektiData.filter(item => item.subjektiID == subjektiID);
+            const filteredShitjet = shitjeData.filter(item => item.subjektiID == subjektiID);
+            const filteredBlerjet = blerjeData.filter(item => item.subjektiID == subjektiID);
+            const filteredServiset = servisiData.filter(item => item.subjektiID == subjektiID);
+            const filteredPagesa = pagesaData.filter(item => item.subjektiID == subjektiID);
+            setTotalsFormatiMujor(totalsFormatiMujorReceived)
+
+            let combined 
+
+            if(lloji == 'klient') {
+                combined = [...filteredShitjet, ...filteredServiset].map(item => ({
+                    ...item,
+                    mbetjaPerPagese: item.mbetjaPerPagese ?? item.mbetjaPageses
+                })).sort((a, b) => new Date(a.dataShitjes || a.dataPerfundimit) - new Date(b.dataShitjes || b.dataPerfundimit));
+
+                setTotaliIPagesave(filteredPagesa.reduce((total, pagesa) => total + pagesa.shumaPageses, 0));
+        
+            }else{
+                combined = [...filteredBlerjet].map(item => ({
+                    ...item,
+                    mbetjaPerPagese: item.mbetjaPerPagese ?? item.mbetjaPageses
+                })).sort((a, b) => new Date(a.dataShitjes || a.dataPerfundimit) - new Date(b.dataShitjes || b.dataPerfundimit));
+        
+            }
+            const totals = combined.reduce((acc, item) => {
+                acc.totalTotaliPerPagese += item.totaliPerPagese || 0;
+                acc.totalTotaliPageses += item.totaliPageses || 0;
+                acc.totalMbetjaPerPagese += item.mbetjaPerPagese || 0;
+                return acc;
+            }, { totalTotaliPerPagese: 0, totalTotaliPageses: 0, totalMbetjaPerPagese: 0 });
+
+            setPaymentPercentage(calculatePaymentPercentage(totals.totalTotaliPerPagese,totals.totalTotaliPageses))
+            // Update state
+            setSubjekti(filteredSubjekti);
+            setShitjet(filteredShitjet);
+            setBlerjet(filteredBlerjet);
+            setServiset(filteredServiset);
+            setProfiti(profitiResult[0]?.TotalProfiti || 0);
+            setPagesat(filteredPagesa);
+            setCombinedData(combined);
+            setTotals(totals);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const filteredTransaksionet = useMemo(() => {
         const data = lloji === 'klient' ? combinedData : blerjet;
@@ -174,14 +176,7 @@ export default function DetajePerKlient() {
             setActiveShifra(item.shifra); 
         }
     };
-    const formatDate = (date) => {
-        const d = new Date(date);
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0'); 
-        const year = d.getFullYear();
-        return `${day}/${month}/${year}`;
-    };
-    
+
     if (loading) {
         return (
             <div className="d-flex justify-content-center pt-5 mt-5">
@@ -215,14 +210,15 @@ export default function DetajePerKlient() {
         setButtonLoading(true)
 
         try{
-            const result = await window.api.deletePagesa(dataPerAnulimPagese)
-            if(result.success){
-                toast.success('Pagesa u fshi me sukses')
-            }
+
+            await window.api.deletePagesa(dataPerAnulimPagese)
+            showToast('Pagesa u Anulua me sukses!' , 'success')
+            
         }catch(e){
-            console.log(e)
+            showToast('Pagesa nuk mund te Anulohet!' , 'error')
         }finally{
             setButtonLoading(false)
+            setTriggerReload(!triggerReload)
         }
     }
     return (

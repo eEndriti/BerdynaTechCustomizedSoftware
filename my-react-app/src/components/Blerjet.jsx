@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Button, Form, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan, faEdit,faChevronRight,faChevronDown,faEuroSign } from '@fortawesome/free-solid-svg-icons';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import ModalPerPyetje from './ModalPerPyetje';
 import DetajePerShitjeBlerje from './DetajePerShitjeBlerje';
 import AnimatedSpinner from './AnimatedSpinner';
@@ -29,18 +29,30 @@ export default function Blerjet() {
     const [dataPerShtoPagese,setDataPerShtoPagese] = useState()
     const [showShtoPagese,setShowShtoPagese] = useState(false)
     const { authData } = useContext(AuthContext);
+    const showToast = useToast();
+    const [triggerReload, setTriggerReload] = useState(false);
 
     useEffect(() => {
-        window.api.fetchTableBlerje().then((receivedData) => {
-            setBlerjet(receivedData);
-            setLoading(false);
-        });
+        fetchData()
         if(authData.aKaUser != 'admin'){
             setStartDate(localTodayDate)
             setEndDate(localTodayDate)
         }
-    }, []);
+    }, [triggerReload]);
 
+    const fetchData = async () => {
+        try {
+            setLoading(true)
+            await window.api.fetchTableBlerje().then((receivedData) => {
+                setBlerjet(receivedData);
+                setLoading(false);
+            });
+        } catch (e) {
+            showToast('Gabim gjate shkarkimit te te dhenave: ' + e.message, 'error');
+        }finally{
+            setLoading(false)
+        }
+    }
     const handleSearchChange = (e) => setSearchTerm(e.target.value);
     const handleClientChange = (e) => setClientFilter(e.target.value);
     const handleUserChange = (e) => setUserFilter(e.target.value);
@@ -76,19 +88,19 @@ export default function Blerjet() {
             lloji: 'Blerje',
             transaksioniID: idPerAnulim,
         };
+        try {
+            await window.api.anuloBlerjen(data);
+            showToast(`Blerja u Anulua me Sukses !`, 'success');
 
-        const result = await window.api.anuloBlerjen(data);
+        } catch (error) {
+            showToast('Gabim gjate Anulimit: ' + error , 'error');
 
-        if (result.success) {
-            toast.success(`Blerja u Anulua me Sukses !`, {
-                position: 'top-center',
-                autoClose: 1500,
-                onClose: () => window.location.reload(),
-            });
-        } else {
-            toast.error('Gabim gjate Anulimit: ' + result.error);
+        }finally{
+            setTriggerReload(!triggerReload)
         }
     };
+
+
     const shfaqProduktetEBlerjes = (ID,shifra) => {
         setShifraPerDetaje(shifra)
        if(IDPerDetaje == ID){

@@ -3,12 +3,8 @@ import { Container,Button,Row,Col,Modal,Form, Spinner, InputGroup,Table,Card } f
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from '../ModalPerPyetje'
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import UpdateServise from '../UpdateServise';
-import AnimatedSpinner from '../AnimatedSpinner';
-import Transaksionet from './Transaksionet';
 import AuthContext,{formatCurrency} from '../AuthContext';
+import { useToast } from '../ToastProvider';
 
 export default function Porosite() {
   const [loading,setLoading] = useState(false)
@@ -22,27 +18,26 @@ export default function Porosite() {
   const [buttonLoading,setButtonLoading] = useState(false)
   const {authData} = useContext(AuthContext)
 
-  useEffect(() => {
-
-    const fetchData = async () => {
-      setLoading(true)
-
-      try{
-        const [porosite] = await Promise.all([
-          window.api.fetchTableShitjeOnline(),
-        ]);
-
-        setShitjetOnline(porosite.filter(item => item.statusi))
-      }catch(e){
-        console.log(e)
-      }finally{
-        setLoading(false)
-      }
-    };
+  const showToast = useToast();
   
+  useEffect(() => {   
     fetchData();
-
   }, []);
+
+  const fetchData = async () => {
+    setLoading(true)
+    try{
+      const [porosite] = await Promise.all([
+        window.api.fetchTableShitjeOnline(),
+      ]);
+
+      setShitjetOnline(porosite.filter(item => item.statusi))
+    }catch(e){
+      console.log(e)
+    }finally{
+      setLoading(false)
+    }
+  };
 
   useEffect(() => {
 
@@ -90,11 +85,13 @@ export default function Porosite() {
   
     try {
       await window.api.perfundoShitjenOnline(updatedDataPerAprovim);
-    } catch (error) {
-      console.log(error);
+      showToast("Shitja u regjistrua me sukses!", "success");
+    } catch (e) {
+      showToast("Gabim gjatë aprovimit të shitjes!", "error");
     } finally {
       setButtonLoading(false);
       setAprovoShitjenOnlineModal(false);
+      fetchData();
     }
   };
 
@@ -103,17 +100,13 @@ export default function Porosite() {
     const result = await window.api.anuloPorosineOnline(idPerAnulim)
 
     if (result.success) {
-      toast.success(`Shitja Online u Anulua me Sukses !`, {
-        position: "top-center",  
-        autoClose: 1500,
-        onClose: () =>       window.location.reload()
-      });            ;
-      
-    } else {
-      toast.error('Gabim gjate Anulimit: ' + result.error);
-    }
-  }
+      showToast("Shitja u aprovua me sukses!", "success"); 
+      fetchData()
 
+    } else {
+      showToast("Gabim gjatë aprovimit të shitjes!", "error");
+        }
+      }
   return (
    <Container fluid >
      <Col>
@@ -158,7 +151,7 @@ export default function Porosite() {
                             variant="outline-danger"
                             className="action-btn mx-1"
                             onClick={() =>
-                              thirreModal('ShitjeOnline', item.shitjeID, 'anuloPorosineOnline')
+                              thirreModal('ShitjeOnline', item.shitjeID, anuloPorosineOnline)
                             }
                           >
                             <FontAwesomeIcon icon={faTrashCan} />
@@ -253,7 +246,6 @@ export default function Porosite() {
                   </Button>
                 </Modal.Footer>
                 
-                <ToastContainer />
               </Modal>
 
               <ModalPerPyetje show={showModal} handleClose={() => setShowModal(false)} handleConfirm={() => anuloPorosineOnline()}/>

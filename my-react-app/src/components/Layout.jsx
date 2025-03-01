@@ -18,10 +18,11 @@ function Layout() {
   const [totalShumaPerBonuse,setTotalShumaPerBonuse] = useState()
   const [totaliIArkes,setTotaliIArkes] = useState()
   const [totaliArkesResult,setTotaliArkesResult] = useState([])
+
   useEffect(() => {
-    console.log(authData.avansi)
   }, []);
-  useEffect(() => {
+
+  useEffect(() => { // ktu jon butonat me  navigu neper faqe F1,F2,F3,F4,F5,F6
     const handleKeyPress = (event) => {
       switch (event.key) {
         case "F1":

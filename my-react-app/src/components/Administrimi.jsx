@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Button, Container } from 'react-bootstrap';
 import Punonjesit from './Punonjesit';
 import Perdoruesit from './Perdoruesit';
 import MenyratPagesave from './MenyratPagesave';
 import Nderrimet from './Nderrimet'
+import { useLocation } from 'react-router-dom';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
+
 
 export default function Administrimi() {
   const [activeSection, setActiveSection] = useState('punonjesit');
+  const location = useLocation();
+  const showToast = useToast();
+
+  useEffect(() => {
+    if (location.state?.showToast) {
+      showToast(location.state.message, location.state.type);
+    }},[location]);
 
   const renderActiveSection = () => {
     switch (activeSection) {
@@ -61,6 +72,7 @@ export default function Administrimi() {
       <div className="section-content">
         {renderActiveSection()}
       </div>
+      <ToastContainer />
     </Container>
   );
 }

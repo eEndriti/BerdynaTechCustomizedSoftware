@@ -5,8 +5,8 @@ import KerkoSubjektin from "./KerkoSubjektin";
 import KerkoProduktin from "./stoku/KerkoProduktin";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTrashCan } from '@fortawesome/free-solid-svg-icons';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import AnimatedSpinner from "./AnimatedSpinner";
 import { PrintoGarancion } from "./PrintoGarancion";
 import AuthContext ,{ formatCurrency } from "../components/AuthContext";
@@ -29,14 +29,19 @@ export default function Shitje() {
   const [aKaGarancion,setAKaGarancion] = useState(false)
   const [kohaGarancionit,setKohaGarancionit] = useState('6')
   const {authData, updateAuthData} = useContext(AuthContext)
-  
+  const showToast = useToast()
+  const [triggerReload,setTriggerReload] = useState(false)
+
   useEffect(() => {
-    window.api.fetchTableMenyratPageses().then(receivedData => {
+    fetchData()
+  }, [triggerReload]);
+
+  const fetchData = async () => {
+    await window.api.fetchTableMenyratPageses().then(receivedData => {
       setMenyratPageses(receivedData);
       setLoading(false);
     });
-
-  }, []);
+  }
 
   useEffect(() => {
     const total = products.reduce((acc, product) => {
@@ -99,17 +104,9 @@ export default function Shitje() {
     if (value <= totaliPerPagese) {
       setTotaliPageses(value);
     } else {
-      toast.error('Shuma e paguar nuk mund të jetë më e madhe se totali!');
+      showToast('Shuma e paguar nuk mund të jetë më e madhe se totali!','error');
     }
   };
-  
-  const formatCurrency = (value) => {
-    return value.toLocaleString('sq-AL', {
-      style: 'currency',
-      currency: 'ALL',
-    });
-  };
-  
 
   const mbetjaPerPagese = (totaliPerPagese - totaliPageses).toFixed(2);
 
@@ -121,12 +118,13 @@ export default function Shitje() {
     let returnedShitjeID;
 
     if (!authData.perdoruesiID || !menyraPagesesID || !selectedSubjekti?.subjektiID || !products?.length) {
-      toast.error('Të gjitha fushat e nevojshme duhet të plotësohen!');
+      showToast('Të gjitha fushat e nevojshme duhet të plotësohen!','warning');
       return;
     }
   
     setLoading(true);  
-    
+    let statusiShitjes
+    let message
     const data = {
       lloji: llojiShitjes,
       komenti: komentiShitjes,
@@ -163,23 +161,22 @@ export default function Shitje() {
       const result = await window.api.insertShitje(data);
       if (result.success) {
         returnedShitjeID = result.shitjeID
-        toast.success('Shitja u Regjistrua me Sukses!', {
-          position: "top-center",  
-          autoClose: 1500
-        }); 
+        statusiShitjes = 'success'
+        message = 'Shitja u regjistrua me sukses!'
         if(aKaGarancion){
           const shifra = result.shifra
           PrintoGarancion(data,shifra)
         
       } else {
-        toast.error('Gabim gjate regjistrimit: ' + result.error);
+        statusiShitjes = 'error'
+        message = 'Gabim gjate regjistrimit: ' + result.error
       }}
     } catch (error) {
-      toast.error('Gabim gjate komunikimit me server: ' + error.message);
+      showToast('Gabim gjate komunikimit me server: ' + error.message , 'error');
     } finally {
       setLoading(false);
       updateAuthData({shitjeFunditID:returnedShitjeID})
-      navigate('/faqjaKryesore')
+      navigate('/faqjaKryesore/' , {state:{showToast:true , message:message , type:statusiShitjes}})
     }
   };
   
@@ -197,7 +194,6 @@ export default function Shitje() {
     setNrPorosise(event.target.value);
   };
 
-  const handleCloseShtoProduktinModal = () => setShowShtoProduktinModal(false);
  
 const kontrolloValidetin = () => {
   let vlera = true
@@ -355,7 +351,8 @@ const kontrolloValidetin = () => {
           <h5 className="text-center mb-3">
             Shtype Garancionin
             <Form.Check 
-              className="px-3 ms-2" 
+              className="px-3 ms-2 fs-4 "
+              
               inline 
               onClick={() => setAKaGarancion(!aKaGarancion)} 
 
@@ -368,6 +365,7 @@ const kontrolloValidetin = () => {
                 className="me-2 w-50 w-md-25" 
                 placeholder="Muaj" 
                 min={1}
+                max = {99}
                 value={kohaGarancionit}
                 onChange={(e) => {
                   const value = Number(e.target.value);

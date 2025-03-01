@@ -1,9 +1,9 @@
 import { useState, useEffect,useContext } from 'react';
-import { Container, Row, Col, Button, Form } from 'react-bootstrap';
+import { Container, Row, Col, Button, Form,Card,Table } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan,faEdit,faChevronDown,faChevronRight,faFilePdf,faEuroSign } from '@fortawesome/free-solid-svg-icons';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import ModalPerPyetje from './ModalPerPyetje';
 import AnimatedSpinner from './AnimatedSpinner'
 import DetajePerShitjeBlerje from './DetajePerShitjeBlerje';
@@ -31,18 +31,24 @@ export default function Shitjet() {
     const [dataPerShtoPagese,setDataPerShtoPagese] = useState()
     const [showShtoPagese,setShowShtoPagese] = useState(false)
     const {authData} = useContext(AuthContext)
+    const showToast = useToast();
+    const [triggerReload, setTriggerReload] = useState(false);
 
     useEffect(() => {
-        window.api.fetchTableShitje().then((receivedData) => {
-            setShitjet(receivedData);
-            setLoading(false);
-        });
+        fetchData()
         if(authData.aKaUser != 'admin'){
             setEndDate(localTodayDate);
             setStartDate(localTodayDate)
         }
        
-    }, []);    
+    }, [triggerReload]);    
+
+    const fetchData = async () => {
+        await window.api.fetchTableShitje().then((receivedData) => {
+            setShitjet(receivedData);
+            setLoading(false);
+        });
+    }
 
     const handleSearchChange = (e) => setSearchTerm(e.target.value);
     const handleClientChange = (e) => setClientFilter(e.target.value);
@@ -82,20 +88,22 @@ export default function Shitjet() {
             lloji: 'Shitje',
             transaksioniID: transaksioniIDPerAnulim,
         };
-        let result
-        if(llojiShitjes == 'dyqan'){
-             result = await window.api.anuloShitjen(data);
-        }else if (llojiShitjes == 'online'){
-            result = await window.api.anuloPorosineOnlineTePranuar(shitjeIDPerAnulim)
-        }
-        if (result.success) {
-            toast.success(`Shitja u Anulua me Sukses !`, {
-                position: 'top-center',
-                autoClose: 1500,
-                onClose: () => window.location.reload(),
-            });
-        } else {
-            toast.error('Gabim gjate Anulimit: ' + result.error);
+
+        try {
+            if(llojiShitjes == 'dyqan'){
+                await window.api.anuloShitjen(data);
+           }else if (llojiShitjes == 'online'){
+                await window.api.anuloPorosineOnlineTePranuar(shitjeIDPerAnulim)
+           }
+
+            showToast(`Shitja u Anulua me Sukses !`, 'success');
+          
+        } catch (error) {
+            showToast('Gabim gjate Anulimit: ' + error , 'eror');
+
+        }finally{
+            setTriggerReload(!triggerReload)
+            setShowModalPerPyetje(false);
         }
     };
 
@@ -204,9 +212,10 @@ const hapeShtoPagese = (item) =>{
                             </h5>
                         ) : (
                             <div className=" my-3 tabelaTransaksioneve">
-                                <div className="table-responsive tableHeight50">
-                                    <table className="table table-sm table-striped border table-hover text-center">
-                                        <thead className="table-secondary">
+                                <div className="table-responsive tableHeight50 mb-5">
+                                    <Card>
+                                    <Table responsive bordered striped  hover className="text-center" >
+                                        <thead className="table-light">
                                             <tr className="fs-5">
                                                 <th scope="col">Nr</th>
                                                 <th scope="col">Shifra</th>
@@ -223,7 +232,7 @@ const hapeShtoPagese = (item) =>{
                                                 <th scope="col">Opsionet</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="border-dark">
+                                        <tbody className="">
                                             {filteredShitjet.slice().reverse().map((item, index) => (
                                                 <tr key={index} >
                                                     <th scope="row">{filteredShitjet.length - index}</th>
@@ -264,7 +273,8 @@ const hapeShtoPagese = (item) =>{
                                                 </tr>
                                             ))}
                                         </tbody>
-                                    </table>
+                                    </Table>
+                                    </Card>
                                 </div>
                             </div>
                         )}
@@ -276,7 +286,7 @@ const hapeShtoPagese = (item) =>{
                 <DetajePerShitjeBlerje shifraPerDetaje = {shifraPerDetaje}  IDPerDetaje = {IDPerDetaje} lloji = {'shitje'} />
                 </>:null}
                 
-                {!loading && authData.aKaUser == 'admin'? 
+                {!loading && authData.aKaUser == 'admin' && filteredShitjet.length > 0? 
                 <Row className='d-flex flex-row flex-wrap justify-content-center' >
                     <Col style={{maxHeight:'400px' ,minHeight:'400px'}}>
                         <LineChartComponent dataFillimit={startDate} dataMbarimit={endDate} teDhenat={shitjet.map(sale => ({

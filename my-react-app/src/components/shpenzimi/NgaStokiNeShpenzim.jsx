@@ -1,7 +1,7 @@
 import  { useState, useEffect, useContext } from 'react';
 import { Row, Button, Form,Spinner, Container, InputGroup} from 'react-bootstrap';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from '../ToastProvider';
 import KerkoProduktin from '../stoku/KerkoProduktin';
 import AuthContext from '../AuthContext';
 
@@ -15,6 +15,7 @@ export default function NgaStokiNeShpenzim() {
     const [kostoTotale,setKostoTotale] = useState()
     const [kategoriaID,setKategoriaID] = useState()
     const {authData} = useContext(AuthContext)
+    const showToast = useToast();
     useEffect(() => {
             const fetchData = async () => {
               setLoading(true)
@@ -32,7 +33,6 @@ export default function NgaStokiNeShpenzim() {
             }
         
             fetchData()
-          
         
           }, []);
 
@@ -62,20 +62,21 @@ export default function NgaStokiNeShpenzim() {
       produktiID:produktiSelektuar.produktiID,
       sasia:sasiaPerProdukt,
     };
-    const result = await window.api.kaloNgaStokuNeShpenzim(data);
+    
+    try {
+      await window.api.kaloNgaStokuNeShpenzim(data);
+      showToast('Produkti u Regjistrua me Sukses si Shpenzim!', 'success');            
 
-    if (result.success) {
+    } catch (error) {
+      showToast('Gabim gjate regjistrimit: ' ,'error');
+
+    }finally{
       setLoading(false)
-      toast.success('Produkti u Regjistrua me Sukses si Shpenzim!', {
-        position: "top-center",  
-        autoClose: 1500, 
-        onClose: () => window.location.reload(), 
-      });            
-    } else {
-      setLoading(false)
-      toast.error('Gabim gjate regjistrimit: ' + result.error);
+      setButtonLoading(false)
+      window.location.reload()
+
     }
-    setButtonLoading(false)
+
   };
 
       
@@ -122,6 +123,7 @@ export default function NgaStokiNeShpenzim() {
 
 
              <ToastContainer/>
+
                   {productModal && (
                           <KerkoProduktin
                             show={productModal}

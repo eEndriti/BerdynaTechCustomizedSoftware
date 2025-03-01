@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Modal, Button, Form, Spinner } from 'react-bootstrap';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 
-export default function ShtoNdryshoSubjektin({show,handleClose,data}) {
+export default function ShtoNdryshoSubjektin({show,handleClose,data = {}}) {
     const [loading,setLoading] = useState(false)
     const [inputEmertimi,setInputEmertimi] = useState('')
     const [inputKontakti,setInputKontakti] = useState('')
-
+    const showToast = useToast()
     useEffect(() => {
       setInputEmertimi(data.inputEmertimi || ''); // Default to an empty string
       setInputKontakti(data.inputKontakti || ''); // Default to an empty string
@@ -31,24 +31,17 @@ export default function ShtoNdryshoSubjektin({show,handleClose,data}) {
             try {
                 const result = await window.api.ndryshoSubjektin(dataPerNdryshim);
                 if (result.success) {
-                  toast.success(`${data.lloji == 'klient' ? 'Klienti' : 'Furnitori'} u Ndryshua me Sukses!`, {
-                    position: "top-center",  
-                    autoClose: 1500,
-                    onClose:() => window.location.reload()
-                  }); 
+                  showToast(`${data.lloji == 'klient' ? 'Klienti' : 'Furnitori'} u Ndryshua me Sukses!`, 'success'); 
                 } else {
-                  toast.error('Gabim gjate Ndryshimit: ' + result.error);
+                  showToast('Gabim gjate Ndryshimit: ' + result.error , 'error');
                 }
               } catch (error) {
-                toast.error('Gabim gjate komunikimit me server: ' + error.message);
+                showToast('Gabim gjate komunikimit me server: ' + error.message , 'error');
               } finally {
                 setLoading(false);
               }
         }else{
-            toast.warning('Plotesoni fushat me më shume karaktere!', {
-                position:'top-center',
-                autoClose:1500
-            })
+            showToast('Plotesoni fushat me më shume karaktere!', 'warning')
             setLoading(false)
         }
       };
@@ -64,24 +57,18 @@ export default function ShtoNdryshoSubjektin({show,handleClose,data}) {
             try {
                 const result = await window.api.insertSubjekti(dataPerInsert);
                 if (result.success) {
-                  toast.success('Klienti u Regjistrua me Sukses!', {
-                    position: "top-center",  
-                    autoClose: 1500
-                  }); 
+                  showToast('Klienti u Regjistrua me Sukses!', 'success'); 
                 } else {
-                  toast.error('Gabim gjate regjistrimit: ' + result.error);
+                  showToast('Gabim gjate regjistrimit: ' + result.error , 'error');
                 }
               } catch (error) {
-                toast.error('Gabim gjate komunikimit me server: ' + error.message);
+                showToast('Gabim gjate komunikimit me server: ' + error.message , 'error');
               } finally {
                 setLoading(false);
                 window.location.reload()
               }
         }else{
-            toast.warning('Plotesoni fushat me më shume karaktere!', {
-                position:'top-center',
-                autoClose:1500
-            })
+          showToast('Plotesoni fushat me më shume karaktere!', 'warning')
             setLoading(false)
         }
       };

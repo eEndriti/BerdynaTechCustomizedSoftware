@@ -4,9 +4,8 @@ import { Container,Button,Row,Col,Modal,Form, Spinner, InputGroup,Table,Card } f
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from '../ModalPerPyetje'
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import UpdateServise from '../UpdateServise';
+import {useToast} from '../ToastProvider'
+
 import AnimatedSpinner from '../AnimatedSpinner';
 import AuthContext, { formatCurrency, formatDate, formatLongDateToAlbanian, normalizoDaten } from '../AuthContext';
 import Charts from './Charts';
@@ -24,30 +23,31 @@ export default function Transaksionet() {
     const [selectedNderrimi,setSelectedNderrimi] = useState()
     const [selectedNderrimiData,setSelectedNderrimiData] = useState()
     const [tregoGrafikun,setTregoGrafikun] = useState(false)
+    const showToast = useToast();
 
     useEffect(() => {
 
-        const fetchData = async () => {
-          try{
-            const [transaksionetData,nderrimetData] = await Promise.all([
-              window.api.fetchTableTransaksionet(),
-              window.api.fetchTableNderrimi(),
-            ]);
-
-            setTransaksionet(transaksionetData);
-            setNderrimet(nderrimetData)
-
-          }catch(e){
-            console.log(e)
-          }finally{
-            setLoading(false)
-          }
-        };
-      
         fetchData();
     
       }, []);
       
+      const fetchData = async () => {
+        try{
+          const [transaksionetData,nderrimetData] = await Promise.all([
+            window.api.fetchTableTransaksionet(),
+            window.api.fetchTableNderrimi(),
+          ]);
+
+          setTransaksionet(transaksionetData);
+          setNderrimet(nderrimetData)
+
+        }catch(e){
+          console.log(e)
+        }finally{
+          setLoading(false)
+        }
+      };
+    
       useEffect(() => {
         if(selectedNderrimi){
           setTregoGrafikun(true)
@@ -93,14 +93,11 @@ export default function Transaksionet() {
             }
 
             if (result.success) {
-                toast.success(`Transaksioni i llojit ${item.lloji} u Anulua me Sukses !`, {
-                  position: "top-center",  
-                  autoClose: 1500,
-                  onClose: () =>       window.location.reload()
-                });            ;
+              showToast(`Transaksioni i llojit ${item.lloji} u Anulua me Sukses!`, "success");
+               fetchData();
                 
               } else {
-                toast.error('Gabim gjate Anulimit: ' + result.error);
+                showToast("Gabim gjatë ndryshimit!", "error"); 
               }
         }catch(e){
             console.log(e)
@@ -135,14 +132,11 @@ export default function Transaksionet() {
             }
 
             if (result.success) {
-                toast.success(`Transaksioni i llojit ${dataPerPerdorim.lloji} u Anulua me Sukses !`, {
-                  position: "top-center",  
-                  autoClose: 1500,
-                  onClose: () =>       window.location.reload()
-                });            ;
-                
+              showToast(`Transaksioni i llojit ${dataPerPerdorim.lloji} u Anulua me Sukses!`, "success");
+               fetchData();
               } else {
-                toast.error('Gabim gjate Anulimit: ' + result.error);
+                showToast("Gabim gjatë Anulimit!", "error"); 
+ 
               }
         }catch(e){
             console.log(e)
@@ -252,7 +246,6 @@ export default function Transaksionet() {
         </Col>
       </Row>}
     <ModalPerPyetje show={showModalPerPyetje} handleClose={()=> setShowModalPerPyetje(false)} handleConfirm={confirmModalPerPyetje} />
-    <ToastContainer/>
   </Container>
   )
 }

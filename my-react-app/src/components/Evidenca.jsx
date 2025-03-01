@@ -6,6 +6,8 @@ import { formatCurrency, normalizoDaten } from "../components/AuthContext";
 import DashboardStats from './DashboardStats';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoneyBill } from '@fortawesome/free-solid-svg-icons';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 
 export default function Evidenca() {
   const [loading, setLoading] = useState(true);
@@ -13,7 +15,6 @@ export default function Evidenca() {
   const [vleraShitjevePaPaguar, setVleraShitjevePaPaguar] = useState([]);
   const [vleraBlerjevePaPaguar, setVleraBlerjevePaPaguar] = useState([]);
   const [produktiData, setProduktiData] = useState([]);
-  const [error, setError] = useState(null);
   const [startDate, setStartDate] = useState();
   const [endDate, setEndDate] = useState();
   const [loading2,setLoading2] = useState(false)
@@ -21,56 +22,56 @@ export default function Evidenca() {
   const [diferencaDitore,setDiferencaDitore] = useState()
   const [startDate2,setStartDate2] = useState()
   const [diferencat,setDiferencat] = useState('') 
+  const [triggerReload, setTriggerReload] = useState(false);
+  const showToast = useToast();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [menyratResponse, shitjeResponse, blerjeResponse, produktiResponse] = await Promise.all([
-          window.api.fetchTableMenyratPageses(),
-          window.api.fetchTableQuery('SELECT SUM(mbetjaPerPagese) as vleraShitjevePaPaguar FROM shitje'),
-          window.api.fetchTableQuery('SELECT SUM(mbetjaPerPagese) as vleraBlerjevePaPaguar FROM blerje'),
-          window.api.fetchTableQuery(`
-            SELECT 
-              SUM(p.sasia * p.cmimiBlerjes) AS vleraEBlerjeve, 
-              SUM(p.sasia * p.cmimiShitjes) AS VleraShitjeve,
-              SUM(p.sasia) AS sasiaTotale,
-              COUNT(*) AS nrProdukteve,
-              SUM(CASE WHEN p.meFatureTeRregullt = 'po' THEN 1 ELSE 0 END) AS meFatureTeRregulltCount
-            FROM produkti p
-          `)
-        ]);
-        
-
-        // Set state with fetched data
-        setMenyratEPageses(menyratResponse);
-        setVleraShitjevePaPaguar(shitjeResponse);
-        setVleraBlerjevePaPaguar(blerjeResponse);
-        setProduktiData(produktiResponse);
-        setStartDate(() => {
-          const today = new Date();
-          today.setDate(2); 
-          return today.toISOString().split('T')[0]; 
-        })
-        setEndDate(() => new Date().toISOString().split('T')[0])
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('Error fetching data.');
-        setLoading(false);
-      }
-    };
+  
 
     fetchData();
-  }, []);
+  }, [triggerReload]);
+
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      const [menyratResponse, shitjeResponse, blerjeResponse, produktiResponse] = await Promise.all([
+        window.api.fetchTableMenyratPageses(),
+        window.api.fetchTableQuery('SELECT SUM(mbetjaPerPagese) as vleraShitjevePaPaguar FROM shitje'),
+        window.api.fetchTableQuery('SELECT SUM(mbetjaPerPagese) as vleraBlerjevePaPaguar FROM blerje'),
+        window.api.fetchTableQuery(`
+          SELECT 
+            SUM(p.sasia * p.cmimiBlerjes) AS vleraEBlerjeve, 
+            SUM(p.sasia * p.cmimiShitjes) AS VleraShitjeve,
+            SUM(p.sasia) AS sasiaTotale,
+            COUNT(*) AS nrProdukteve,
+            SUM(CASE WHEN p.meFatureTeRregullt = 'po' THEN 1 ELSE 0 END) AS meFatureTeRregulltCount
+          FROM produkti p
+        `)
+      ]);
+      
+      setMenyratEPageses(menyratResponse);
+      setVleraShitjevePaPaguar(shitjeResponse);
+      setVleraBlerjevePaPaguar(blerjeResponse);
+      setProduktiData(produktiResponse);
+      setStartDate(() => {
+        const today = new Date();
+        today.setDate(2); 
+        return today.toISOString().split('T')[0]; 
+      })
+      setEndDate(() => new Date().toISOString().split('T')[0])
+      setLoading(false);
+    } catch (err) {
+      showToast('Gabim gjate marrjes se te dhenave', 'error');
+    }finally{
+      setLoading(false)
+    }
+  };
 
   useEffect(() => {
     if (!startDate || !endDate) return;  
     console.log(startDate,endDate)
     const startDateNormale = `${startDate} 00:00:00`
     const endDateNormale = `${endDate} 23:59:59`
-
-   
-
 
     const fetchData = async () => {
       setLoading2(true);
@@ -217,8 +218,8 @@ export default function Evidenca() {
     );
   }
 
-  if (error) {
-    return <div>{error}</div>;
+  if (loading) {
+    return <div className='text-center'><AnimatedSpinner/></div>;
   }
 
   const bgColors = ['bg-success', 'bg-info', 'bg-warning', 'bg-primary', 'bg-secondary','bg-danger'];

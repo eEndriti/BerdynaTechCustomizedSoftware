@@ -1,7 +1,8 @@
 import  { useState, useEffect, useContext } from 'react';
 import { Row, Col, Button, Form,Spinner, Container, InputGroup} from 'react-bootstrap';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from '../ToastProvider';
+
 import AuthContext from '../AuthContext';
 
 export default function ShtoShpenzim() {
@@ -12,19 +13,21 @@ export default function ShtoShpenzim() {
     const [loading,setLoading] = useState(false)
     const {authData} = useContext(AuthContext)
     const [buttonLoading,setButtonLoading] = useState(false)
-  
+    const showToast = useToast()
+    const [triggerReload,setTriggerReload] = useState(false)
+
     useEffect(() => {
   
-      const fetchData = async () => {    
-        await window.api.fetchTableLlojetShpenzimeve().then(receivedData => {
-          setLlojetShpenzimeve(receivedData);
-        });
-      }
+     
   
       fetchData()
-    }, []);
+    }, [triggerReload]);
   
-  
+    const fetchData = async () => {    
+      await window.api.fetchTableLlojetShpenzimeve().then(receivedData => {
+        setLlojetShpenzimeve(receivedData);
+      });
+    }
     
     const handleSelectChange = (event) => {
       const selectedValue = event.target.value;
@@ -44,20 +47,19 @@ export default function ShtoShpenzim() {
         perdoruesiID: authData.perdoruesiID,
         nderrimiID:authData.nderrimiID
       };
-      const result = await window.api.insertShpenzimi(data);
-      if (result.success) {
+      try {
+        await window.api.insertShpenzimi(data);
+        showToast('Shpenzimi u Regjistrua me Sukses!', 'success');            
+
+      } catch (e) {
+        showToast('Gabim gjate regjistrimit: ' ,'error');
+
+      }finally{
         setLoading(false)
-        toast.success('Shpenzimi u Regjistrua me Sukses!', {
-          position: "top-center",  
-          autoClose: 1500, 
-          onClose: () => window.location.reload(), 
-        });            
-      } else {
-        setLoading(false)
-        toast.error('Gabim gjate regjistrimit: ' + result.error);
+        setButtonLoading(false)
+        setTriggerReload(true)
       }
-      setButtonLoading(false)
-    };
+    }
   
   return (
     <Container>

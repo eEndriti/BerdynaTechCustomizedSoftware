@@ -3,8 +3,8 @@ import { Col, Container, Row, Button, Form, Spinner,Card,Table } from 'react-boo
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan,faEdit } from '@fortawesome/free-solid-svg-icons';
 import ModalPerPyetje from '../ModalPerPyetje';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from '../ToastProvider';
 import ShtoNjeProdukt from './ShtoNjeProdukt';
 import { useNavigate } from 'react-router-dom';
 import AnimatedSpinner from '../AnimatedSpinner';
@@ -26,20 +26,21 @@ export default function Produktet() {
   const [filterKategoria, setFilterKategoria] = useState('');
   const [produkti,setProdukti] = useState({})
   const {authData} = useContext(AuthContext);
+  const [triggerReload,setTriggerReload] = useState(false)
+  const showToast = useToast()
 
   useEffect(() => {
-
-    const fetchData = async () => {
-      await window.api.fetchTableProdukti().then(receivedData => {
-        setProduktet(receivedData);
-        setFilteredProduktet(receivedData);
-      });
-    }
-    
     fetchData()
     setLoading(false)
-  }, []);
+  }, [triggerReload]);
 
+  const fetchData = async () => {
+    await window.api.fetchTableProdukti().then(receivedData => {
+      setProduktet(receivedData);
+      setFilteredProduktet(receivedData);
+    });
+  }
+  
   const thirreModalPerPyetje = (produktiID) => {
     setIdPerAnulim(produktiID);
     setShowModalPerPyetje(true);
@@ -55,17 +56,15 @@ export default function Produktet() {
   const handleCloseModal = () => setShowModal(false);
 
   const handleDeleteProduktin = async () => {
-    const result = await window.api.fshijeProduktin(idPerAnulim);
-    setShowModalPerPyetje(false);
+    try {
+      await window.api.fshijeProduktin(idPerAnulim);
+      showToast(`Produkti u fshie me Sukses!`, 'success ');
+    } catch (error) {
+      showToast('Gabim gjate Anulimit: ' ,'error');
 
-    if (result.success) {
-      toast.success(`Produkti u fshie me Sukses!`, {
-        position: "top-center",
-        autoClose: 1500,
-        onClose: () => window.location.reload(),
-      });
-    } else {
-      toast.error('Gabim gjate Anulimit: ' + result.error);
+    }finally{
+      setShowModalPerPyetje(false);
+      setTriggerReload(prev => !prev)
     }
   };
 
@@ -206,8 +205,8 @@ export default function Produktet() {
                     <td>{item.tvsh} %</td>
                     <td className='d-flex flex-row justify-content-between'>
                     
-                      <Button  variant='outline-primary' onClick={() => thirreNdryshoProduktin(item)}><FontAwesomeIcon icon={faEdit}/></Button>
-                        <Button variant='outline-danger' onClick={() => thirreModalPerPyetje(item.produktiID)} disabled = {item.sasia > 0}>
+                      <Button  variant='outline-primary' className='mx-1' onClick={() => thirreNdryshoProduktin(item)}><FontAwesomeIcon icon={faEdit}/></Button>
+                        <Button variant='outline-danger' className='mx-1' onClick={() => thirreModalPerPyetje(item.produktiID)} disabled = {item.sasia > 0}>
                           {loading && idPerAnulim === item.produktiID ? (
                             <Spinner animation="border" role="status" size="sm">
                               <span className="visually-hidden">Loading...</span>
@@ -217,7 +216,7 @@ export default function Produktet() {
                           )}
                         </Button>
 
-                        {authData.aKaUser == 'admin' &&<Button  variant='outline-dark' onClick={() => handleDetaje(item.produktiID)}>Detaje... </Button>}
+                        {authData.aKaUser == 'admin' &&<Button  variant='outline-dark' className='mx-1' onClick={() => handleDetaje(item.produktiID)}>Detaje... </Button>}
                     </td>
                   </tr>
                 ))}
@@ -227,7 +226,7 @@ export default function Produktet() {
           }
       </Row>
 
-      <ShtoNjeProdukt show={showModal} prejardhja={'meRefresh'} handleClose={handleCloseModal} produkti = {produkti}/>
+      <ShtoNjeProdukt show={showModal} prejardhja={'meRefresh'} handleClose={handleCloseModal} produkti = {produkti} handleConfirm={fetchData()}/>
       <ModalPerPyetje show={showModalPerPyetje} handleConfirm={handleConfirmModalPerPyetje} handleClose={handleCloseModalPerPyetje} />
       <ToastContainer />
     </Container>

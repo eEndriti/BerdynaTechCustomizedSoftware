@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { Modal, Form, Table, Button, Spinner, Alert } from "react-bootstrap";
 import ShtoNjeProdukt from "./ShtoNjeProdukt";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import AnimatedSpinner from "../AnimatedSpinner";
+import {ToastContainer } from 'react-toastify';
+import { useToast } from '../ToastProvider';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 
@@ -18,24 +17,24 @@ export default function KerkoProduktin({ show, onHide, onSelect, meFatureProp })
   const [produktet, setProduktet] = useState([]);
   const [showShtoProduktinModal, setShowShtoProduktinModal] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // Fetch products on component mount
+  const [triggerReload,setTriggerReload] = useState(false)
+  const showToast = useToast()
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const data = await window.api.fetchTableProdukti();
-        setProduktet(data);
-      } catch (error) {
-        toast.error("Nuk u arrit të tërhiqeshin produktet!");
-      } finally {
-        setLoading(false);
-      }
-    };
+   
     fetchProducts();
-  }, []);
+  }, [triggerReload]);
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const data = await window.api.fetchTableProdukti();
+      setProduktet(data);
+    } catch (error) {
+      showToast("Nuk u arrit të tërhiqeshin produktet!",'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Filter products based on search inputs
   useEffect(() => {
     const filterProducts = () => {
       console.log('mefature',meFatureProp)

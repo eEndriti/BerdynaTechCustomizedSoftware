@@ -3,11 +3,10 @@ import { Container, Row, Col, Button, Table, Modal, Form, InputGroup, Spinner } 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
 import AnimatedSpinner from './AnimatedSpinner';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import AuthContext from "../components/AuthContext";
 import ModalPerPyetje from './ModalPerPyetje'
-import StatusToggle from './StatusToggle';
 import FilterPerdorues from './FilterPerdorues';
 
 export default function Perdoruesit() {
@@ -23,49 +22,43 @@ export default function Perdoruesit() {
     const [idPerPerdorim,setIdPerPerdorim] = useState()
     const [modalPerPyetje,setModalPerPyetje] = useState(false)
     const [searchTerms,setSearchTerms] = useState({emertimi:'',roli:'all'})
+    const showToast = useToast()
+    const [triggerReload,setTriggerReload] = useState(false)
 
     useEffect(() =>{
-        const fetchData = async () => {
-            try {
-                const receivedData = await window.api.fetchTableQuery(
-                    `SELECT  *,
-                            CASE 
-                                WHEN EXISTS (SELECT 1 FROM blerje WHERE perdoruesiID = perdoruesi.perdoruesiID)
-                                    OR EXISTS (SELECT 1 FROM shitje WHERE perdoruesiID = perdoruesi.perdoruesiID)
-                                    OR EXISTS (SELECT 1 FROM transaksioni WHERE perdoruesiID = perdoruesi.perdoruesiID)
-                                    OR EXISTS (SELECT 1 FROM servisimi WHERE perdoruesiID = perdoruesi.perdoruesiID)
-                                    OR EXISTS (SELECT 1 FROM shpenzimi WHERE perdoruesiID = perdoruesi.perdoruesiID)
-                                    OR EXISTS (SELECT 1 FROM logs WHERE perdoruesiID = perdoruesi.perdoruesiID)
-                                THEN CAST(1 AS BIT)  -- Returns TRUE if related data exists
-                                ELSE CAST(0 AS BIT)   -- Returns FALSE if no related data exists
-                            END AS DataExists
-                        FROM 
-                            perdoruesi;
-`
-                )
-                setFilteredPerdoruesit(receivedData)
-                setPerdoruesit(receivedData)
-                console.log(receivedData)
-
-            }catch(error){
-                console.log(error)
-            }finally{
-                setLoading(false)
-            }
-        }
+       
         fetchData()
-        if (localStorage.getItem('sukses') === 'true') {
-            toast.success(localStorage.getItem('msg'));
-            setTimeout(() => {
-              setTimeout((localStorage.removeItem('sukses'),localStorage.removeItem('msg')) , 1500)
-            }, 1000)
-        }else if(localStorage.getItem('sukses') === 'false') {
-            toast.error('Punonjesi u shtua me sukses!');
-            setTimeout(() => {
-              setTimeout((localStorage.removeItem('sukses'),localStorage.removeItem('msg')) , 1500)
-            }, 1000)
+        
+    },[triggerReload])
+
+    const fetchData = async () => {
+        try {
+            const receivedData = await window.api.fetchTableQuery(
+                `SELECT  *,
+                        CASE 
+                            WHEN EXISTS (SELECT 1 FROM blerje WHERE perdoruesiID = perdoruesi.perdoruesiID)
+                                OR EXISTS (SELECT 1 FROM shitje WHERE perdoruesiID = perdoruesi.perdoruesiID)
+                                OR EXISTS (SELECT 1 FROM transaksioni WHERE perdoruesiID = perdoruesi.perdoruesiID)
+                                OR EXISTS (SELECT 1 FROM servisimi WHERE perdoruesiID = perdoruesi.perdoruesiID)
+                                OR EXISTS (SELECT 1 FROM shpenzimi WHERE perdoruesiID = perdoruesi.perdoruesiID)
+                                OR EXISTS (SELECT 1 FROM logs WHERE perdoruesiID = perdoruesi.perdoruesiID)
+                            THEN CAST(1 AS BIT)  -- Returns TRUE if related data exists
+                            ELSE CAST(0 AS BIT)   -- Returns FALSE if no related data exists
+                        END AS DataExists
+                    FROM 
+                        perdoruesi;
+`
+            )
+            setFilteredPerdoruesit(receivedData)
+            setPerdoruesit(receivedData)
+            console.log(receivedData)
+
+        }catch(error){
+            console.log(error)
+        }finally{
+            setLoading(false)
         }
-    },[])
+    }
 
     useEffect(() => { // perFiltrim
        if(perdoruesit){
@@ -108,33 +101,29 @@ export default function Perdoruesit() {
         
         setButtonLoading(true);
         console.log(dataPerPerdorues)
-        
+        setShtoPerdoruesModal(false)
         try {
             await window.api.shtoPerdoruesin(dataPerPerdorues);
-            localStorage.setItem('sukses', 'true');
-            localStorage.setItem('msg', 'Perdoruesi u Shtua me Sukses');
-        } catch (error) {
-            localStorage.setItem('sukses', 'false');
-            localStorage.setItem('msg', error);
+           showToast('Perdoruesi u shtua me sukses', 'success')
+        } catch (e) {
+            showToast('Perdoruesi nuk mund te shtohet', 'error')    
         } finally {
             setButtonLoading(false);
-            window.location.reload();
+            fetchData()
         } 
     };
 
     const ndryshoPerdorues = async () => {
         setButtonLoading(true);
-
+        setShtoPerdoruesModal(false)
         try {
             await window.api.ndryshoPerdorues(dataPerPerdorues);
-            localStorage.setItem('sukses', 'true');
-            localStorage.setItem('msg', 'Perdoruesi u Ndryshua me Sukses');
+            showToast('Perdoruesi u ndryshua me sukses', 'success')
         } catch (error) {
-            localStorage.setItem('sukses', 'false');
-            localStorage.setItem('msg', error);
+            showToast('Perdoruesi nuk mund te ndryshohet', 'error')
         } finally {
             setButtonLoading(false);
-            window.location.reload();
+            fetchData()
         } 
     };
     const thirreModalPerPyetje = (id) => {
@@ -145,14 +134,13 @@ export default function Perdoruesit() {
         setButtonLoading(true)
         try {
             await window.api.deletePerdoruesi(idPerPerdorim);
-            localStorage.setItem('sukses', 'true');
-            localStorage.setItem('msg', 'Perdoruesi u Fshie me Sukses');
+            showToast('Perdoruesi u Anulua me sukses', 'success')
         } catch (error) {
-            localStorage.setItem('sukses', 'false');
-            localStorage.setItem('msg', error);
+            showToast('Perdoruesi nuk mund te anulohet', 'error')
         } finally {
             setButtonLoading(false);
-            window.location.reload();
+            fetchData()
+            setModalPerPyetje(false)
         } 
     }
 

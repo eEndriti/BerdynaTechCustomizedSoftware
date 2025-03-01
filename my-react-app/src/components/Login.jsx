@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Form, Button, Row, Modal, Spinner } from 'react-bootstrap';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import AnimatedSpinner from './AnimatedSpinner';
 import Cookies from 'js-cookie';
 
@@ -14,6 +14,7 @@ export default function Login() {
   const [avansAmount, setAvansAmount] = useState('');
   const [loading, setLoading] = useState(true);
   const [buttonLoading, setButtonLoading] = useState(false);
+  const showToast = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,12 +57,12 @@ export default function Login() {
       if (result.success) {
         return result; 
       } else {
-        toast.error(result.message || 'Login failed'); 
+        showToast('Login failed' + result.message , 'error'); 
         return null; 
       }
     } catch (error) {
       console.error('Error during login:', error);
-      toast.error('An unexpected error occurred');
+      showToast('Ndodhi nje Gabim!' , 'error');
     }
   };
 
@@ -78,7 +79,6 @@ export default function Login() {
 
         if (currentShift) {
           const shiftDate = new Date(currentShift.dataFillimit).toLocaleDateString();
-          console.log('data',currentDate,'shift',shiftDate)
           setSessionCookie('nderrimiID', currentShift.nderrimiID);
           setSessionCookie('avansi', currentShift.avansi);
           setSessionCookie('numriPercjelles', currentShift.numriPercjelles);
@@ -93,10 +93,10 @@ export default function Login() {
           setShowAdvanceModal(true);
         }
       } else {
-        toast.error('Keni Gabuar Perdoruesin ose Fjalekalimin');
+        showToast('Keni Gabuar Perdoruesin ose Fjalekalimin','error');
       }
     } catch (error) {
-      console.error("Error during login process:", error);
+      showToast("Gabim gjate Procesit se Kyqjes:", error,'error');
     }
   };
 
@@ -122,17 +122,9 @@ export default function Login() {
       setSessionCookie('numriPercjelles', receivedShift.numriPercjelles);
       setSessionCookie('dataFillimit', receivedShift.dataFillimit);
     } catch (error) {
-      console.log(error);
+      showToast('Gabim gjate marrjes se te dhenave per Cookies:', error,'error');
     } finally {
       window.location.href = 'faqjaKryesore';
-    }
-  };
-
-  const closeAndStartNewShift = () => {
-    if (currentShift) {
-      setShowAdvanceModal(true);
-    } else {
-      alert('No active shift to close.');
     }
   };
 

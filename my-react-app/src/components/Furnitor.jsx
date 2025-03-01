@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, Spinner, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan, faEdit,faPlus } from '@fortawesome/free-solid-svg-icons';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import ModalPerPyetje from './ModalPerPyetje';
 import { useNavigate } from 'react-router-dom';
 import ShtoNdryshoSubjektin from './ShtoNdryshoSubjektin';
@@ -21,16 +21,22 @@ export default function Furnitor() {
     const [modalShow, setModalShow] = useState(false);
     const [data, setData] = useState({ inputEmertimi: '', inputKontakti: '', ndrysho: false, idPerNdryshim: null, lloji: 'furnitor' });
     const [filteredFurnitoret,setFilteredFurnitoret] = useState([])
+    const [triggerReload, setTriggerReload] = useState(false);
+    const showToast = useToast()
 
     useEffect(() => {
+        fetchData();
+    }, [triggerReload]);
+
+    const fetchData = async () => {
         setLoading(true);
-        window.api.fetchTableSubjekti('furnitor').then((receivedData) => {
-            const filteredData = receivedData.filter(item => item.lloji == 'furnitor');
-            setFurnitoret(filteredData);
-            setFilteredFurnitoret(filteredData)
-            setLoading(false);
-        });
-    }, []);
+            await window.api.fetchTableSubjekti('furnitor').then((receivedData) => {
+                const filteredData = receivedData.filter(item => item.lloji == 'furnitor');
+                setFurnitoret(filteredData);
+                setFilteredFurnitoret(filteredData)
+                setLoading(false);
+            });
+    }
 
     useEffect(() => {
         const filterResult = furnitoret.filter((furnitor) => {
@@ -51,20 +57,17 @@ export default function Furnitor() {
     const handleDeleteSubjekti = async () => {
         if (idPerAnulim) {
             try {
-                const result = await window.api.deleteSubjekti(idPerAnulim);
-                if (result.success) {
-                    toast.success('Furnitori u Fshi me Sukses!', { position: "top-center", autoClose: 1500 });
-                } else {
-                    toast.error('Gabim gjate Fshirjes: ' + result.error);
-                }
+                await window.api.deleteSubjekti(idPerAnulim);
+                showToast('Furnitori u Anulua me Sukses!', 'success');
+                
             } catch (error) {
-                toast.error('Gabim gjate komunikimit me server: ' + error.message);
+                showToast('Gabim gjate Fshirjes: ' + error, 'error');
             } finally {
                 setLoading(false);
-                window.location.reload();
+                setTriggerReload(!triggerReload);
             }
         } else {
-            toast.error('Gabim, Rifreskoni faqen dhe provoni serish: ');
+            showToast('Gabim, Rifreskoni faqen dhe provoni serish: ','error');
         }
     }
 

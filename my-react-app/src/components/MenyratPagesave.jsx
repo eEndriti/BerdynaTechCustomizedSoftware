@@ -2,11 +2,12 @@ import {useState,useEffect} from 'react'
 import { Container,Row,Col,Button,Table,Modal,Form,Spinner,InputGroup } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashCan,faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
-import { toast, ToastContainer } from 'react-toastify';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import AnimatedSpinner from './AnimatedSpinner';
 import ModalPerPyetje from './ModalPerPyetje'
 import { formatCurrency } from "../components/AuthContext";
-
+import { useNavigate } from 'react-router-dom';
 export default function MenyratPagesave() {
     const [loading,setLoading] = useState(true)
     const [buttonLoading,setButtonLoading] = useState(false)
@@ -22,7 +23,10 @@ export default function MenyratPagesave() {
     const [neOpsionin, setneOpsionin] = useState("");
     const [shuma, setshuma] = useState("");
     const [emertimiSearch,setEmertimiSearch] = useState('')
-
+    const showToast = useToast()
+    const [triggerReload,setTriggerReload] = useState(false)
+    const navigate = useNavigate()
+    
     const handleFromChange = (e) => {
       setngaOpsioni(e.target.value);
     };
@@ -36,46 +40,40 @@ export default function MenyratPagesave() {
     };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const receivedData = await window.api.fetchTableQuery(
-                    `SELECT 
-                        m.menyraPagesesID, 
-                        m.emertimi, 
-                        m.asociuarMeArken,
-                        b.shuma, 
-                        CASE 
-                            WHEN EXISTS (SELECT 1 FROM blerje WHERE menyraPagesesID = m.menyraPagesesID)
-                                OR EXISTS (SELECT 1 FROM shitje WHERE menyraPagesesID = m.menyraPagesesID)
-                                OR EXISTS (SELECT 1 FROM pagesa WHERE menyraPagesesID = m.menyraPagesesID)
-                            THEN CAST(1 AS BIT)  -- Returns TRUE if data exists
-                            ELSE CAST(0 AS BIT)   -- Returns FALSE if no data exists
-                        END AS DataExists
-                    FROM 
-                        menyraPageses m 
-                    JOIN 
-                        balanci b ON b.menyraPagesesID = m.menyraPagesesID;`
-                );
-                setMenyratPagesave(receivedData);
-                setMenyratPagesaveFiltered(receivedData)
-            } catch (error) {
-                console.log(error);
-            } finally {
-                setLoading(false); 
-            }
-        };
+       
         fetchData();
-    
-        if (localStorage.getItem('sukses') === 'true') {
-            toast.success(localStorage.getItem('msg'));
-            setTimeout(() => localStorage.removeItem('sukses'), 1500);
-            setTimeout(() => localStorage.removeItem('msg'), 1500);
-        } else if (localStorage.getItem('sukses') === 'false') {
-            toast.error(localStorage.getItem('msg'));
-            setTimeout(() => localStorage.removeItem('sukses'), 1500);
-            setTimeout(() => localStorage.removeItem('msg'), 1500);
+
+    }, [triggerReload]);
+
+    const fetchData = async () => {
+        try {
+            setLoading(true)
+            const receivedData = await window.api.fetchTableQuery(
+                `SELECT 
+                    m.menyraPagesesID, 
+                    m.emertimi, 
+                    m.asociuarMeArken,
+                    b.shuma, 
+                    CASE 
+                        WHEN EXISTS (SELECT 1 FROM blerje WHERE menyraPagesesID = m.menyraPagesesID)
+                            OR EXISTS (SELECT 1 FROM shitje WHERE menyraPagesesID = m.menyraPagesesID)
+                            OR EXISTS (SELECT 1 FROM pagesa WHERE menyraPagesesID = m.menyraPagesesID)
+                        THEN CAST(1 AS BIT)  -- Returns TRUE if data exists
+                        ELSE CAST(0 AS BIT)   -- Returns FALSE if no data exists
+                    END AS DataExists
+                FROM 
+                    menyraPageses m 
+                JOIN 
+                    balanci b ON b.menyraPagesesID = m.menyraPagesesID;`
+            );
+            setMenyratPagesave(receivedData);
+            setMenyratPagesaveFiltered(receivedData)
+        } catch (error) {
+            showToast('Gabim gjate marrjes se te dhenave: ' + error, 'error');
+        } finally {
+            setLoading(false); 
         }
-    }, []);
+    };
 
     useEffect(() =>{
         if(menyratPagesave){
@@ -85,6 +83,7 @@ export default function MenyratPagesave() {
             setMenyratPagesaveFiltered(filterResult)
         }
     },[menyratPagesave,emertimiSearch])
+
     const handleChangeData = (event) => {
         const { name, value } = event.target;
         setData({
@@ -101,33 +100,38 @@ export default function MenyratPagesave() {
         setPerNdryshim(null)
       }
 
-    const shtoOpsion = async () => {
+      const shtoOpsion = async () => {
         setButtonLoading(true);
         try {
             await window.api.shtoOpsionPagese(data);
-            localStorage.setItem('sukses', 'true');
-            localStorage.setItem('msg', 'Menyra e Pageses u Shtua me Sukses');
+            showToast('Menyra e Pageses u Regjistrua me Sukses', 'success');
+    
+            setTimeout(() => {
+                setModal(false);
+                setTriggerReload(prev => !prev);
+            }, 2500); 
         } catch (error) {
-            localStorage.setItem('sukses', 'false');
-            localStorage.setItem('msg', error);
+            showToast('Gabim gjate Regjistrimit te Menyres se Pageses: ' + error, 'error');
         } finally {
             setButtonLoading(false);
-            window.location.reload();
         }
     };
+    
 
     const ndryshoOpsion = async () => {
         setButtonLoading(true);
         try {
             await window.api.ndryshoOpsionPagese(data);
-            localStorage.setItem('sukses', 'true');
-            localStorage.setItem('msg', 'Menyra e Pageses u Ndryshua me Sukses');
+            showToast('Menyra e Pageses u Ndryshua me Sukses', 'success')
+            setTimeout(() => {
+                setModal(false);
+                setTriggerReload(prev => !prev);
+            }, 2500); 
         } catch (error) {
-            localStorage.setItem('sukses', 'false');
-            localStorage.setItem('msg', error);
+            showToast('Gabim gjate Ndryshimit te Menyres se Pageses: ' + error, 'error');
         } finally {
             setButtonLoading(false);
-            window.location.reload();
+            
         }
     };
 
@@ -135,18 +139,19 @@ export default function MenyratPagesave() {
         setIdPerNdryshim(id)
         setModalPerPyetje(true)
     }
+
     const handleConfirm = async() => {
         if(idPerNdryshim){
           try{
             await window.api.deleteOpsionPagese(idPerNdryshim)
-            localStorage.setItem('sukses', 'true');
-            localStorage.setItem('msg', 'Menyra e Pageses u Fshie me Sukses');
+            showToast('Menyra e Pageses u Anulua me Sukses','success')
+            setTimeout(() => {
+                setTriggerReload(prev => !prev);
+            }, 2500); 
         } catch (error) {
-            localStorage.setItem('sukses', 'false');
-            localStorage.setItem('msg', error);
+            showToast('Gabim gjate Anulimit se Menyres se Pageses: ' + error, 'error');
         } finally {
             setButtonLoading(false);
-            window.location.reload();
         }
         }
       }
@@ -162,10 +167,14 @@ export default function MenyratPagesave() {
 
         try{
             await window.api.transferoMjetet(data)
+            showToast('Mjetet u Transferuan me Sukses','success')
+            setTimeout(() => {
+                setLevizjeModal(false)
+                setTriggerReload(prev => !prev);
+            }, 2500); 
         }catch(error){
-            console.log(error)
+            showToast('Gabim gjate Transferimit te Mjeteve: ' + error, 'error');
         }finally{
-            setLevizjeModal(false)
             setButtonLoading(false)
         }
       }

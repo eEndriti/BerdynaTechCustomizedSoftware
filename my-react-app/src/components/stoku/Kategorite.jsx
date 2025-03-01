@@ -1,24 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Row,
-  Col,
-  Form,
-  Button,
-  Spinner,
-  Modal,
-  Card,
-  Badge,
-  Table,
-} from 'react-bootstrap';
-import { toast, ToastContainer } from 'react-toastify';
-import { ClipLoader } from 'react-spinners';
+import {Container,Row,Col,Form,Button,Spinner,Modal,Card,Badge,Table} from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan, faEdit } from '@fortawesome/free-solid-svg-icons';
-import 'react-toastify/dist/ReactToastify.css';
 import 'animate.css';
 import ModalPerPyetje from '../ModalPerPyetje';
 import AnimatedSpinner from '../AnimatedSpinner';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from '../ToastProvider';
 
 export default function Kategorite() {
   const [kategorite, setKategorite] = useState([]);
@@ -31,13 +19,19 @@ export default function Kategorite() {
   const [showModal, setShowModal] = useState(false);
   const [modalPerPyetje, setModalPerPyetje] = useState(false);
   const [idPerAnulim, setIdPerAnulim] = useState();
+  const [triggerReload, setTriggerReload] = useState(false);
+  const showToast = useToast();
 
   useEffect(() => {
-    window.api.fetchTableKategoria().then((receivedData) => {
+      fetchData()
+  }, [triggerReload]);
+
+  const fetchData = async () => {
+    await window.api.fetchTableKategoria().then((receivedData) => {
       setKategorite(receivedData);
       setLoading(false);
     });
-  }, []);
+  }
 
   const handleCheckKomponenta = () => {
     setKomponenta(!komponenta);
@@ -53,19 +47,17 @@ export default function Kategorite() {
       komponenta: km,
     };
 
-    const result = await window.api.insertKategorine(data);
+    try {
+      await window.api.insertKategorine(data);
+      showToast('Kategoria u Regjistrua me Sukses!','success');
+    } catch (error) {
+      showToast('Gabim gjate regjistrimit: ' ,'error');
 
-    if (result.success) {
-      toast.success('Kategoria u Regjistrua me Sukses!', {
-        position: 'top-center',
-        autoClose: 1500,
-        onClose: () => window.location.reload(),
-      });
-    } else {
-      toast.error('Gabim gjate regjistrimit: ' + result.error);
+    }finally{
+      setSubmitLoading(false);
+      setTriggerReload(!triggerReload);
     }
 
-    setSubmitLoading(false);
   };
 
   const handleEditCategory = (category) => {

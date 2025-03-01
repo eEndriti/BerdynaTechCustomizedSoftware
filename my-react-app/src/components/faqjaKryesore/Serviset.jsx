@@ -3,11 +3,9 @@ import { Container,Button,Row,Col,Modal,Form, Spinner, InputGroup,Table,Card } f
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from '../ModalPerPyetje'
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useToast } from '../ToastProvider';
 import UpdateServise from '../UpdateServise';
-import AnimatedSpinner from '../AnimatedSpinner';
-import AuthContext,{formatCurrency} from '../AuthContext';
+import AuthContext from '../AuthContext';
 
 export default function Serviset() {
   const [loading,setLoading] = useState(true)
@@ -22,30 +20,30 @@ export default function Serviset() {
   const [updateServisType,setUpdateServisType] = useState()
   const { authData } = useContext(AuthContext)
   const [buttonLoading,setButtonLoading] = useState(false)
+  const showToast = useToast();
 
   useEffect(() => {
 
-    const fetchData = async () => {
-      setLoading(true)
-
-      try{
-        const [servisetFetched] = await Promise.all([
-          window.api.fetchTableServisi(),
-        ]);
-
-        setServiset(servisetFetched.filter(item => item.statusi === 'Aktiv'))
-        console.log(serviset)
-
-      }catch(e){
-        console.log(e)
-      }finally{
-        setLoading(false)
-      }
-    };
-  
     fetchData();
 
   }, []);
+  const fetchData = async () => {
+    setLoading(true)
+
+    try{
+      const [servisetFetched] = await Promise.all([
+        window.api.fetchTableServisi(),
+      ]);
+
+      setServiset(servisetFetched.filter(item => item.statusi === 'Aktiv'))
+      console.log(serviset)
+
+    }catch(e){
+      console.log(e)
+    }finally{
+      setLoading(false)
+    }
+  };
 
   const ndryshoServisin = (data,type) =>{
 
@@ -58,14 +56,11 @@ export default function Serviset() {
     const result = await window.api.deleteServisi(idPerAnulim);
 
     if (result.success) {
-        toast.success(`Servisi u Anulua me Sukses !`, {
-            position: 'top-center',
-            autoClose: 1500,
-            onClose: () => window.location.reload(),
-        });
+      showToast("Servisi u anulua me Sukses!", "success");
+      fetchData();       
     } else {
-        toast.error('Gabim gjate Anulimit: ' + result.error);
-    }
+      showToast("Gabim gjatë Anulimit!", "error");
+  }
 }
 
 
@@ -137,11 +132,8 @@ export default function Serviset() {
         handleClose={() => setShowModal(false)}
         handleConfirm={() => deleteServisin()}
       />
-      <UpdateServise show={modalPerServisUpdate} handleClose={() => setModalPerServisUpdate(false)} updateType={updateServisType} data = {data} />
-      
-      
+      <UpdateServise show={modalPerServisUpdate} handleClose={() => setModalPerServisUpdate(false)} updateType={updateServisType} data = {data} />  
 
-      <ToastContainer/>
     </Container>
   )
 }

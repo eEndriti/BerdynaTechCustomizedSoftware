@@ -1,14 +1,14 @@
 import { useState, useEffect, useContext } from 'react';
 import { Modal, Button, Form,Spinner, Toast,InputGroup,Row,Col,Table } from 'react-bootstrap';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import AuthContext, { formatCurrency } from "../components/AuthContext";
 import KerkoProduktin from './stoku/KerkoProduktin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import AnimatedSpinner from './AnimatedSpinner';
 
-function UpdateServise({ show, handleClose, updateType, data = {} }) {
+function UpdateServise({ show, handleClose, updateType, data = {} , handleConfirm }) {
     const [loading, setLoading] = useState(false);
     const [aKaData, setAKaData] = useState(false);
     const [aKaAdapter, setKaAdapter] = useState(false);
@@ -25,7 +25,8 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
     const [showModalKerkoProduktin,setShowModalKerkoProduktin] = useState(false)
     const [selectedRow, setSelectedRow] = useState(null);
     const [menyratPageses, setMenyratPageses] = useState([]);
-
+    const showToast = useToast();
+    
     useEffect(() => {
             
             if (data?.pajisjetPercjellese) {
@@ -41,12 +42,17 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
             setKomenti(data?.komenti);
             setShifraGarancionit(data?.shifraGarancionit);
         
-        window.api.fetchTableMenyratPageses().then(receivedData => {
+       
+
+        fetchData()
+    }, [data]);
+    
+    const fetchData = async () => {
+        await window.api.fetchTableMenyratPageses().then(receivedData => {
             setMenyratPageses(receivedData);
             setLoading(false);
           });
-    }, [data]);
-    
+    }
 
     const handleConfirmClick = async () => {
         setLoading(true);
@@ -77,21 +83,18 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
             console.log('dataPerndryshim',dataPerNdryshim)
             const result = await window.api.ndryshoServisin(dataPerNdryshim);
             if (result.success) {
-              toast.success(`Servisi u ${updateType != 'perfundo' ? 'Ndryshua' : 'Perfundua'} me Sukses!`, {
-                position: "top-center",  
-                autoClose: 1500,
-                onClose:() => window.location.reload()
-              }); 
+                showToast(`Servisi u ${updateType != 'perfundo' ? 'Ndryshua' : 'Perfundua'} me Sukses!`, 'success'); 
             } else {
-              toast.error('Gabim gjate Ndryshimit: ' + result.error);
+                showToast('Gabim gjate Ndryshimit: ' + result.error , 'error');
             }
           } catch (error) {
-            toast.error('Gabim gjate komunikimit me server: ' + error.message);
+            showToast('Gabim gjate komunikimit me server: ' + error.message , 'error');
           } finally {
             setLoading(false);
+            handleConfirm()
             handleClose()
-            window.location.reload()
-          }
+
+        }
 
     };
 
@@ -139,7 +142,7 @@ function UpdateServise({ show, handleClose, updateType, data = {} }) {
         if (value <= totaliPerPagese) {
             setTotaliIPageses(value);
         } else {
-          toast.error('Shuma e paguar nuk mund të jetë më e madhe se totali!');
+            showToast('Shuma e paguar nuk mund të jetë më e madhe se totali!' , 'warning');
         }
         setMbetjaPerPagese(totaliPerPagese - totaliIPageses)
 

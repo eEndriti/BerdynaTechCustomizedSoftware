@@ -2,19 +2,14 @@ import  { useState, useEffect, useContext } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoneyBillTransfer, faList ,faExchangeAlt } from '@fortawesome/free-solid-svg-icons'; 
 import { Row, Col, Button, Form,Spinner,Modal, Container, InputGroup, FormGroup} from 'react-bootstrap';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import ModalPerPyetje from '../ModalPerPyetje'
-import KerkoProduktin from '../stoku/KerkoProduktin';
-import AuthContext, { normalizoDaten , localTodayDate, formatLongDateToAlbanian } from '../AuthContext';
 import Shpenzimet from './Shpenzimet';
 import LlojetShpenzimeve from './LlojetShpenzimeve'
 import ShtoShpenzim from './ShtoShpenzim';
 import NgaStokiNeShpenzim from './NgaStokiNeShpenzim';
+import {ToastContainer } from 'react-toastify';
 
 export default function Shpenzim() {
   const [activeTab, setActiveTab] = useState("shpenzimet");
-
 
   return (
     <Container>
@@ -62,6 +57,8 @@ export default function Shpenzim() {
 
       {activeTab === "llojetShpenzimeve" && <LlojetShpenzimeve />}
       {activeTab === "kaloNgaStoki" && <NgaStokiNeShpenzim />}
+
+      <ToastContainer/>
     </Container>
   );
 }

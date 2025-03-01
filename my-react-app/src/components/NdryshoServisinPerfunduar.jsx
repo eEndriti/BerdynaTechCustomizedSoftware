@@ -1,15 +1,13 @@
 import { useState, useEffect, useContext } from 'react';
 import { Modal, Button, Form,Spinner, Toast,InputGroup,Row,Col,Table } from 'react-bootstrap';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import AuthContext, { formatCurrency } from "../components/AuthContext";
-import MenyratPagesesExport from './MenyratPagesesExport';
 import KerkoProduktin from './stoku/KerkoProduktin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import AnimatedSpinner from './AnimatedSpinner';
+import { useToast } from './ToastProvider';
 
-function NdryshoServisinPerfunduar({ show, handleClose,data = {}}) {
+function NdryshoServisinPerfunduar({ show, handleClose,data = {}, handleConfirm}) {
 
     const [loading, setLoading] = useState(false);
     const [komenti, setKomenti] = useState();
@@ -27,7 +25,7 @@ function NdryshoServisinPerfunduar({ show, handleClose,data = {}}) {
     const [totaliPagesesFillestare,setTotaliPagesesFillestare] = useState()
     const [menyraPagesesIDFillestare,setMenyraPagesesIDFillestare] = useState()
     const [transaksioniIDFillestare,setTransaksioniIDFillestare] = useState()
-
+    const showToast = useToast()
     useEffect(() => {     
         setProducts([{}]);   
             fetchDataFillestare();
@@ -105,23 +103,19 @@ function NdryshoServisinPerfunduar({ show, handleClose,data = {}}) {
             produktet:products.slice(0, products.length - 1)
         }
         try {
-            console.log('dataPerndryshim',dataPerNdryshim)
+
             const result = await window.api.ndryshoServisinPerfunduar(dataPerNdryshim);
             if (result.success) {
-              toast.success(`Servisi u Ndryshua me Sukses!`, {
-                position: "top-center",  
-                autoClose: 1500,
-                onClose:() => window.location.reload()
-              }); 
+              showToast(`Servisi u Ndryshua me Sukses!`, 'success'); 
             } else {
-              toast.error('Gabim gjate Ndryshimit: ' + result.error);
+                showToast('Gabim gjate Ndryshimit: ' + result.error , 'error');
             }
           } catch (error) {
-            toast.error('Gabim gjate komunikimit me server: ' + error.message);
+            showToast('Gabim gjate komunikimit me server: ' + error.message, 'error');
           } finally {
             setLoading(false);
+            handleConfirm(true)
             handleClose()
-            //window.location.reload()
           }
 
     };
@@ -171,7 +165,7 @@ function NdryshoServisinPerfunduar({ show, handleClose,data = {}}) {
         if (value <= totaliPerPagese) {
             setTotaliIPageses(value);
         } else {
-          toast.error('Shuma e paguar nuk mund të jetë më e madhe se totali!');
+          showToast('Shuma e paguar nuk mund të jetë më e madhe se totali!' ,'warn');
         }
         setMbetjaPerPagese(totaliPerPagese - totaliIPageses)
 
@@ -401,7 +395,6 @@ function NdryshoServisinPerfunduar({ show, handleClose,data = {}}) {
                     )}
                 </Button>
             </Modal.Footer> 
-            <ToastContainer/>
         </Modal>
     );
 }

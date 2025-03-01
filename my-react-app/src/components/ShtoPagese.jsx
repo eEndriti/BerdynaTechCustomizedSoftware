@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Modal, Button, Form, InputGroup, Spinner,Col,Row } from 'react-bootstrap';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import AuthContext, { formatCurrency } from "../components/AuthContext";
 import AnimatedSpinner from './AnimatedSpinner';
 import MenyratPagesesExport from './MenyratPagesesExport'
@@ -13,7 +13,7 @@ const ShtoPagese = ({ show, handleClose,data = {} }) => {
    const [mbetjaPerPagese,setMbetjaPageses] = useState()
    const [menyraPagesesID,setMenyraPagesesID] = useState()
    const {authData} = useContext(AuthContext)
-   
+  const showToast = useToast();
   useEffect(() => {
     setMbetjaPageses(data.mbetjaPerPagese)
   },[data])
@@ -70,15 +70,7 @@ const ShtoPagese = ({ show, handleClose,data = {} }) => {
             setLoading(false)
             setButtonLoading(false)
             handleClose()
-            toast.success('Pagesa u regjistrua me sukses!', {
-              position: 'top-right',
-              autoClose: 3000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-            });
+            showToast('Pagesa u regjistrua me sukses!', 'success');
           }, 2000);
         }
     }catch(e){
@@ -86,15 +78,7 @@ const ShtoPagese = ({ show, handleClose,data = {} }) => {
         setLoading(false)
         setButtonLoading(false)
         handleClose()
-        toast.error('Pagesa nuk regjistrua me sukses!', {
-          position: 'top-right',
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
+        showToast('Pagesa nuk regjistrua me sukses!', 'error');
       }, 2000);
     }finally{
       window.location.reload()

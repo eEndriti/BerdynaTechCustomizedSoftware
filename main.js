@@ -35,30 +35,14 @@ async function hashData(plainTextPassword) {
   }
 }
 
-/*async function getDateTime() {
-  const apiUrl = 'http://worldtimeapi.org/api/ip'; // World Time API endpoint for datetime
-
-  try {
-    // Try to fetch the datetime from the World Time API
-    const response = await fetch(apiUrl);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const data = await response.json();
-    return data.datetime; // Returns the datetime in ISO 8601 format
-  } catch (error) {
-    console.error('Failed to fetch datetime from online server:');
-    // Fallback to local system time if the request fails
-    return new Date().toISOString(); // Return the current local datetime in ISO format
-  }
-}*/
 
 async function getDateTime() {
-  const apiUrl = 'http://worldtimeapi.org/api/ip'; // World Time API endpoint for datetime
+  const apiUrl = 'https://worldtimeapi.org/api/timezone/Europe/Skopje'; // World Time API endpoint for datetime
 
   try {
     // Fetch the datetime from the World Time API
     const response = await fetch(apiUrl);
+    console.log('res',response)
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
@@ -1081,7 +1065,7 @@ ipcMain.handle('kaloNgaStokuNeShpenzim', async (event, data) => {
       eshtePublik:1
     })
      
-    const transaksioniID = insertTransaksionin(dataPerTransaksion,connection)
+    const transaksioniID = await insertTransaksionin(dataPerTransaksion,connection)
 
     const insertShpenzimi = `
       INSERT INTO shpenzimi (
@@ -1090,7 +1074,7 @@ ipcMain.handle('kaloNgaStokuNeShpenzim', async (event, data) => {
         @shifra, @shumaShpenzimit, @dataShpenzimit, @komenti, @llojetShpenzimeveID, @perdoruesiID, @transaksioniID
       )
     `;
-
+    console.log('transaksioniID',transaksioniID)
     const shpenzimiResult = await connection.request()
       .input('shifra', sql.VarChar, shifra)
       .input('shumaShpenzimit', sql.Decimal(18,2), data.cmimiFurnizimit)

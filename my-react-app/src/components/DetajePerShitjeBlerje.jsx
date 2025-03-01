@@ -10,8 +10,8 @@ export default function DetajePerShitjeBlerje({ shifraPerDetaje, IDPerDetaje,llo
   const [tregoProfitinDetaje, setTregoProfitinDetaje] = useState(false);
   const {authData} = useContext(AuthContext);
 
-  function fetchOneQuery(query) {
-    window.api.fetchTableQuery(query)
+  const fetchOneQuery = async (query) => {
+    await window.api.fetchTableQuery(query)
       .then((receivedData) => {
         setQueryResponse(receivedData);
         setLoading(false);

@@ -4,8 +4,8 @@ import KerkoSubjektin from './KerkoSubjektin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faEdit, faTrashCan,faCheckCircle, faTimesCircle,faEuroSign } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from './ModalPerPyetje'
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import UpdateServise from './UpdateServise'
 import AuthContext from "../components/AuthContext";
 import NdryshoServisinPerfunduar from './NdryshoServisinPerfunduar';
@@ -42,22 +42,25 @@ export default function Serviset() {
     const [ndryshoServisinPerfunduar,setNdryshoServisinPerfunduar] = useState(false)
     const [dataPerShtoPagese,setDataPerShtoPagese] = useState()
     const [showShtoPagese,setShowShtoPagese] = useState(false)
+      const showToast = useToast();
 
     useEffect(() => {
-        const fetchData = async () => {
-          try {
-            const receivedData = await window.api.fetchTableServisi();
-            setServiset(receivedData);
-            setFilteredServiset(receivedData.filter(item => item.statusi === filterStatusi));
-          } catch (error) {
-            console.error('Error fetching data:', error);
-          } finally {
-            setLoading(false); 
-          }
-        };
-    
+        
         fetchData();
       }, [filterStatusi]);
+
+      const fetchData = async () => {
+        try {
+          const receivedData = await window.api.fetchTableServisi();
+          setServiset(receivedData);
+          setFilteredServiset(receivedData.filter(item => item.statusi === filterStatusi));
+        } catch (error) {
+          showToast('Error fetching data:'+ error,'error');
+        } finally {
+          setLoading(false); 
+        }
+      };
+  
 
     useEffect(() => {
         const applyFilters = () => {
@@ -110,16 +113,15 @@ export default function Serviset() {
         if(selectedSubjekti.emertimi.length > 1){
             if(aKaGarancion){
                 if(shifraGarancionit.length < 1) {
-                    toast.warning('Duhet te shenoni shifren e garancionit!')
+                    showToast('Duhet te shenoni shifren e garancionit!','warning')
                 }else{
                     handleShtoServisin()
-                    console.log('asd')
                 }
             }else{
                 handleShtoServisin()
             }
         }else{
-            toast.warning('Selektoni subjektin per te vazhduar!')
+            showToast('Selektoni subjektin per te vazhduar!','warning')
         }
     }
 
@@ -144,18 +146,15 @@ export default function Serviset() {
                 try {
                     const result = await window.api.insertServisi(data);
                     if (result.success) {
-                      toast.success('Servisi u Regjistrua me Sukses!', {
-                        position: "top-center",  
-                        autoClose: 1500,
-                        onClose:() => window.location.reload()
-                      }); 
+                        showToast('Servisi u Regjistrua me Sukses!', 'success'); 
                     } else {
-                      toast.error('Gabim gjate regjistrimit: ' + result.error);
+                        showToast('Gabim gjate regjistrimit: ' + result.error,'error');
                     }
                   } catch (error) {
-                    toast.error('Gabim gjate komunikimit me server: ' + error.message);
+                    showToast('Gabim gjate komunikimit me server: ' + error.message,'error');
                   } finally {
                     setLoading(false);
+                    fetchData();
                   }
     }
 
@@ -186,16 +185,14 @@ export default function Serviset() {
         const result = await window.api.deleteServisi(dataPerAnulim);
 
         if (result.success) {
-            toast.success(`Servisi u Anulua me Sukses !`, {
-                position: 'top-center',
-                autoClose: 1500,
-                onClose: () => window.location.reload(),
-            });
+            showToast(`Servisi u Anulua me Sukses !`, 'success');
         } else {
-            toast.error('Gabim gjate Anulimit: ' + result.error);
+            showToast('Gabim gjate Anulimit: ' + result.error,'error');
         }
         }catch(e){
-            console.log(e)
+            showToast('Gabim gjate Anulimit: ' + e,'error');
+        }finally{
+            fetchData()
         }
     }
     
@@ -228,6 +225,14 @@ export default function Serviset() {
         })
         console.log('prejblej',dataPerShtoPagese)
         setShowShtoPagese(true)
+    }
+
+    const handleConfirmServisinPerfunduar = () => {
+        fetchData()
+    }
+
+    const handleServisChange = () => {
+        fetchData()
     }
   return (
     <Container fluid className='mt-5'>
@@ -321,13 +326,13 @@ export default function Serviset() {
                                     type="date"
                                     value={filterDataStart}
                                     readOnly = {authData.aKaUser != 'admin'}
-                                    onChange={(e) => {authData.aKaUser != 'admin' ? setFilterDataStart(e.target.value) : null}}
+                                    onChange={(e) => {authData.aKaUser == 'admin' ? setFilterDataStart(e.target.value) : null}}
                                 />
                                 <Form.Control
                                     type="date"
                                     value={filterDataEnd}
                                     readOnly = {authData.aKaUser != 'admin'}
-                                    onChange={(e) => {authData.aKaUser != 'admin' ? setFilterDataEnd(e.target.value) : null}}
+                                    onChange={(e) => {authData.aKaUser == 'admin' ? setFilterDataEnd(e.target.value) : null}}
                                 />
                             </Form.Group>                          
                         </Col>
@@ -367,23 +372,23 @@ export default function Serviset() {
                         <Col>
                             <Form.Group>
                                <Form.Label>Statusi</Form.Label>
-                                                                     <div
-                                                                        onClick={() => setFilterStatusi(filterStatusi === 'Aktiv' ? 'Perfunduar' : 'Aktiv')} style={{
-                                                                         display: 'flex',
-                                                                         alignItems: 'center',
-                                                                         cursor: 'pointer',
-                                                                         backgroundColor: filterStatusi === 'Aktiv'  ? '#24AD5D' : '#d9534f',
-                                                                         color: '#fff',
-                                                                         padding: '8px 20px',
-                                                                         borderRadius: '25px',
-                                                                         fontWeight: '500',
-                                                                         fontSize: '0.9rem',
-                                                                         transition: 'background-color 0.3s',
-                                                                         gap: '10px', }}
-                                                                     >
-                                                                       <FontAwesomeIcon icon={filterStatusi ? faCheckCircle : faTimesCircle} />
-                                                                       <span>{filterStatusi === 'Aktiv' ? 'Aktiv' : 'Perfunduar'}</span>
-                                                                     </div>
+                                    <div
+                                    onClick={() => setFilterStatusi(filterStatusi === 'Aktiv' ? 'Perfunduar' : 'Aktiv')} style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        cursor: 'pointer',
+                                        backgroundColor: filterStatusi === 'Aktiv'  ? '#24AD5D' : '#d9534f',
+                                        color: '#fff',
+                                        padding: '8px 20px',
+                                        borderRadius: '25px',
+                                        fontWeight: '500',
+                                        fontSize: '0.9rem',
+                                        transition: 'background-color 0.3s',
+                                        gap: '10px', }}
+                                    >
+                                    <FontAwesomeIcon icon={filterStatusi ? faCheckCircle : faTimesCircle} />
+                                    <span>{filterStatusi === 'Aktiv' ? 'Aktiv' : 'Perfunduar'}</span>
+                                    </div>
                             </Form.Group>
                         </Col>
                     </Row>
@@ -473,8 +478,8 @@ export default function Serviset() {
         </Row>
         <ToastContainer />
         <ModalPerPyetje show={modalPerPyetje} handleClose={closeModalPerPyetje} handleConfirm={confirmModal} />
-        <UpdateServise show={modalPerUpdate} handleClose={closeModalPerUpdate} updateType={updateType} data = {data} />
-        <NdryshoServisinPerfunduar show={ndryshoServisinPerfunduar} handleClose={() => setNdryshoServisinPerfunduar(false)} data={data}/>
+        <UpdateServise show={modalPerUpdate} handleClose={closeModalPerUpdate} updateType={updateType} data = {data} handleConfirm={handleServisChange}/>
+        <NdryshoServisinPerfunduar show={ndryshoServisinPerfunduar} handleClose={() => setNdryshoServisinPerfunduar(false)} data={data} handleConfirm={handleConfirmServisinPerfunduar}/>
         <ShtoPagese show={showShtoPagese} handleClose={() => setShowShtoPagese(false)} data={dataPerShtoPagese} />
 
     </Container>

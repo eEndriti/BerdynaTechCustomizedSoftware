@@ -33,8 +33,6 @@ export default function SearchInput({ filter,value, onSelect,lloji }) {
 
             
           });
-      
-         
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -65,9 +63,9 @@ export default function SearchInput({ filter,value, onSelect,lloji }) {
   };
 
   const handleSelect = (result) => {
-    onSelect(result); // Notify parent component
-    setQuery(result.emertimi); // Update the input field
-    setShowDropdown(false); // Hide the dropdown
+    onSelect(result); 
+    setQuery(result.emertimi); 
+    setShowDropdown(false); 
   };
   const handleAddSubject = () => setShowModal(true)
   const handleCloseModal = () => setShowModal(false)

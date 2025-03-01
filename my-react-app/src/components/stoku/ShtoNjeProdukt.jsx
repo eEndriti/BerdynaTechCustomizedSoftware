@@ -1,11 +1,11 @@
 import { useState, useEffect, useContext, useCallback } from 'react';
 import { Modal, Button, Form, InputGroup, Spinner, Col } from 'react-bootstrap';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from '../ToastProvider';
 import AuthContext from "../AuthContext";
 import AnimatedSpinner from '../AnimatedSpinner';
 
-const ShtoNjeProdukt = ({ show, handleClose, prejardhja, produkti = {} }) => {
+const ShtoNjeProdukt = ({ show, handleClose, prejardhja, produkti = {} , handleConfirm }) => {
   const [kategorite, setKategorite] = useState([]);
   const [selectedKategoria, setSelectedKategoria] = useState(null);
   const [aKa, setAka] = useState(true);
@@ -22,7 +22,7 @@ const ShtoNjeProdukt = ({ show, handleClose, prejardhja, produkti = {} }) => {
     cmimiShitjes: '',
     komenti: ''
   });
-
+  const showToast = useToast();
   const { authData } = useContext(AuthContext);
 
   // Fetch kategorite when the modal is shown
@@ -78,10 +78,7 @@ const ShtoNjeProdukt = ({ show, handleClose, prejardhja, produkti = {} }) => {
 
   const handleShtoProduktin = useCallback(async () => {
     if (parseFloat(productDetails.cmimiShitjes) <= parseFloat(productDetails.cmimiBlerjes)) {
-      toast.warn('Cmimi Shitjes duhet të jetë më i madh se Cmimi Blerjes!', {
-        position: 'top-center',
-        autoClose: 1500,
-      });
+      showToast('Cmimi Shitjes duhet të jetë më i madh se Cmimi Blerjes!', 'warning');
       return;
     }
 
@@ -118,39 +115,30 @@ const ShtoNjeProdukt = ({ show, handleClose, prejardhja, produkti = {} }) => {
         const result = await window.api.insertProduktin(data);
 
         if (result.success) {
-          toast.success('Produkti u shtua me sukses!', {
-            position: 'top-center',
-            autoClose: 1500,
-          });
+          showToast('Produkti u shtua me sukses!', 'success');
           setTimeout(() => {
             handleClose();
           }, 1500);
         } else {
-          toast.error('Gabim gjatë regjistrimit: ' + result.error);
+          showToast('Gabim gjatë regjistrimit: ' + result.error , 'error');
         }
       } catch (error) {
-        toast.error('Gabim gjatë komunikimit me serverin.' + error);
+        showToast('Gabim gjatë komunikimit me serverin.' + error , 'error');
       } finally {
         setLoading(false);
         if (prejardhja === 'meRefresh') {
-          window.location.reload();
+          handleConfirm()
         }
       }
     } else {
-      toast.warn('Ju Lutem Plotesoni te Gjitha Fushat!', {
-        position: 'top-center',
-        autoClose: 1500,
-      });
+      showToast('Ju Lutem Plotesoni te Gjitha Fushat!', 'warning');
       setLoading(false);
     }
   }, [productDetails, selectedKategoria, meFature, sasiStatike, authData.perdoruesiID, handleClose, prejardhja]);
 
   const ndryshoProduktin = useCallback(async () => {
     if (parseFloat(productDetails.cmimiShitjes) <= parseFloat(productDetails.cmimiBlerjes)) {
-      toast.warn('Cmimi Shitjes duhet të jetë më i madh se Cmimi Blerjes!', {
-        position: 'top-center',
-        autoClose: 1500,
-      });
+      showToast('Cmimi Shitjes duhet të jetë më i madh se Cmimi Blerjes!', 'warning');
       return;
     }
 
@@ -196,29 +184,23 @@ const ShtoNjeProdukt = ({ show, handleClose, prejardhja, produkti = {} }) => {
         const result = await window.api.ndryshoProduktin(data);
 
         if (result.success) {
-          toast.success('Produkti u Ndryshua me Sukses!', {
-            position: 'top-center',
-            autoClose: 1500,
-          });
+          showToast('Produkti u Ndryshua me Sukses!', 'success');
           setTimeout(() => {
             handleClose();
           }, 1500);
         } else {
-          toast.error('Gabim gjatë regjistrimit: ' + result.error);
+          showToast('Gabim gjatë regjistrimit: ' + result.error , 'error');
         }
       } catch (error) {
-        toast.error('Gabim gjatë komunikimit me serverin.' + error);
+        showToast('Gabim gjatë komunikimit me serverin.' + error , 'error');
       } finally {
         setLoading(false);
         if (prejardhja === 'meRefresh') {
-          window.location.reload();
+          handleConfirm()
         }
       }
     } else {
-      toast.warn('Ju Lutem Plotesoni te Gjitha Fushat!', {
-        position: 'top-center',
-        autoClose: 1500,
-      });
+      showToast('Ju Lutem Plotesoni te Gjitha Fushat!', 'warning');
       setLoading(false);
     }
   }, [productDetails, selectedKategoria, meFature, sasiStatike, authData.perdoruesiID, handleClose, prejardhja, produkti.produktiID]);

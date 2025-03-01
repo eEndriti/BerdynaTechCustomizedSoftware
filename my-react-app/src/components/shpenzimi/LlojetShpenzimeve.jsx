@@ -3,8 +3,8 @@ import { Container,Row,Col,Form,Button,InputGroup,Spinner, FormGroup } from 'rea
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan,faEdit } from '@fortawesome/free-solid-svg-icons'; 
 import AnimatedSpinner from '../AnimatedSpinner';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from '../ToastProvider';
 import ModalPerPyetje from '../ModalPerPyetje'
 import NdryshoLlojin from './NdryshoLlojin';
 
@@ -18,27 +18,29 @@ export default function LlojetShpenzimeve() {
     const [dataPerNdryshim,setDataPerNdryshim] = useState({})
     const [llojetShpenzimeveID,setLlojetShpenzimeveID] = useState() // per delete
     const [emertimiSearch,setEmertimiSearch] = useState()
+    const showToast = useToast();
 
     useEffect(() => {
-        const fetchData = async () => {
-          setLoading(true)
-         try{
-            await window.api.fetchTableLlojetShpenzimeve().then(receivedData => {
-                setLlojetShpenzimeve(receivedData);
-                console.log('llojet',llojetShpenzimeve)
-              });
-              
-         }catch(e){
-            console.log(e)
-         }finally{
-            setLoading(false)
-         }
-        }
-    
+        
         fetchData()
       
-    
       }, []);
+      
+      const fetchData = async () => {
+        setLoading(true)
+       try{
+          await window.api.fetchTableLlojetShpenzimeve().then(receivedData => {
+              setLlojetShpenzimeve(receivedData);
+              console.log('llojet',llojetShpenzimeve)
+            });
+            
+       }catch(e){
+          console.log(e)
+       }finally{
+          setLoading(false)
+       }
+      }
+  
 
       useEffect(() => {
         if(llojetShpenzimeve.length > 1 && emertimiSearch){
@@ -59,19 +61,18 @@ export default function LlojetShpenzimeve() {
         setLoading(true)
         setButtonLoading(true)
        
-        const result = await window.api.insertLlojiShpenzimit(shtoLlojinData);
-        if (result.success) {
+        try {
+          await window.api.insertLlojiShpenzimit(shtoLlojinData);
+          showToast("Lloji i Shpenzimit u Regjistrua me Sukses!", "success");
+          setShtoLlojinData({emertimi:'',shumaStandarde:0})
+        } catch (e) {
+          showToast("Gabim gjate regjistrimit!", "error"); 
+ 
+        }finally{
           setLoading(false)
-          toast.success('Lloji i Shpenzimit u Regjistrua me Sukses!', {
-            position: "top-center",  
-            autoClose: 1500, 
-            onClose: () => window.location.reload(), 
-          });            ;
-        } else {
-          setLoading(false)
-          toast.error('Gabim gjate regjistrimit: ');
+          setButtonLoading(false)
+          fetchData()
         }
-        setButtonLoading(false)
       };
 
       const handleEditLlojiShpenzimitClick = (item) =>{
@@ -90,24 +91,18 @@ export default function LlojetShpenzimeve() {
       }
 
       const handleDelete= async () =>{
-              let result
               setButtonLoading(true)
               try{
-                  result = await window.api.deleteLlojiShpenzimit(llojetShpenzimeveID)
-                  if (result.success) {
-                      toast.success(` eshte fshirë me sukses!`, {
-                        position: 'top-center',
-                        autoClose: 1500,
-                        onClose: () => window.location.reload(),
-                      });
-                    } else {
-                      setLoading(false)
-                      toast.error('Gabim gjate fshirjes: ' + result.error);
-                    }
+                  await window.api.deleteLlojiShpenzimit(llojetShpenzimeveID)
+                  showToast("Lloji i Shpenzimit eshte fshirë me sukses !", "success");
+          
               }catch(e){
-                  console.log(e)
+                showToast("Gabim gjate fshirjes!", "error"); 
+ 
               }finally{
                   setButtonLoading(false)
+                  fetchData()
+
               }
             }
 
@@ -186,8 +181,7 @@ export default function LlojetShpenzimeve() {
 
       <ModalPerPyetje show={showModalPerPyetje} handleClose={() => setShowModalPerPyetje(false)} handleConfirm={handleConfirmModal} />
       <NdryshoLlojin show={showModalPerNdryshim} handleClose={() => setShowModalPerNdryshim(false)} dataPerNdryshim={dataPerNdryshim}/>
-
-      <ToastContainer/>
+                      <ToastContainer/>
     </Container>
   )
 }

@@ -6,8 +6,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEdit, faUndo,faTrashCan,faWarning, faL } from '@fortawesome/free-solid-svg-icons';
 import KerkoSubjektin from './KerkoSubjektin'
 import KerkoProduktin from './stoku/KerkoProduktin'
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import ModalPerPyetje from './ModalPerPyetje'
 import AuthContext, { formatCurrency } from "../components/AuthContext";
 
@@ -20,7 +20,6 @@ export default function NdryshoBlerjen() {
     const [selectedSubjekti, setSelectedSubjekti] = useState({ emertimi: "", kontakti: "", subjektiID: null });
     const [inputDisabled,setInputDisabled] = useState(false)
     const [data,setData] = useState({})
-    const [dataFillestarem,setDataFillestare] = useState({})
     const [produktetFillestare,setProduktetFillestare] = useState([])
     const [products, setProducts] = useState([{}]);
     const [selectedRow, setSelectedRow] = useState(null);
@@ -28,9 +27,9 @@ export default function NdryshoBlerjen() {
     const [modalPerPyetje,setModalPerPyetje] = useState(false)
     const [totaliPerPagese,setTotaliPerPagese] = useState()
     const [totaliPageses,setTotaliPageses] = useState()
-    const [mbetjaPerPagese,setMbetjaPerPagese] = useState()
     const [totaliTvsh,setTotaliTvsh] = useState()
     const { authData } = useContext(AuthContext)
+    const showToast = useToast()
     
     useEffect(() => {
         const fetchData = async () => {
@@ -69,7 +68,7 @@ export default function NdryshoBlerjen() {
                 setTotaliPageses(formatCurrency(receivedBlerjeData[0].totaliPagesave,true))
                 setSelectedSubjekti({emertimi:receivedBlerjeData[0].subjekti,subjektiID:receivedBlerjeData[0].subjektiID,kontakti:receivedBlerjeData[0].kontakti})
             } catch (error) {
-                toast.error('Error fetching data:', error);
+                showToast('Gabim gjate marrjes se te dhenave', error);
             }finally{
                 setLoading(false)
             }
@@ -95,7 +94,7 @@ export default function NdryshoBlerjen() {
                     setProduktetFillestare(productData);
                     console.log('produktetFillestare',productData)
                 } catch (error) {
-                    toast.error('Error fetching data:', error);
+                    showToast('Gabim gjate marrjes se te dhenave!', error);
                 }finally{
                   setLoading(false)
                 }
@@ -193,16 +192,6 @@ export default function NdryshoBlerjen() {
     return `${year}-${month}-${day}`;
   };
 
-  const handleTotaliPagesesChange = (e) => {
-    const value = parseFloat(e.target.value) || 0;
-    console.log(mbetjaPerPagese,'mbetja')
-    if (value <= totaliPerPagese) {
-      setTotaliPageses(value);
-    } else {
-      toast.error('Shuma e paguar nuk mund të jetë më e madhe se totali!');
-    }
-  };
-
   const NdryshoBlerjen = async () => {
    setInputDisabled(true)
     const dataPerNdryshim = ({
@@ -218,14 +207,10 @@ export default function NdryshoBlerjen() {
     })
       
     try{
-      console.log(dataPerNdryshim)
-      const response = await window.api.ndryshoBlerje(dataPerNdryshim)
-      if(response){
-        toast.success('Blerja u ndryshua me sukses!')
-        navigate('/faqjaKryesore/')
-      }
+      await window.api.ndryshoBlerje(dataPerNdryshim)
+        navigate('/faqjaKryesore/' , {state:{showToast:true , message:'Blerja u ndryshua me sukses!' , type:'success'}})
     }catch(e){
-      console.log(e)
+      showToast('Gabim gjate ndryshimit te blerjes!', 'error');
     }finally{
       setInputDisabled(false)
     }

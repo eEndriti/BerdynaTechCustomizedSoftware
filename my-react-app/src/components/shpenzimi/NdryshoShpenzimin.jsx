@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import {Modal,Form,Button,Spinner} from 'react-bootstrap'
 import AnimatedSpinner from '../AnimatedSpinner'
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from '../ToastProvider';
+
 export default function NdryshoShpenzimin({show,handleClose,dataPerNdryshim = {}}) {
     
     const [buttonLoading,setButtonLoading] = useState(false)
@@ -11,7 +12,7 @@ export default function NdryshoShpenzimin({show,handleClose,dataPerNdryshim = {}
     const [llojetShpenzimeve,setLlojetShpenzimeve] = useState({})
     const [selectedShumaStandarde,setSelectedShumaStandarde] = useState()
     const [data,setData] = useState()
-
+    const showToast = useToast();
     useEffect(() => {
         const fetchData = async() => {
             try{
@@ -55,22 +56,14 @@ export default function NdryshoShpenzimin({show,handleClose,dataPerNdryshim = {}
                 transaksioniID:data.transaksioniID,
                 shpenzimiID:data.shpenzimiID
               }
-               result = await window.api.ndryshoShpenzimin(data2)
-            
-            setButtonLoading(false)
-            if (result.success) {
-              toast.success('Ndryshimet u ruajten me sukses!', {
-                position: 'top-center',
-                autoClose: 1500,
-                onClose: () => window.location.reload(),
-              });
-            } else {
-              setLoading(false)
-              toast.error('Gabim gjate ndryshimit: ' + result.error);
-            }
+
+              await window.api.ndryshoShpenzimin(data2)
+              showToast('Ndryshimet u ruajten me sukses!', 'success')
+
         }catch(e){
-            console.log(e)
+            showToast('Gabim gjate ndryshimit: ' , 'error');
         }finally{
+            setLoading(false)
             setButtonLoading(false)
             handleClose()
         }

@@ -6,8 +6,8 @@ import { faTrashCan,faEdit,faChevronDown, faChevronRight,faExchangeAlt } from '@
 import AnimatedSpinner from '../AnimatedSpinner';
 import ModalPerPyetje from '../ModalPerPyetje'
 import NdryshoShpenzimin from './NdryshoShpenzimin';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from '../ToastProvider';
 
 export default function Shpenzimet() {
     const [loading,setLoading] = useState(true)
@@ -24,23 +24,12 @@ export default function Shpenzimet() {
     const [dataPerNdryshim,setDataPerNdryshim] = useState()
     const [showModalPerNdryshim,setShowModalPerNdryshim] = useState(false)
     const [dataPerDelete,setDataPerDelete] = useState()
+    const showToast = useToast()
+    const [triggerReload,setTriggerReload] = useState(false)
 
       useEffect(() => {
     
-        const fetchData = async () => {
-            setLoading(true)
-           try{
-            await window.api.fetchTableShpenzimet().then(receivedData => {
-              setShpenzimet(receivedData);
-             
-            });
-           }catch(e){
-            console.log(e)
-           }finally{
-            setLoading(false)
-           }
-        }
-    
+       
         fetchData()
        if(authData.aKaUser == 'admin'){
         setStartDate(localTodayDate)
@@ -48,8 +37,22 @@ export default function Shpenzimet() {
        }
 
     
-      }, []);
+      }, [triggerReload]);
     
+      const fetchData = async () => {
+        setLoading(true)
+       try{
+        await window.api.fetchTableShpenzimet().then(receivedData => {
+          setShpenzimet(receivedData);
+         
+        });
+       }catch(e){
+        console.log(e)
+       }finally{
+        setLoading(false)
+       }
+    }
+
     
 
     useEffect(() => {
@@ -110,22 +113,17 @@ export default function Shpenzimet() {
         let result
         setButtonLoading(true)
         try{
-          console.log(dataPerDelete)
-            result = await window.api.anuloShpenzimin(dataPerDelete)
-            if (result.success) {
-                toast.success(` eshte fshirë me sukses!`, {
-                  position: 'top-center',
-                  autoClose: 1500,
-                  onClose: () => window.location.reload(),
-                });
-              } else {
-                setLoading(false)
-                toast.error('Gabim gjate fshirjes: ' + result.error);
-              }
+
+          await window.api.anuloShpenzimin(dataPerDelete)
+          showToast(`Shpenzimi eshte fshirë me sukses!`, 'success');
         }catch(e){
             console.log(e)
+            showToast('Gabim gjate fshirjes: ' + result.error);
+
         }finally{
+            setLoading(false)
             setButtonLoading(false)
+            setTriggerReload(true)
         }
       }
       

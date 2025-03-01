@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Table, Modal, Form, InputGroup, Spinner,OverlayTrigger,Tooltip } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashCan, faGift, faCoins, faCheckCircle, faTimesCircle,faPencil } from '@fortawesome/free-solid-svg-icons';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import AnimatedSpinner from './AnimatedSpinner';
 import ModalPerPyetje from './ModalPerPyetje'
 import DetajePunonjes from './DetajePunonjes';
@@ -22,34 +22,24 @@ export default function Punonjesit() {
     const [showDetaje,setShowDetaje] = useState(false)
     const [reload,setReload] = useState(false)
     const [searchTerms , setSearchTerms] = useState({emri:'', nrTelefonit:'', statusi:true})
+    const showToast = useToast()
+
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                await window.api.fetchTablePunonjesit().then((receivedData) => {
-                    setPunonjesit(receivedData);
-                    setFilteredPunonjesit(receivedData)
-                });
-            } catch (error) {
-                console.log(error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchData();
-
-        if (localStorage.getItem('sukses') === 'true') {
-            toast.success(localStorage.getItem('msg'));
-            setTimeout(() => {
-              setTimeout((localStorage.removeItem('sukses'),localStorage.removeItem('msg')) , 1500)
-            }, 1000)
-        }else if(localStorage.getItem('sukses') === 'false') {
-            toast.error('Punonjesi u shtua me sukses!');
-            setTimeout(() => {
-              setTimeout((localStorage.removeItem('sukses'),localStorage.removeItem('msg')) , 1500)
-            }, 1000)
-        }
     }, [reload]);
+
+    const fetchData = async () => {
+        try {
+            await window.api.fetchTablePunonjesit().then((receivedData) => {
+                setPunonjesit(receivedData);
+                setFilteredPunonjesit(receivedData)
+            });
+        } catch (error) {
+            showToast('Gabim gjate marrjes se te dhenave' +error,'error');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         setLoading(true)
@@ -85,56 +75,51 @@ export default function Punonjesit() {
 
     const shtoPunonjes = async () => {
         setButtonLoading(true);
+        setShtoPunonjesModal(false);
         try {
             await window.api.shtoPunonjes(dataPerPunonjes);
-            localStorage.setItem('sukses', 'true');
-            localStorage.setItem('msg', 'Punonjesi u Shtua me Sukses');
+            showToast('Punonjesi u shtua me sukses','success');
         } catch (error) {
-            localStorage.setItem('sukses', 'false');
-            localStorage.setItem('msg', error);
+            showToast('Punonjesi nuk mund te Shtohet!' +error,'error');
         } finally {
             setButtonLoading(false);
-            window.location.reload();
+            setReload(prev => !prev)
         }
     };
-
-    const triggerReload = () => {
-        setReload(prev => !prev)
-    }
 
     const modalPerPyetje = (id) => {
       setIdPerPerdorim(id)
       setShowModalPerPyetje(true)
     }
+
     const handleConfirmModal = async() => {
       if(idPerPerdorim){
+
         try{
           await window.api.fshijePunonjesin(idPerPerdorim)
-          localStorage.setItem('sukses', 'true');
-          localStorage.setItem('msg', 'Punonjesi u Fshie me Sukses');
+            showToast('Punonjesi u Anulua me sukses','success')
       } catch (error) {
-          localStorage.setItem('sukses', 'false');
-          localStorage.setItem('msg', error);
+            showToast('Punonjesi nuk mund te Anulohet!' +error,'error');
       } finally {
           setButtonLoading(false);
-          window.location.reload();
+        setShowModalPerPyetje(false)
+        setReload(prev => !prev)
       }
       }
     }
 
     const ndryshoPunonjes = async () => {
       setButtonLoading(true);
+      setShtoPunonjesModal(false)
+
       try {
           await window.api.ndryshoPunonjes(dataPerPunonjes);
-          localStorage.setItem('sukses', 'true');
-          localStorage.setItem('msg', 'Punonjesi u Ndryshua me Sukses');
+            showToast('Punonjesi u ndryshua me sukses','success');
       } catch (error) {
-          localStorage.setItem('sukses', 'false');
-          localStorage.setItem('msg', error);
+            showToast('Punonjesi nuk mund te Ndryshohet!' +error,'error');
       } finally {
           setButtonLoading(false);
-          setShtoPunonjesModal(false)
-          triggerReload()
+          setReload(prev => !prev)
         }
   };
 

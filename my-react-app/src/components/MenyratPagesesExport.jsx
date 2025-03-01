@@ -8,10 +8,13 @@ export default function MenyratPagesesExport({ updateMenyraPageses }) {
   const [menyraPagesesID,setMenyraPagesesID] = useState()
 
   useEffect(() => {
-    window.api.fetchTableMenyratPageses().then(receivedData => {
-      setMenyratPageses(receivedData);
-      setLoading(false);
-    });
+    const fetchData = async () => {
+      await window.api.fetchTableMenyratPageses().then(receivedData => {
+        setMenyratPageses(receivedData);
+        setLoading(false);
+      });
+    }
+    fetchData()
   }, []);
 
   return (

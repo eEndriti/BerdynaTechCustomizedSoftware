@@ -6,8 +6,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEdit, faUndo,faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import KerkoSubjektin from './KerkoSubjektin'
 import KerkoProduktin from './stoku/KerkoProduktin'
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import ModalPerPyetje from './ModalPerPyetje'
 import AuthContext, { formatCurrency } from "../components/AuthContext";
 
@@ -40,38 +40,41 @@ export default function NdryshoShitjen() {
     const {authData} = useContext(AuthContext)
     const [shitjeProdukti,setShitjeProdukti] = useState()
     const [llojiFillestarIShitjes,setLlojiFillestarIShitjes] = useState()
-
+    const showToast = useToast()
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const receivedData = await window.api.fetchTableQuery( ` SELECT sh.shitjeID, sh.shifra, sh.lloji, sh.komenti, sh.totaliPerPagese, sh.totaliPageses,
-                            sh.mbetjaPerPagese, sh.dataShitjes, sh.menyraPagesesID, sh.perdoruesiID,
-                            sh.transaksioniID, sh.kohaGarancionit, sho.nrPorosise, sho.statusi, pr.profitiID,
-                            s.emertimi AS 'subjekti', sh.subjektiID, m.emertimi AS 'menyraPageses',
-                            p.emri AS 'perdoruesi', n.numriPercjelles, n.dataFillimit
-                        FROM shitje sh
-                        JOIN subjekti s ON s.subjektiID = sh.subjektiID
-                        JOIN menyraPageses m ON m.menyraPagesesID = sh.menyraPagesesID
-                        JOIN Perdoruesi p ON p.perdoruesiID = sh.perdoruesiID
-                        JOIN nderrimi n ON n.nderrimiID = sh.nderrimiID
-                        join profiti pr on pr.transaksioniID = sh.transaksioniID
-                        LEFT JOIN shitjeOnline sho ON sho.shitjeID = sh.shitjeID
-                        WHERE sh.shitjeID = ${shitjeID}
-                    `);
-                setShitje(receivedData);
-
-                const shitjeProdukti = await window.api.fetchTableQuery( ` select * from shitjeProdukti
-                    where shitjeID = ${shitjeID}
-                    `);
-                    console.log(receivedData)
-                setShitjeProdukti(shitjeProdukti);
-            } catch (error) {
-                toast.error('Error fetching data:', error);
-            }
-
-        };
+       
         fetchData();
     }, [shitjeID]);
+
+
+    const fetchData = async () => {
+        try {
+            const receivedData = await window.api.fetchTableQuery( ` SELECT sh.shitjeID, sh.shifra, sh.lloji, sh.komenti, sh.totaliPerPagese, sh.totaliPageses,
+                        sh.mbetjaPerPagese, sh.dataShitjes, sh.menyraPagesesID, sh.perdoruesiID,
+                        sh.transaksioniID, sh.kohaGarancionit, sho.nrPorosise, sho.statusi, pr.profitiID,
+                        s.emertimi AS 'subjekti', sh.subjektiID, m.emertimi AS 'menyraPageses',
+                        p.emri AS 'perdoruesi', n.numriPercjelles, n.dataFillimit
+                    FROM shitje sh
+                    JOIN subjekti s ON s.subjektiID = sh.subjektiID
+                    JOIN menyraPageses m ON m.menyraPagesesID = sh.menyraPagesesID
+                    JOIN Perdoruesi p ON p.perdoruesiID = sh.perdoruesiID
+                    JOIN nderrimi n ON n.nderrimiID = sh.nderrimiID
+                    join profiti pr on pr.transaksioniID = sh.transaksioniID
+                    LEFT JOIN shitjeOnline sho ON sho.shitjeID = sh.shitjeID
+                    WHERE sh.shitjeID = ${shitjeID}
+                `);
+            setShitje(receivedData);
+
+            const shitjeProdukti = await window.api.fetchTableQuery( ` select * from shitjeProdukti
+                where shitjeID = ${shitjeID}
+                `);
+                console.log(receivedData)
+            setShitjeProdukti(shitjeProdukti);
+        } catch (error) {
+            toast.error('Error fetching data:', error);
+        }
+
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -109,7 +112,7 @@ export default function NdryshoShitjen() {
                     setNrPorosise(shitje[0].nrPorosise)
                     setLlojiFillestarIShitjes(shitje[0].lloji)
                 } catch (error) {
-                    toast.error('Error fetching data:', error);
+                    showToast('Error fetching data:' + error , 'error');
                 }
             }
         };
@@ -194,7 +197,7 @@ export default function NdryshoShitjen() {
         if (value <= totaliPerPagese) {
           setTotaliPageses(value);
         } else {
-          toast.error('Shuma e paguar nuk mund të jetë më e madhe se totali!');
+            showToast('Shuma e paguar nuk mund të jetë më e madhe se totali!','warning');
         }
       };
 
@@ -216,7 +219,7 @@ export default function NdryshoShitjen() {
 
 
         if (!authData.perdoruesiID || !menyraPagesesID || !selectedSubjekti?.subjektiID || !products?.length) {
-          toast.error('Të gjitha fushat e nevojshme duhet të plotësohen!');
+            showToast('Të gjitha fushat e nevojshme duhet të plotësohen!','warning');
           return;
         }
       
@@ -254,21 +257,14 @@ export default function NdryshoShitjen() {
        };
   
     try {
-        console.log('data',data)
-      const result = await window.api.ndryshoShitje(data);
-      if (result.success) {
-        toast.success('Shitja u Ndryshua me Sukses!', {
-          position: "top-center",  
-          autoClose: 1500
-        }); 
-      } else {
-        toast.error('Gabim gjate ndryshimit: ' + result.error);
-      }
+
+        await window.api.ndryshoShitje(data);
+        navigate('/faqjaKryesore/' , {state:{showToast:true , message:'Shitja u Ndryshua me Sukses!' , type:'success'}})
+
     } catch (error) {
-      toast.error('Gabim gjate komunikimit me server: ' + error.message);
+        showToast('Gabim gjate ndryshimit: ' +error , 'error');
     } finally {
       setLoading(false);
-      navigate('/faqjaKryesore/')
     }
 }
 
@@ -572,7 +568,9 @@ export default function NdryshoShitjen() {
                     </div>
                 </Col>
                 </Row>
+
             <ToastContainer/>
+
             <ModalPerPyetje
                 show={modalPerPyetje}
                 handleClose={() => setModalPerPyetje(false)}

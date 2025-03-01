@@ -4,11 +4,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faEdit, faTrashCan,faUmbrellaBeach,faGift, faCoins,faTriangleExclamation,faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import AnimatedSpinner from './AnimatedSpinner';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import ModalPerPyetje from './ModalPerPyetje'
 import MenyratPagesesExport from './MenyratPagesesExport';
 import AuthContext , {formatCurrency, normalizoDaten} from '../components/AuthContext';
+import { set } from 'lodash';
 
 export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     const [loading, setLoading] = useState(true);
@@ -41,54 +42,45 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     const {authData} = useContext(AuthContext)
     const [startDate, setStartDate] = useState();
     const [endDate, setEndDate] = useState();
-
+    const [triggerReload, setTriggerReload] = useState(false);
+    const showToast = useToast()
+    
     const albanianMonths = [
         "Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor",
         "Korrik", "Gusht", "Shtator", "Tetor", "Nëntor", "Dhjetor"
       ];
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const fetchedPushimet = await window.api.fetchTablePushimet();
-                const fetchedBonuset = await window.api.fetchTableBonuset();
-                const fetchedPaga = await window.api.fetchTablePagat();
-                const fetchedBonusetNeDetaje = await window.api.fetchTableQuery(`
-                    SELECT b.bonusetID,  b.dataBonuseve,  b.shuma,  bp.dataPageses,  bp.menyraPagesesID,  bp.punonjesiID,  bp.statusi, bp.shifra,bp.transaksioniID,  m.emertimi 
-                FROM bonuset b
-                JOIN bonusetPunonjesit bp ON bp.bonusetID = b.bonusetID
-                LEFT JOIN menyraPageses m ON m.menyraPagesesID = bp.menyraPagesesID
-                `)
-                setPushimet(fetchedPushimet.filter(item => punonjesID == item.punonjesID));
-                setBonuset(fetchedBonuset);
-                setPagat(fetchedPaga.filter(item => punonjesID == item.punonjesID));
-                setFilteredPushimet(fetchedPushimet.filter(item => punonjesID == item.punonjesID));
-                setFilteredPagat(fetchedPaga.filter(item => punonjesID == item.punonjesID));
-                setBonusetNeDetaje(fetchedBonusetNeDetaje)
-                setFilteredBonuset(fetchedBonusetNeDetaje);
-                setStartDate(`${new Date().getFullYear()}-01-01`)
-                setEndDate(new Date().toISOString().substring(0, 10))
-            } catch (error) {
-                console.log(error)
-            }finally{
-                setLoading(false);
-            }
-            
-        };
         fetchData();
+    }, [punonjesID,triggerReload]);
 
-        if (localStorage.getItem('sukses') === 'true') {
-            toast.success(localStorage.getItem('msg'));
-            setTimeout(() => {
-              setTimeout((localStorage.removeItem('sukses'),localStorage.removeItem('msg')) , 1500)
-            }, 1000)
-        }else if(localStorage.getItem('sukses') === 'false') {
-            toast.success(localStorage.getItem('msg'));
-            setTimeout(() => {
-              setTimeout((localStorage.removeItem('sukses'),localStorage.removeItem('msg')) , 1500)
-            }, 1000)
+    const fetchData = async () => {
+        try {
+            const fetchedPushimet = await window.api.fetchTablePushimet();
+            const fetchedBonuset = await window.api.fetchTableBonuset();
+            const fetchedPaga = await window.api.fetchTablePagat();
+            const fetchedBonusetNeDetaje = await window.api.fetchTableQuery(`
+                SELECT b.bonusetID,  b.dataBonuseve,  b.shuma,  bp.dataPageses,  bp.menyraPagesesID,  bp.punonjesiID,  bp.statusi, bp.shifra,bp.transaksioniID,  m.emertimi 
+            FROM bonuset b
+            JOIN bonusetPunonjesit bp ON bp.bonusetID = b.bonusetID
+            LEFT JOIN menyraPageses m ON m.menyraPagesesID = bp.menyraPagesesID
+            `)
+            setPushimet(fetchedPushimet.filter(item => punonjesID == item.punonjesID));
+            setBonuset(fetchedBonuset);
+            setPagat(fetchedPaga.filter(item => punonjesID == item.punonjesID));
+            setFilteredPushimet(fetchedPushimet.filter(item => punonjesID == item.punonjesID));
+            setFilteredPagat(fetchedPaga.filter(item => punonjesID == item.punonjesID));
+            setBonusetNeDetaje(fetchedBonusetNeDetaje)
+            setFilteredBonuset(fetchedBonusetNeDetaje);
+            setStartDate(`${new Date().getFullYear()}-01-01`)
+            setEndDate(new Date().toISOString().substring(0, 10))
+        } catch (error) {
+            console.log(error)
+        }finally{
+            setLoading(false);
         }
-    }, [punonjesID]);
+        
+    };
 
     useEffect(() => {
         const total = bonusetPerPunonjes.reduce((acc, item) => acc + item.shuma, 0);
@@ -128,6 +120,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     
         setFilteredPushimet(pushimetFiltered)
     },[startDate,endDate])
+
       const updateMenyraPageses = (menyraPageses) => {
         setSelectedMenyraPageses(menyraPageses);
       };
@@ -181,28 +174,26 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
 
           try {
                 await window.api.ndryshoPagen(data);
-                localStorage.setItem('sukses', 'true');
-                localStorage.setItem('msg', 'Ndryshimet u Ruajten!');
+                showToast('Paga u Ndryshua!' , 'success')
           } catch (error) {
-              localStorage.setItem('sukses', 'false');
-              localStorage.setItem('msg', error);
+                showToast('Paga nuk mund te Ndryshoet!' + error , 'error')
           } finally {
+                setNdryshoModal(false)
               setButtonLoading(false);
-              window.location.reload()
+              setTriggerReload(!triggerReload)
             }
       }
 
       const handleConfirm = async () => {
             try{
               await window.api.fshijePagen(activeSalary.pagaID)
-              localStorage.setItem('sukses', 'true');
-              localStorage.setItem('msg', 'Paga u Fshie me Sukses');
+              showToast('Paga u Anulua me Sukses!' , 'success')
+             
           } catch (error) {
-              localStorage.setItem('sukses', 'false');
-              localStorage.setItem('msg', error);
+            showToast('Paga nuk mund te Anulohet!' + error , 'error')
           } finally {
               setButtonLoading(false);
-              window.location.reload();
+              setTriggerReload(!triggerReload)
           }
           
       }
@@ -218,14 +209,14 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
             }  
 
           await window.api.paguajPagen(data)
-          localStorage.setItem('sukses', 'true');
-          localStorage.setItem('msg', 'Paga u Regjistrua me Sukses');
+          showToast('Paga u Pagua me Sukses!' , 'success')
+          
       } catch (error) {
-          localStorage.setItem('sukses', 'false');
-          localStorage.setItem('msg', error);
+          showToast('Paga nuk mund te Paguahet!' + error , 'error')
       } finally {
           setButtonLoading(false);
-          window.location.reload()
+          setNdryshoModal(false)
+          setTriggerReload(!triggerReload)
       }
       
   }
@@ -290,10 +281,13 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
         console.log(data)
         try{
             await window.api.paguajBonuset(data)
+            showToast('Bonuset u Paguan me Sukses!' , 'success')
         }catch(error){
-            console.log(error)
+            showToast('Bonuset nuk mund te Paguahen!' + error , 'error')
         }finally{
+            setModalPerBonuse(false)
             setButtonLoading(false)
+            setTriggerReload(!triggerReload)
         }
     }
 
@@ -305,11 +299,13 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
             menyraPagesesID
         }
         try{
-            console.log(data)
-
-            window.api.anuloBonusin(data)
+            await window.api.anuloBonusin(data)
+            showToast('Bonusi u Anulua me Sukses!' , 'success')
         }catch(error){
+            showToast('Bonusi nuk mund te Anulohet!' + error , 'error')
             console.log(error)
+        }finally{
+            setTriggerReload(!triggerReload)
         }
     }
 
@@ -374,11 +370,14 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
         setButtonLoading(true)
         if(dataPerPushim){
             try{
-                window.api.shtoPushimin(dataPerPushim)
+                await window.api.shtoPushimin(dataPerPushim)
+                showToast('Pushimi u Shtua me Sukses!' , 'success')
             }catch(error){
-                console.log(error)
+                showToast('Pushimi nuk mund te Shtohet!' + error , 'error')
             }finally{
+                setModalPerPushime(false)
                 setButtonLoading(false)
+                setTriggerReload(!triggerReload)
             }
         }
     }
@@ -403,11 +402,14 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
         setButtonLoading(true)
         if(dataPerPushim){
             try{
-                window.api.ndryshoPushimin(dataPerPushim)
+                await window.api.ndryshoPushimin(dataPerPushim)
+                showToast('Pushimi u Ndryshua me Sukses!' , 'success')
             }catch(error){
-                console.log(error)
+                showToast('Pushimi nuk mund te Ndryshohet!' + error , 'error')
             }finally{
+                setModalPerPushime(false)
                 setButtonLoading(false)
+                setTriggerReload(!triggerReload)
             }
         }
     }
@@ -415,8 +417,11 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     const handlePushimiDelete = async (pushimiID) => {
         try{
             await window.api.deletePushimi(pushimiID)
+            showToast('Pushimi u Anulua me Sukses!' , 'success')
         }catch(error){
-            console.log(error)
+            showToast('Pushimi nuk mund te Anulohet!' + error , 'error')
+        }finally{
+            setTriggerReload(!triggerReload)
         }
     }
     return (
@@ -496,7 +501,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                                                 <FontAwesomeIcon icon={faEdit} /> Ndrysho
                                                             </Button>
                                                             <Button variant="outline-danger" className='mx-1' onClick={() => {emptyActiveSalary();setActiveSalary(paga);setShowModalPerPyetje(true)}}>
-                                                                <FontAwesomeIcon icon={faTrashCan} /> Fshij
+                                                                <FontAwesomeIcon icon={faTrashCan} /> Anulo
                                                             </Button>
                                                         </td>
                                                     </tr>
@@ -553,7 +558,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
                                                                     <FontAwesomeIcon icon={faEdit} /> Ndrysho
                                                                 </Button>
                                                                 <Button variant="outline-danger" className='mx-1' onClick={() => handlePushimiDelete(pushimi.pushimID)}>
-                                                                    <FontAwesomeIcon icon={faTrashCan} /> Fshij
+                                                                    <FontAwesomeIcon icon={faTrashCan} /> Anulo
                                                                 </Button>
                                                             </td>
                                                         </tr>

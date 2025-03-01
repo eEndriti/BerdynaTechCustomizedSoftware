@@ -1,23 +1,26 @@
 import React, { useEffect,useState } from 'react'
 import {Modal,Form,Button,Spinner} from 'react-bootstrap'
+import { useToast } from '../ToastProvider';
+
 export default function NdryshoLlojin({show,handleClose,dataPerNdryshim = {}}) {
     const [data,setData] = useState()
     const [buttonLoading,setButtonLoading] = useState(false)
+    const showToast = useToast();
 
     useEffect(() => {
         setData(dataPerNdryshim)
-        
     },[show])
 
     const handleRuajNdryshimet = async () => {
         try {
             setButtonLoading(true)
-            const result = await window.api.ndryshoLlojinShpenzimit(data)
-
+             await window.api.ndryshoLlojinShpenzimit(data)
+            showToast("Lloji u Ndryshua me Sukses !", "success");
         } catch (error) {
-            console.log(error)
+            showToast("Gabim Gjate Ndryshimit !", "error"); 
         }finally{
             setButtonLoading(false)
+            handleClose()
         }
     }
   return (

@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, Spinner, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan, faEdit, faPlus } from '@fortawesome/free-solid-svg-icons';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import ModalPerPyetje from './ModalPerPyetje';
 import { useNavigate } from 'react-router-dom';
 import ShtoNdryshoSubjektin from './ShtoNdryshoSubjektin';
@@ -20,51 +20,54 @@ export default function Klient() {
     const [modalShow, setModalShow] = useState(false);
     const [data, setData] = useState({inputEmertimi: '', inputKontakti: '', ndrysho: false, idPerNdryshim: null, lloji: 'klient'});
     const [filteredKlientet,setFilteredKlientet] = useState([])
+    const showToast = useToast()
+    const [triggerReload, setTriggerReload] = useState(false);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-
-                const [klientData, servisimiData] = await Promise.all([
-                    window.api.fetchTableSubjekti('klient'),
-                    window.api.fetchTableQuery(`
-                        SELECT s.subjektiID, s.lloji, s.emertimi, s.kontakti,
-                               COALESCE(SUM(sh.totaliPerPagese), 0) AS totalTotaliPerPagese,
-                               COALESCE(SUM(sh.totaliPageses), 0) AS totalTotaliPageses,
-                               COALESCE(SUM(sh.mbetjaPageses), 0) AS totalMbetjaPerPagese
-                        FROM subjekti s
-                        LEFT JOIN servisimi sh ON s.subjektiID = sh.subjektiID
-                        GROUP BY s.subjektiID, s.emertimi, s.kontakti, s.lloji
-                    `)
-                ]);
-
-                const combinedData = [...klientData, ...servisimiData];
-
-                const aggregatedData = combinedData.reduce((acc, item) => {
-                    const existing = acc.find(i => i.subjektiID === item.subjektiID);
-                    if (existing) {
-                        existing.totalTotaliPerPagese += item.totalTotaliPerPagese;
-                        existing.totalTotaliPageses += item.totalTotaliPageses;
-                        existing.totalMbetjaPerPagese += item.totalMbetjaPerPagese;
-                    } else {
-                        acc.push({ ...item });
-                    }
-                    return acc;
-                }, []);
-
-                const filteredData = aggregatedData.filter(item => item.lloji === 'klient');
-                setKlientet(filteredData);
-                setFilteredKlientet(filteredData)
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchData();
-    }, []);
+    }, [triggerReload]);
+
+
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+
+            const [klientData, servisimiData] = await Promise.all([
+                window.api.fetchTableSubjekti('klient'),
+                window.api.fetchTableQuery(`
+                    SELECT s.subjektiID, s.lloji, s.emertimi, s.kontakti,
+                           COALESCE(SUM(sh.totaliPerPagese), 0) AS totalTotaliPerPagese,
+                           COALESCE(SUM(sh.totaliPageses), 0) AS totalTotaliPageses,
+                           COALESCE(SUM(sh.mbetjaPageses), 0) AS totalMbetjaPerPagese
+                    FROM subjekti s
+                    LEFT JOIN servisimi sh ON s.subjektiID = sh.subjektiID
+                    GROUP BY s.subjektiID, s.emertimi, s.kontakti, s.lloji
+                `)
+            ]);
+
+            const combinedData = [...klientData, ...servisimiData];
+
+            const aggregatedData = combinedData.reduce((acc, item) => {
+                const existing = acc.find(i => i.subjektiID === item.subjektiID);
+                if (existing) {
+                    existing.totalTotaliPerPagese += item.totalTotaliPerPagese;
+                    existing.totalTotaliPageses += item.totalTotaliPageses;
+                    existing.totalMbetjaPerPagese += item.totalMbetjaPerPagese;
+                } else {
+                    acc.push({ ...item });
+                }
+                return acc;
+            }, []);
+
+            const filteredData = aggregatedData.filter(item => item.lloji === 'klient');
+            setKlientet(filteredData);
+            setFilteredKlientet(filteredData)
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         const filterResult = klientet.filter((klienti)=>{
@@ -85,23 +88,18 @@ export default function Klient() {
     const handleDeleteSubjekti = async () => {
         if (idPerAnulim) {
             try {
-                const result = await window.api.deleteSubjekti(idPerAnulim);
-                if (result.success) {
-                    toast.success('Klienti u Fshi me Sukses!', {
-                        position: "top-center",
-                        autoClose: 1500
-                    });
-                } else {
-                    toast.error('Gabim gjate Fshirjes: ' + result.error);
-                }
+                
+                await window.api.deleteSubjekti(idPerAnulim);
+                showToast('Klienti u Anulua me Sukses!', 'success');
+
             } catch (error) {
-                toast.error('Gabim gjate komunikimit me server: ' + error.message);
+                showToast('Gabim gjate Fshirjes: ' + error , 'error');
             } finally {
                 setLoading(false);
-                window.location.reload();
+                setTriggerReload(!triggerReload);
             }
         } else {
-            toast.error('Gabim, Rifreskoni faqen dhe provoni serish: ');
+            showToast('Gabim, Rifreskoni faqen dhe provoni serish: ', 'error');
         }
     };
 

@@ -3,8 +3,8 @@ import { Container, Row,Col,Form, Button,Table,Spinner,InputGroup, Tooltip } fro
 import KerkoSubjektin from './KerkoSubjektin'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons'; 
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer } from 'react-toastify';
+import { useToast } from './ToastProvider';
 import KerkoProduktin from "./stoku/KerkoProduktin";
 import { useNavigate } from "react-router-dom";
 import AuthContext,{formatCurrency} from "../components/AuthContext";
@@ -29,17 +29,30 @@ export default function Blerje() {
   const [blerjet,setBlerjet] = useState([])
   const [nukPranohetNrFatures,setNukPranohetNrFatures] = useState(false)
   const { authData } = useContext(AuthContext)
-  
+  const showToast = useToast()
+  const [triggerReload,setTriggerReload] = useState(false)
 
   useEffect(() => {
-    window.api.fetchTableMenyratPageses().then(receivedData => {
-      setMenyratPageses(receivedData);
-    });
-    window.api.fetchTableBlerje().then(receivedData => {
-      setBlerjet(receivedData);
-    });
+   
+    fetchData()
+    
+  }, [triggerReload]);
 
-  }, []);
+  const fetchData = async() => {
+    try{
+      setLoading(true)
+      await window.api.fetchTableMenyratPageses().then(receivedData => {
+        setMenyratPageses(receivedData);
+      });
+      await window.api.fetchTableBlerje().then(receivedData => {
+        setBlerjet(receivedData);
+      });
+    }catch(e){
+      showToast('Gabim gjate komunikimit me server: ' ,'error');
+    }finally{
+      setLoading(false)
+    }
+  }
 
   const handleSelectSubjekti = (result) => {
     setSelectedSubjekti({
@@ -122,10 +135,7 @@ export default function Blerje() {
   
     if (!authData.perdoruesiID || !menyraPagesesID) {
       setLoading(false); 
-      return toast.warn('Ju Lutem Plotesoni te Gjitha Fushat!', {
-        position: "top-center",
-        autoClose: 1500,
-      });
+      return showToast('Ju Lutem Plotesoni te Gjitha Fushat!', 'warn');
     }
     const data = {
       totaliPerPagese,
@@ -146,24 +156,15 @@ export default function Blerje() {
       const result = await window.api.insertBlerje(data);
   
       if (result.success) {
-        toast.success('Blerja u Regjistrua me Sukses!', {
-          position: "top-center",
-          autoClose: 1500
-        });
-        navigate('/faqjaKryesore')
+        navigate("/faqjaKryesore", { state: { showToast: true,message: 'Blerja u Regjistrua me Sukses !',type: 'success' } });
       } else {
-        toast.error('Gabim gjate regjistrimit: ' + result.error, {
-          position: "top-center",
-          autoClose: 1500,
-        });
+        showToast('Gabim gjate regjistrimit: ' , 'error');
       }
-    } catch (error) {
-      toast.error('Gabim gjate komunikimit me server: ' + error.message, {
-        position: "top-center",
-        autoClose: 1500,
-      });
+    } catch (e) {
+      showToast('Gabim gjate komunikimit me server: ' ,'error');
     } finally {
       setLoading(false); 
+      
     }
   };
   
