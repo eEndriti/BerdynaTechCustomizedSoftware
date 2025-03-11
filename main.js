@@ -340,6 +340,25 @@ ipcMain.handle('fetchTotaliArkes', async (event, nderrimiID) => {
   return data;
 });
 
+async function fetchTableParametrat() {
+  try {
+    await sql.connect(config);
+    const result = await sql.query`
+       Select * from parametratGarancionit
+        `;
+    return result.recordset;
+  } catch (err) {
+    console.error('Error retrieving data:', err);
+    return [];
+  } finally {
+       
+  }
+}
+ipcMain.handle('fetchTableParametrat', async () => {
+  const data = await fetchTableParametrat();
+  return data;
+});
+
 async function fetchTableShitje() {
   try {
     await sql.connect(config);
@@ -662,7 +681,7 @@ async function fetchTableShpenzimet() {
   try {
     await sql.connect(config);
     const result = await sql.query`
-      select sh.shpenzimiID,sh.shifra,sh.shumaShpenzimit,sh.dataShpenzimit,sh.komenti,lsh.llojetShpenzimeveID,lsh.emertimi,lsh.shumaStandarde,p.emri as 'perdoruesi',t.transaksioniID from shpenzimi sh
+      select sh.shpenzimiID,sh.shifra,sh.shumaShpenzimit,sh.dataShpenzimit,sh.nenLloji,sh.komenti,lsh.llojetShpenzimeveID,lsh.emertimi,lsh.shumaStandarde,p.emri as 'perdoruesi',t.transaksioniID from shpenzimi sh
       join llojetShpenzimeve lsh on sh.llojetShpenzimeveID = lsh.llojetShpenzimeveID
       join Perdoruesi p on sh.perdoruesiID = p.perdoruesiID
       join transaksioni t on sh.transaksioniID = t.transaksioniID
@@ -785,7 +804,7 @@ ipcMain.handle('fetchTableProfitiDitor', async () => {
           console.log('1')
 
           // Increment the number
-          nextShifra = `${shtojca}-${latestShifraNumber + 1}${vitiAktual % 100}`;
+          nextShifra = `${shtojca}-${vitiAktual % 100}${latestShifraNumber + 1}`;
           console.log('1')
 
           // Check if this 'shifra' already exists
@@ -810,6 +829,7 @@ ipcMain.handle('fetchTableProfitiDitor', async () => {
       throw err;
   }
 }
+
 
 ipcMain.handle('insertLogs', async (event, data) => {
   let connection;
@@ -1069,9 +1089,9 @@ ipcMain.handle('kaloNgaStokuNeShpenzim', async (event, data) => {
 
     const insertShpenzimi = `
       INSERT INTO shpenzimi (
-        shifra, shumaShpenzimit, dataShpenzimit, komenti, llojetShpenzimeveID, perdoruesiID, transaksioniID
+        shifra, shumaShpenzimit, dataShpenzimit, komenti, llojetShpenzimeveID, perdoruesiID, transaksioniID,nenLloji
       ) OUTPUT INSERTED.shpenzimiID VALUES (
-        @shifra, @shumaShpenzimit, @dataShpenzimit, @komenti, @llojetShpenzimeveID, @perdoruesiID, @transaksioniID
+        @shifra, @shumaShpenzimit, @dataShpenzimit, @komenti, @llojetShpenzimeveID, @perdoruesiID, @transaksioniID,@nenLloji
       )
     `;
     console.log('transaksioniID',transaksioniID)
@@ -1083,6 +1103,7 @@ ipcMain.handle('kaloNgaStokuNeShpenzim', async (event, data) => {
       .input('llojetShpenzimeveID', sql.Int, data.llojetShpenzimeveID)
       .input('perdoruesiID', sql.Int, data.perdoruesiID)
       .input('transaksioniID', sql.Int, transaksioniID)
+      .input('nenLloji', sql.VarChar, 'ngaStoku')
       .query(insertShpenzimi);
 
       const shpenzimiID = shpenzimiResult.recordset[0].shpenzimiID;
@@ -1610,6 +1631,8 @@ ipcMain.handle('ndryshoPerdorues', async (event, data) => {
   }  
 });
 
+
+
 ipcMain.handle('ndryshoServisin', async (event, data) => {
   let connection;
   let dataDheOra
@@ -1756,6 +1779,8 @@ ipcMain.handle('ndryshoServisin', async (event, data) => {
     return { success: false, error: error.message };
   }  
 });
+
+
 
 ipcMain.handle('ndryshoShitje', async (event, data) => {
   let connection;
@@ -3723,7 +3748,7 @@ ipcMain.handle('anuloBonusin', async (event, data) => {
   }  
 });
 
-ipcMain.handle('anuloShpenzimin', async (event, transaksioniID) => {
+ipcMain.handle('anuloShpenzimin', async (event, data) => {
   let connection;
 
   try {
@@ -3732,13 +3757,13 @@ ipcMain.handle('anuloShpenzimin', async (event, transaksioniID) => {
 
         connection = await sql.connect(config);
 
-        const getNenLloji = `SELECT nenLloji FROM shpenzimi WHERE transaksioniID = @transaksioniID`;
+       // const getNenLloji = `SELECT nenLloji FROM shpenzimi WHERE transaksioniID = @transaksioniID`;
 
-        const result = await connection.request()
-          .input('transaksioniID', sql.Int, transaksioniID)
-          .query(getNenLloji);
+        //const result = await connection.request()
+          //.input('transaksioniID', sql.Int, transaksioniID)
+          //.query(getNenLloji);
 
-        const nenLloji = result.recordset.length > 0 ? result.recordset[0].nenLloji : null;
+        const nenLloji = data.nenLloji
 
         if(nenLloji == 'ngaStoku'){ 
           
@@ -3755,7 +3780,7 @@ ipcMain.handle('anuloShpenzimin', async (event, transaksioniID) => {
               )
             `;
               const shpenzimProduktiResult = await connection.request()
-              .input('transaksioniID', sql.Int, transaksioniID)
+              .input('transaksioniID', sql.Int, data.transaksioniID)
               .query(getShpenzimProduktQuery);
 
             const Products = shpenzimProduktiResult.recordset;
@@ -3780,7 +3805,7 @@ ipcMain.handle('anuloShpenzimin', async (event, transaksioniID) => {
             DELETE FROM shpenzimProdukti 
             WHERE transaksioniID = @transaksioniID
           `
-          await connection.request().input('transaksioniID', sql.Int, transaksioniID).query(deleteShpenzimiFromShpenzimProdukt);
+          await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShpenzimiFromShpenzimProdukt);
 
          }else{
                     //ktu fillon pjesa per menaxhim bilanci
@@ -3790,12 +3815,12 @@ ipcMain.handle('anuloShpenzimin', async (event, transaksioniID) => {
               where transaksioniID = @transaksioniID
             `
             const getShumaResult = await connection.request()
-              .input('transaksioniID', sql.Int, transaksioniID)
+              .input('transaksioniID', sql.Int, data.transaksioniID)
               .query(getShuma)
 
               const shuma = getShumaResult.recordset[0]
               console.log('shuma',shuma)
-              const nderrimiID = await getNderrimiID(transaksioniID,connection)
+              const nderrimiID = await getNderrimiID(data.transaksioniID,connection)
               await ndryshoBalancin(1,shuma.shumaShpenzimit,'+',connection)
               await ndryshoGjendjenEArkes(1,shuma.shumaShpenzimit,'+',nderrimiID,connection)  
          }
@@ -3808,8 +3833,8 @@ ipcMain.handle('anuloShpenzimin', async (event, transaksioniID) => {
             DELETE FROM shpenzimi 
             WHERE transaksioniID = @transaksioniID
           `;
-          await connection.request().input('transaksioniID', sql.Int, transaksioniID).query(deleteShpenzimiQuery);
-          await connection.request().input('transaksioniID', sql.Int, transaksioniID).query(deleteShpenzimiFromTransaksioni);
+          await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShpenzimiQuery);
+          await connection.request().input('transaksioniID', sql.Int, data.transaksioniID).query(deleteShpenzimiFromTransaksioni);
 
           return { success: true };
 
@@ -3846,20 +3871,26 @@ ipcMain.handle('fshijeProduktin', async (event, idPerAnulim) => {
   try {
     connection = await sql.connect(config);
 
-      const deleteProduktinQuery = `
-        DELETE FROM produkti 
-        WHERE produktiID = @produktiID
-      `;
+    const deleteProduktinQuery = `
+      DELETE FROM produkti 
+      WHERE produktiID = @produktiID
+    `;
 
-      await connection.request().input('produktiID', sql.Int, idPerAnulim).query(deleteProduktinQuery);
-      
-      return { success: true };
+    await connection.request().input('produktiID', sql.Int, idPerAnulim).query(deleteProduktinQuery);
+    
+    return { success: true };
 
   } catch (error) {
     console.error('Database error:', error);
-    return { success: false, error: error.message };
+
+    if (error.number == 547) {
+      return { success: false, error: 'Ky produkt është përdorur në tabela të tjera dhe nuk mund të fshihet!' };
+    }
+
+    return { success: false, error: 'Diçka shkoi keq gjatë fshirjes së produktit!' };
   }  
 });
+
 
 ipcMain.handle('fshijePunonjesin', async (event, idPerAnulim) => {
   let connection;
@@ -4220,6 +4251,40 @@ ipcMain.handle('ndryshoPunonjes', async (event, data) => {
       .input('nrTelefonit', sql.VarChar, data.nrTelefonit)
       .input('punonjesID', sql.Int, data.punonjesID)
       .query(updatePunonjes);   
+
+      return { success: true };
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  }  
+});
+
+ipcMain.handle('ndryshoParametrat', async (event, data) => {
+  let connection;
+
+  try {
+    connection = await sql.connect(config);
+    const kushtetJSON = JSON.stringify(data.kushtet)
+
+      const updateParametrat = `
+        Update parametratGarancionit 
+        SET emriBiznesit = @emriBiznesit,
+            adresa = @adresa,
+            telefoni = @telefoni,
+            kushtet = @kushtet,
+            filePath = @filePath
+        where parametratGarancionitID = @parametratGarancionitID
+      `;
+
+      await connection.request()
+      .input('emriBiznesit', sql.NVarChar, data.parametratGarancionit.emriBiznesit)
+      .input('adresa', sql.NVarChar, data.parametratGarancionit.adresa)
+      .input('telefoni', sql.NVarChar, data.parametratGarancionit.telefoni)
+      .input('kushtet', sql.NVarChar, kushtetJSON)
+      .input('filePath', sql.NVarChar, data.parametratGarancionit.filePath)
+      .input('parametratGarancionitID', sql.Int, data.parametratGarancionit.parametratGarancionitID)
+      .query(updateParametrat);   
 
       return { success: true };
 

@@ -57,11 +57,14 @@ export default function Produktet() {
 
   const handleDeleteProduktin = async () => {
     try {
-      await window.api.fshijeProduktin(idPerAnulim);
-      showToast(`Produkti u fshie me Sukses!`, 'success ');
+      const response = await window.api.fshijeProduktin(idPerAnulim);
+      if (response.success) {
+        showToast( "Produkti u Anulua me sukses!" ,"success");
+      } else {
+        showToast(response.error || "Fshirja e produktit dështoi!" , "error");
+      }
     } catch (error) {
-      showToast('Gabim gjate Anulimit: ' ,'error');
-
+      showToast("Diçka shkoi keq!",'error');
     }finally{
       setShowModalPerPyetje(false);
       setTriggerReload(prev => !prev)

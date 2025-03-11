@@ -99,11 +99,12 @@ export default function Shitjet() {
             showToast(`Shitja u Anulua me Sukses !`, 'success');
           
         } catch (error) {
-            showToast('Gabim gjate Anulimit: ' + error , 'eror');
+            showToast('Gabim gjate Anulimit: ' + error , 'error');
 
         }finally{
             setTriggerReload(!triggerReload)
             setShowModalPerPyetje(false);
+            fetchData()
         }
     };
 

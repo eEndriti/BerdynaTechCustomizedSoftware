@@ -1,10 +1,10 @@
 import { useState, useEffect,useContext } from 'react';
 import { Container, Row, Col,ProgressBar,Badge } from 'react-bootstrap';
-import logo from '../assets/BtechLogo.png';
+import logo from '../assets/logo.png';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import '../assets/css/Layout.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faSignOutAlt, faExchangeAlt, faCoins, faGift } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faSignOutAlt, faExchangeAlt, faCoins, faGift, faGears } from '@fortawesome/free-solid-svg-icons';
 import AuthContext, { formatCurrency } from './AuthContext';
 
 import Cookies from 'js-cookie';
@@ -223,6 +223,9 @@ function Layout() {
                 </NavLink>
                 <NavLink to='/administrimi' className='nav-link' activeClassName='active'>
                   Administrimi
+                </NavLink>
+                <NavLink to='/parametrat' className='nav-link' activeClassName='active'>
+                  Parametrat <FontAwesomeIcon icon={faGears} />
                 </NavLink>
                 </>}
                 <div className='current-url p-3'>

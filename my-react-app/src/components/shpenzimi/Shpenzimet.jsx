@@ -100,8 +100,8 @@ export default function Shpenzimet() {
         setShowModalPerNdryshim(true)
       }
 
-      const thirreModalPerPyetje = (transaksioniID) =>{
-       setDataPerDelete(transaksioniID)
+      const thirreModalPerPyetje = (item) =>{
+       setDataPerDelete(item)
        setShowModalPerPyetje(true)
       }
 
@@ -113,9 +113,17 @@ export default function Shpenzimet() {
         let result
         setButtonLoading(true)
         try{
+          let result
+          
+            result = await window.api.anuloShpenzimin(dataPerDelete)
+          
+          
+          if(result.success){
+            showToast(`Shpenzimi eshte fshirë me sukses!`, 'success');
+          }else{
+            showToast(`Diqka shkoi keq!`, 'erorr');
+          }
 
-          await window.api.anuloShpenzimin(dataPerDelete)
-          showToast(`Shpenzimi eshte fshirë me sukses!`, 'success');
         }catch(e){
             console.log(e)
             showToast('Gabim gjate fshirjes: ' + result.error);
@@ -193,7 +201,7 @@ export default function Shpenzimet() {
                         <td>{item.perdoruesi}</td>
                         <td>
                             <Button variant='btn btn-outline-primary' onClick={() => handleEditShpenzimiClick(item)}><FontAwesomeIcon icon={faEdit}/></Button>
-                            <Button variant='btn btn-outline-danger' className='mx-1' onClick={() => thirreModalPerPyetje(item.transaksioniID)}><FontAwesomeIcon icon={faTrashCan}/></Button>
+                            <Button variant='btn btn-outline-danger' className='mx-1' onClick={() => thirreModalPerPyetje(item)}><FontAwesomeIcon icon={faTrashCan}/></Button>
                         </td>
                         </tr>
                     ))}

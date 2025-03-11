@@ -184,7 +184,7 @@ export default function Nderrimet() {
                             <th>Koha e Mbylljes</th>
                             <th>Statusi</th>
                             <th>Avansi</th>
-                            <th>Totali i Arkes me Avans</th>
+                            <th>Totali i Arkes pa Avans</th>
                         </tr>
                     </thead>
                     <tbody>

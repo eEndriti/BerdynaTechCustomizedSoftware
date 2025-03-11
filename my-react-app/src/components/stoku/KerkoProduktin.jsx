@@ -19,10 +19,11 @@ export default function KerkoProduktin({ show, onHide, onSelect, meFatureProp })
   const [loading, setLoading] = useState(true);
   const [triggerReload,setTriggerReload] = useState(false)
   const showToast = useToast()
+
   useEffect(() => {
-   
     fetchProducts();
   }, [triggerReload]);
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -36,33 +37,49 @@ export default function KerkoProduktin({ show, onHide, onSelect, meFatureProp })
   };
 
   useEffect(() => {
-    const filterProducts = () => {
-      console.log('mefature',meFatureProp)
-      const filtered = produktet.filter((product) => {
-        const matchesShifra = product.shifra.toLowerCase().includes(searchFields.shifra.toLowerCase());
-        const matchesEmertimi = product.emertimi.toLowerCase().includes(searchFields.emertimi.toLowerCase());
-        const matchesPershkrimi = product.pershkrimi.toLowerCase().includes(searchFields.pershkrimi.toLowerCase());
-        const matchesSasia = eliminoVleratZero ? product.sasia > 0 : true;
-        if (meFatureProp != null) {
-          if(meFatureProp == 'ngaStoku'){
-            const matchesSasiStatike = product.sasiStatike == 0;
-            return matchesShifra && matchesEmertimi && matchesPershkrimi && matchesSasia && matchesSasiStatike;
-          }else{
+    
+    filterProducts();
+  }, [searchFields, eliminoVleratZero, produktet, meFatureProp]);
+
+
+  const filterProducts = () => {
+    console.log('mefature', meFatureProp);
+
+    const filtered = produktet.filter((product) => {
+      const matchesShifra = searchFields.shifra 
+        ? product.shifra.toLowerCase().includes(searchFields.shifra.toLowerCase()) 
+        : true;
+
+      const matchesEmertimi = searchFields.emertimi 
+        ? product.emertimi.toLowerCase().includes(searchFields.emertimi.toLowerCase()) 
+        : true;
+
+      const matchesPershkrimi = searchFields.pershkrimi 
+        ? product.pershkrimi.toLowerCase().includes(searchFields.pershkrimi.toLowerCase()) 
+        : true;
+
+      const matchesSasia = eliminoVleratZero ? product.sasia > 0 : true;
+
+      if (meFatureProp != null) {
+        if (meFatureProp == 'ngaStoku') {
+          const matchesSasiStatike = product.sasiStatike == 0;
+          return matchesShifra && matchesEmertimi && matchesPershkrimi && matchesSasia && matchesSasiStatike;
+        } else {
           const matchesMeFature = meFatureProp
             ? product.meFatureTeRregullt === "po"
             : product.meFatureTeRregullt === "jo";
-            const matchesSasiStatike = product.sasiStatike == 0;
+          const matchesSasiStatike = product.sasiStatike == 0;
           return matchesShifra && matchesEmertimi && matchesPershkrimi && matchesSasia && matchesMeFature && matchesSasiStatike;
         }
-        } 
-        return matchesShifra && matchesEmertimi && matchesPershkrimi && matchesSasia;
-      });
-      setResults(filtered);
-      setLoading(false)
-    };
+      }
 
-    filterProducts();
-  }, [searchFields, eliminoVleratZero, produktet, meFatureProp]);
+      return matchesShifra && matchesEmertimi && matchesPershkrimi && matchesSasia;
+    });
+
+    setResults(filtered);
+    setLoading(false);
+};
+
 
   const handleInputChange = (e) => {
     setSearchFields({ ...searchFields, [e.target.name]: e.target.value });

@@ -31,16 +31,29 @@ export default function Shitje() {
   const {authData, updateAuthData} = useContext(AuthContext)
   const showToast = useToast()
   const [triggerReload,setTriggerReload] = useState(false)
+  const [parametratGarancionit,setParametratGarancionit] = useState()
 
   useEffect(() => {
     fetchData()
   }, [triggerReload]);
 
   const fetchData = async () => {
-    await window.api.fetchTableMenyratPageses().then(receivedData => {
-      setMenyratPageses(receivedData);
+    try {
+      await window.api.fetchTableMenyratPageses().then(receivedData => {
+        setMenyratPageses(receivedData);
+      })
+       await window.api.fetchTableParametrat().then(receivedData => {
+        setParametratGarancionit(receivedData);
+        console.log(receivedData)
+      })
+    } catch (error) {
+      showToast('Gabim gjat komunikimit me databaze' + error,'error')
+    }finally{
       setLoading(false);
-    });
+
+    }
+   
+
   }
 
   useEffect(() => {
@@ -146,9 +159,9 @@ export default function Shitje() {
         pershkrimiProduktit: product.pershkrimi,
         produktiID: product.produktiID,
         sasiaShitjes: product.sasiaShitjes,
-        cmimiPerCope: product.cmimiShitjes,
+        cmimiPerCope: formatCurrency(product.cmimiShitjes),
         profiti: product.profiti,
-        vleraTotaleProduktit: product.cmimiShitjes * product.sasiaShitjes,
+        vleraTotaleProduktit: formatCurrency(product.cmimiShitjes * product.sasiaShitjes),
         komentiProduktit:product.komenti,
         meFatureTeRregullt:product.meFatureTeRregullt,
         tvsh:product.tvsh,
@@ -163,9 +176,12 @@ export default function Shitje() {
         returnedShitjeID = result.shitjeID
         statusiShitjes = 'success'
         message = 'Shitja u regjistrua me sukses!'
+        navigate('/faqjaKryesore/' , {state:{showToast:true , message:message , type:statusiShitjes}})
+
         if(aKaGarancion){
           const shifra = result.shifra
-          PrintoGarancion(data,shifra)
+          
+          PrintoGarancion(data,parametratGarancionit,shifra)
         
       } else {
         statusiShitjes = 'error'
@@ -176,7 +192,6 @@ export default function Shitje() {
     } finally {
       setLoading(false);
       updateAuthData({shitjeFunditID:returnedShitjeID})
-      navigate('/faqjaKryesore/' , {state:{showToast:true , message:message , type:statusiShitjes}})
     }
   };
   

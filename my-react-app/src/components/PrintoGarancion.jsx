@@ -2,15 +2,20 @@ import jsPDF from 'jspdf';
 import autoTable from "jspdf-autotable";
 import { formatCurrency } from "../components/AuthContext";
 
-export const PrintoGarancion = (data,shifra) => {
 
+export const PrintoGarancion = (data,parametratGarancionit,shifra) => {
 
-  const folderPath = 'C:\\Users\\BerdynaTech\\Documents\\btechPDFtest'
+ 
+  console.log('data',data)
+
+  console.log('data lloji',data.lloji)
+
   const fileName = `Garancioni ${shifra}.pdf`
   const dataGarancionit = getCurrentDateInAlbanian()
   const currentYear = new Date().getFullYear();
 
-  const handlePrint = async () => {
+ 
+  const handlePrint = async (currentData,currentParametrat) => {
     const doc = new jsPDF({
       orientation: 'p',
       unit: 'mm',
@@ -18,6 +23,9 @@ export const PrintoGarancion = (data,shifra) => {
       putOnlyUsedFonts: true,
       floatPrecision: 16, // or "smart", default is 16
     });
+
+    console.log('parametrat',currentParametrat)
+    const folderPath = currentParametrat.filePath
 
     // Title
     doc.setFont("helvetica", "bold");
@@ -41,67 +49,63 @@ export const PrintoGarancion = (data,shifra) => {
     doc.text(clientDetails, startX, 28);
 
     // Header
-    doc.setFont("helvetica", "normal");
     doc.setFontSize(14);
     doc.text(`Garancioni për produktin e blerë është `, 15, 43);
     doc.setFont("helvetica", "bold");
     doc.text(`${data.kohaGarancionit} Muaj`, 101, 43);
     doc.setFont("helvetica", "normal");
-    doc.text(`nga data e blerjes: ${dataGarancionit}`, 117, 43);
+    doc.text(` nga data e blerjes: ${dataGarancionit}`, 117, 43);
 
-    // Add a subtle dividing line for better separation
-    doc.line(10, 35, doc.internal.pageSize.width - 10, 35);
+     // Divider Line
+     doc.line(10, 35, pageWidth - 10, 35);
 
-    // Additional Text
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Në garancion përfshihet mbulesa e plotë përpos nëse produkti është:", 11, 54);
+   // Warranty Details
+   doc.setFont("helvetica", "bold");
+   doc.setFontSize(16);
+   doc.text("Në garancion përfshihet mbulesa e plotë përpos nëse produkti është:", 11, 54);
+   
+   doc.setFont("helvetica", "normal");
+   doc.setFontSize(10);
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`• I dëmtuar nga shkarkesat e ndryshme elektrike te cilat qojne në demtime dhe mosfunksionim.`, 15, 65);
-    doc.text(`• Dëmtimet fizike te cilat vijnë si pasojë e moskujdesit te klientit si psh(Dëmtimet nga përplasjet,
-            hudhja e lëngjeve apo ujit,goditje,ndrydhjet etj.)`, 15, 72);
-    doc.text(`• Në rast se aq kohë produkti është i mbrojtur me garancion tek ne,klienti dërgon këtë produkt për
-            intervinime/servisime të ndryshme te ndonjë organizatë apo individë, përveq në raste kur
-            ne e sygjerojmë për një veprim të tillë.`, 15, 85);
-    doc.text(`• Në garancion nuk përfshihet vendosja e sistemeve operative`, 15, 102);
-    doc.setFont("helvetica", "bold");
-    doc.text(`Windows/IOS (Formatizimet)`, 132, 102);
-    doc.setFont("helvetica", "normal");
-    doc.text(`• Bateria garantohet sa për tu testuar në kohë-zgjatje prej 14 ditësh(Pjesa tjetër e kohës mbetet në
-            përkujdesje të klientit)`, 15, 109);
-    doc.text(`• Në rast të demtimit të diskut, garancioni përfshin vetëm diskun, ndërsa të dhënat mbeten në
-            përgjegjesin e klientit`, 15, 122);
-    doc.text(`• Blerja e Produktit tek ne nuk nenkupton mundesine e shitjes apo nderrimit te atij produkti serish 
-            tek ne. `, 15, 135);
+   const kushtetArray = JSON.parse(currentParametrat.kushtet);
+const initialY = 65; // Initial starting Y position for the conditions
+const lineHeight = 6; // Adjust this value depending on text size
+const spacingAfterKushtet = 5; // Space between kushtet and the table
 
-    // Table Columns
-    const columns = [
-      { header: "Nr", dataKey: "nr" },
-      { header: "Shifra", dataKey: "shifraProduktit" },
-      { header: "Emertimi", dataKey: "emertimiProduktit" },
-      { header: "Pershkrimi", dataKey: "pershkrimiProduktit" },
-      { header: "Cmimi per Cope", dataKey: "cmimiPerCope" },
-      { header: "Sasia", dataKey: "sasiaShitjes" },
-      { header: "Vlera Totale", dataKey: "vleraTotaleProduktit" },
-      { header: "Komenti per Produkt", dataKey: "komentiProduktit" },
-    ];
+// Render the kushtet
+kushtetArray.forEach((kusht, index) => {
+  doc.text(`• ${kusht}`, 15, initialY + index * lineHeight);
+});
 
-    // Example Data
-    const rows = data.produktet
+// Calculate the dynamic Y position for the table
+const tableStartY = initialY + kushtetArray.length * lineHeight + spacingAfterKushtet;
 
-    autoTable(doc, {
-      columns,
-      body: rows,
-      startY: 148,
-      theme: 'grid',
-      styles: { fontSize: 10, textColor: [1, 1, 1], cellPadding: 2 },
-      headStyles: { fillColor: [209, 209, 209], textColor: [1, 1, 1] },
-      columnStyles: {
-        pershkrimi: { cellWidth: 60 },
-        emertimi: { cellWidth: 'wrap' },
-      },
+// Table Columns
+const columns = [
+  { header: "Nr", dataKey: "nr" },
+  { header: "Shifra", dataKey: "shifraProduktit" },
+  { header: "Emertimi", dataKey: "emertimiProduktit" },
+  { header: "Pershkrimi", dataKey: "pershkrimiProduktit" },
+  { header: "Cmimi per Cope", dataKey: "cmimiPerCope" },
+  { header: "Sasia", dataKey: "sasiaShitjes" },
+  { header: "Vlera Totale", dataKey: "vleraTotaleProduktit" },
+  { header: "Komenti per Produkt", dataKey: "komentiProduktit" },
+];
+
+// Example Data
+const rows = data.produktet;
+
+autoTable(doc, {
+  columns,
+  body: rows,
+  startY: tableStartY, // Dynamically set Y position
+  theme: 'grid',
+  styles: { fontSize: 10, textColor: [1, 1, 1], cellPadding: 2 },
+  headStyles: { fillColor: [209, 209, 209], textColor: [1, 1, 1] },
+  columnStyles: {
+    pershkrimi: { cellWidth: 60 },
+    emertimi: { cellWidth: 'wrap' },
+  },
       bodyStyles: {
         minCellHeight: 10,
       },
@@ -119,17 +123,23 @@ export const PrintoGarancion = (data,shifra) => {
         const line2XStart = pageWidth - 200;
         const line2XEnd = pageWidth - 150;
 
-        doc.line(line1XStart, footerY, line1XEnd, footerY);
-        doc.line(line2XStart, footerY, line2XEnd, footerY);
-
         doc.setFontSize(7);
-        doc.text(`Nënshkrimi i Klientit`, 30, footerY + 4);
-        doc.text(`Nënshkrimi i Shitësit`, pageWidth - 45, footerY+4);
+
+        if(currentData.lloji.trim() === 'dyqan'){
+          doc.line(line2XStart, footerY, line2XEnd, footerY);
+
+          doc.text(`Nënshkrimi i Klientit`, 30, footerY + 4);
+        }
+        doc.line(line1XStart, footerY, line1XEnd, footerY);
+
+          doc.text(`Nënshkrimi i Shitësit`, pageWidth - 45, footerY+4);
+    
+        
 
         // Footer Branding
         const YForBranding = doc.internal.pageSize.height - 6;
         doc.setFontSize(8);
-        const brandingText = `Berdyna Tech © 2016 - ${currentYear} | Tel: +383 49 988 833 | Adresa: Rr. Konferenca e Bujanit, Pejë, Kosovë`;
+        const brandingText = `${currentParametrat.emriBiznesit} © 2016 - ${currentYear} | Tel: ${currentParametrat.telefoni} | Adresa: ${currentParametrat.adresa}`;
         const textWidth = doc.getTextWidth(brandingText);
         const startX = (pageWidth - textWidth) / 2;
         doc.setFontSize(8);
@@ -145,8 +155,8 @@ export const PrintoGarancion = (data,shifra) => {
 
       const rows2 = [
         `Totali per Pagese : ${formatCurrency(data.totaliPerPagese)}`,
-        `Totali i Pageses : ${formatCurrency(data.totaliPageses)}`,
-        `Mbetja per Pagese : ${formatCurrency(data.mbetjaPerPagese)}`
+        `Totali i Pageses : ${currentData.lloji == 'online' ? formatCurrency(data.totaliPerPagese) : formatCurrency(data.totaliPageses)}`,
+        `Mbetja per Pagese : ${currentData.lloji == 'online' ? formatCurrency(0) : formatCurrency(data.mbetjaPerPagese)}`
       ];
 
       let currentY = startY;
@@ -167,9 +177,9 @@ export const PrintoGarancion = (data,shifra) => {
     await window.api.openFile(filePath );
 
   };
+  handlePrint(data,parametratGarancionit[0])
 
-  // Trigger print
-  handlePrint();
+
 };
 
 
@@ -180,7 +190,6 @@ function getCurrentDateInAlbanian() {
     'Korrik', 'Gusht', 'Shtator', 'Tetor', 'Nëntor', 'Dhjetor'
   ];
 
-  // Set Albania's timezone offset (+1 GMT)
   const albaniaTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Tirane" }));
 
   const day = String(albaniaTime.getDate()).padStart(2, '0'); // Add leading zero for single-digit days

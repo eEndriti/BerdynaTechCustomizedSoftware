@@ -60,7 +60,7 @@ export default function NgaStokiNeShpenzim() {
       perdoruesiID: authData.perdoruesiID,
       nderrimiID:authData.nderrimiID,
       produktiID:produktiSelektuar.produktiID,
-      sasia:sasiaPerProdukt,
+      sasia:sasiaPerProdukt
     };
     
     try {

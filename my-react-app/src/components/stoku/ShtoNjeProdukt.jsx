@@ -126,6 +126,10 @@ const ShtoNjeProdukt = ({ show, handleClose, prejardhja, produkti = {} , handleC
         showToast('Gabim gjatë komunikimit me serverin.' + error , 'error');
       } finally {
         setLoading(false);
+        setProductDetails(null)
+        setMeFature(false)
+        setSasiStatike(false)
+        setSelectedKategoria(null)
         if (prejardhja === 'meRefresh') {
           handleConfirm()
         }
@@ -182,7 +186,7 @@ const ShtoNjeProdukt = ({ show, handleClose, prejardhja, produkti = {} , handleC
 
       try {
         const result = await window.api.ndryshoProduktin(data);
-
+        console.log('ndrysho Produktin called')
         if (result.success) {
           showToast('Produkti u Ndryshua me Sukses!', 'success');
           setTimeout(() => {
@@ -195,6 +199,10 @@ const ShtoNjeProdukt = ({ show, handleClose, prejardhja, produkti = {} , handleC
         showToast('Gabim gjatë komunikimit me serverin.' + error , 'error');
       } finally {
         setLoading(false);
+        setProductDetails(null)
+        setMeFature(false)
+        setSasiStatike(false)
+        setSelectedKategoria(null)
         if (prejardhja === 'meRefresh') {
           handleConfirm()
         }
@@ -414,7 +422,7 @@ const ShtoNjeProdukt = ({ show, handleClose, prejardhja, produkti = {} , handleC
           </Button>
           <Button
             variant="primary"
-            onClick={() => { produkti != null ? ndryshoProduktin() : handleShtoProduktin() }}
+            onClick={() => { produkti ? ndryshoProduktin() : handleShtoProduktin() }}
             disabled={kontrolloValidetin()}
           >
             {loading ? (
@@ -429,7 +437,7 @@ const ShtoNjeProdukt = ({ show, handleClose, prejardhja, produkti = {} , handleC
                 Duke ruajtur...
               </>
             ) : (
-              <>{produkti != null ? 'Ruaj Ndryshimet' : 'Shto Produktin'}</>
+              <>{produkti ? 'Ruaj Ndryshimet' : 'Shto Produktin'}</>
             )}
           </Button>
         </Modal.Footer>

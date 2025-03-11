@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('api', {
     fetchTableBonuset: () => ipcRenderer.invoke('fetchTableBonuset'),
     fetchTablePushimet: () => ipcRenderer.invoke('fetchTablePushimet'),
     fetchTablePagat: () => ipcRenderer.invoke('fetchTablePagat'),
+    fetchTableParametrat: () => ipcRenderer.invoke('fetchTableParametrat'),
     fetchTotaliArkes: (nderrimiID) => ipcRenderer.invoke('fetchTotaliArkes',nderrimiID),
 
     
@@ -44,12 +45,14 @@ contextBridge.exposeInMainWorld('api', {
     shtoPerdoruesin: (data) => ipcRenderer.invoke('shtoPerdoruesin', data) ,
     shtoOpsionPagese: (data) => ipcRenderer.invoke('shtoOpsionPagese', data) ,
     shtoPushimin: (data) => ipcRenderer.invoke('shtoPushimin', data) ,
+    ndryshoParametrat: (data) => ipcRenderer.invoke('ndryshoParametrat', data) ,
     login: (data) => ipcRenderer.invoke('login', data),
 
 
 
     
     anuloShitjen: (data) => ipcRenderer.invoke('anuloShitjen', data) ,
+    anuloPorosineOnlineTePranuar: (data) => ipcRenderer.invoke('anuloPorosineOnlineTePranuar', data) ,
     anuloBlerjen: (data) => ipcRenderer.invoke('anuloBlerjen', data) ,
     anuloShpenzimin: (transaksioniID) => ipcRenderer.invoke('anuloShpenzimin', transaksioniID) ,
     anuloPorosineOnline: (idPerAnulim) => ipcRenderer.invoke('anuloPorosineOnline', idPerAnulim) ,

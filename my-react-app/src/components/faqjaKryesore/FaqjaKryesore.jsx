@@ -13,6 +13,7 @@ function FaqjaKryesoreAdmin() {
   
   useEffect(() => {
     if (location.state?.showToast) {
+      console.log(location)
         showToast(location.state.message,location.state.type);
     }
 }, [location.state]);

@@ -23,6 +23,7 @@ import Cookies from 'js-cookie';
 import Administrimi from './components/Administrimi';
 import PrintoLabell from './components/PrintoLabell';
 import NdryshoBlerjen from './components/NdryshoBlerjen';
+import Parametrat from './components/parametrat/Parametrat';
 
 const isAuthenticated = () => {
   return !!Cookies.get('aKaUser'); 
@@ -113,6 +114,10 @@ const router = createBrowserRouter([
       {
         path: '/administrimi',
         element: <ProtectedRoute element={<Administrimi />} requiredRole="admin" />,
+      },
+      {
+        path: '/parametrat',
+        element: <ProtectedRoute element={<Parametrat />} requiredRole="admin" />,
       },
       {
         path: '/',
