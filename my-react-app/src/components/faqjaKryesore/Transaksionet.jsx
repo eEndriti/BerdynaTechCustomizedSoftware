@@ -5,7 +5,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons'; 
 import ModalPerPyetje from '../ModalPerPyetje'
 import {useToast} from '../ToastProvider'
-
+import NdryshoShpenzimin from '../shpenzimi/NdryshoShpenzimin';
+import NdryshoServisinPerfunduar from '../NdryshoServisinPerfunduar';
 import AnimatedSpinner from '../AnimatedSpinner';
 import AuthContext, { formatCurrency, formatDate, formatLongDateToAlbanian, normalizoDaten } from '../AuthContext';
 import Charts from './Charts';
@@ -24,6 +25,11 @@ export default function Transaksionet() {
     const [selectedNderrimiData,setSelectedNderrimiData] = useState()
     const [tregoGrafikun,setTregoGrafikun] = useState(false)
     const showToast = useToast();
+    
+    const [modalNdryshoShpenzim,setModalNdryshoShpenzim] = useState(false)
+    const [dataNdryshoShpenzim,setDataNdryshoShpenzim] = useState()
+    const [modalNdryshoServisim,setModalNdryshoServisim] = useState(false)
+    const [dataNdrshoServisim,setDataNdryshoServisim] = useState()
 
     useEffect(() => {
 
@@ -85,11 +91,12 @@ export default function Transaksionet() {
                     break;
                 case 'Blerje' :  navigate(`/ndryshoBlerjen/${item.llojiID}`)
                     break;
-                case 'Shpenzim' : result = await window.api.anuloShpenzimin(data) // kur te rregullohet faqja shpenzimi e vazhdojm ktu
+                case 'Shpenzim' :  // kur te rregullohet faqja shpenzimi e vazhdojm ktu
                     break;
                 case 'Servisim' : console.log(item.lloji) // kur te rregullohet faqja servismi e vazhdojm ktu
                     break;
-                default : console.log('Gabim')
+                
+                default : alert('Gabim, Rifreskoni Faqen!')
             }
 
             if (result.success) {
@@ -145,6 +152,70 @@ export default function Transaksionet() {
         }
     }
 
+    const shifraClick = (item) => {
+      const lloji = item.lloji
+      console.log('item',item)
+      console.log('lloji',lloji)
+      switch(lloji){
+        case 'Shitje'  : 
+        case 'Modifikim Shitje': navigate(`/ndryshoShitjen/${item.llojiID}`)
+            break;
+        case 'Blerje' : 
+        case 'Modifikim Blerje' : navigate(`/ndryshoBlerjen/${item.llojiID}`)
+            break;
+        case 'Shpenzim' : showShpenzimModal(item.llojiID)
+            break;
+        case 'Servisim':
+        case 'Modifikim Servisi': showServisimModal(item.llojiID)
+            break;
+        case 'Pagese Bonuseve' : showToast('Pagesa e Bonuseve mund te ndryshohet vetem nga sektori i Administrimit', 'warning') 
+            break;
+        case 'Pagese per Blerje':
+        case 'Pagese per Shitje':
+        case 'Pagese per Servisimi': showToast('Pagesa e Dokumentit mund te ndryshohet vetem nga sektori i Dokumentit Perkates', 'warning')
+            break;
+        case 'Pagese Page' : showToast('Pagesa e Pages mund te ndryshohet vetem nga sektori i Administrimit', 'warning')
+            break;
+         
+      }
+    }
+
+    const showShpenzimModal = async (id) => {
+      try {
+          const result = await window.api.fetchTableShpenzimet()
+          const data = result.find(item => item.shpenzimiID == id)
+          setDataNdryshoShpenzim(data) 
+
+      } catch (error) {
+         showToast('Gabim gjate marrjes se te dhenave per ndryshim' + error, 'error')
+      }finally{
+          setModalNdryshoShpenzim(true)
+      }
+    }
+
+    const showServisimModal = async (id) => {
+      try {
+          const result = await window.api.fetchTableServisi();
+          const data = result.find(item => item.servisimiID == id);
+          
+          if (!data) {
+              showToast('Gabim: Nuk u gjet servisi me këtë ID', 'error');
+              return; 
+          }
+  
+          setDataNdryshoServisim(data);
+          setModalNdryshoServisim(true); 
+  
+      } catch (error) {
+          showToast('Gabim gjatë marrjes së të dhënave për ndryshim: ' + error, 'error');
+      }
+  };
+  
+
+    const handleConfirmNdryshoServisinPerfunduar =  () => {
+      fetchData()
+      setModalNdryshoServisim(false)
+    }
   return (
     <Container fluid className="pt-3 modern-container">
     {loading ? (
@@ -173,7 +244,13 @@ export default function Transaksionet() {
                 item.transaksioniID !== 0 && (
                     <tr key={index}>
                     <td>{transaksionetENderrimit.length - index}</td>
-                    <td>{item.shifra}</td>
+                    <td>
+                      <Button variant='' className='hover ' style={{color:'#24AD5D',fontSize:'15px'}} onClick={() => shifraClick(item)}
+                         onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                         onMouseLeave={(e) => e.target.style.textDecoration = 'none'}>
+                        {item.shifra}
+                      </Button>
+                    </td>
                     <td>{item.lloji}</td>
                     <td className="text-wrap">{item.pershkrimi}</td>
                     <td>{formatCurrency(item.totaliperPagese)}</td>
@@ -237,7 +314,8 @@ export default function Transaksionet() {
 
           </Col>
           <Col>
-              {selectedNderrimi &&               <Button variant='outline-primary' onClick={() => {setTregoGrafikun(false);setSelectedNderrimi('')}}>{tregoGrafikun ? 'Mbyll Grafikun' : 'Krahaso Nderrimet'}</Button>
+              {selectedNderrimi &&               
+              <Button variant='outline-primary' onClick={() => {setTregoGrafikun(false);setSelectedNderrimi('')}}>{tregoGrafikun ? 'Mbyll Grafikun' : 'Krahaso Nderrimet'}</Button>
             }
           </Col>
         </Col>
@@ -246,6 +324,10 @@ export default function Transaksionet() {
         </Col>
       </Row>}
     <ModalPerPyetje show={showModalPerPyetje} handleClose={()=> setShowModalPerPyetje(false)} handleConfirm={confirmModalPerPyetje} />
+
+    <NdryshoShpenzimin show = {modalNdryshoShpenzim} handleClose = {() => setModalNdryshoShpenzim(false)} dataPerNdryshim = {dataNdryshoShpenzim} />
+    <NdryshoServisinPerfunduar show={modalNdryshoServisim} handleClose={() => setModalNdryshoServisim(false)} data={dataNdrshoServisim} handleConfirm={handleConfirmNdryshoServisinPerfunduar}/>
+  
   </Container>
   )
 }

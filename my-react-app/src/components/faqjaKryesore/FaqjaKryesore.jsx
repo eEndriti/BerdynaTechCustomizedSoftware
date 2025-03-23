@@ -15,6 +15,8 @@ function FaqjaKryesoreAdmin() {
     if (location.state?.showToast) {
       console.log(location)
         showToast(location.state.message,location.state.type);
+        location.state.showToast = false;
+        
     }
 }, [location.state]);
 

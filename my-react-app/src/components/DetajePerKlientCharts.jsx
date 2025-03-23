@@ -64,7 +64,8 @@ const DetajePerKlientCharts = ({ totals = {},nrTransaksioneve,totalsFormatiMujor
 
 
       {/* Grafiku i Borxhit Mujor */}
-      {lloji == 'klient' && <Card className="p-3 shadow">
+      {lloji == 'klient' && 
+      <Card className="p-3 shadow"  style={{ width: "45%" }}>
         <h5 className="text-center">Trendi i Perfomances se Klientit</h5>
         <ResponsiveContainer width="100%" height={300}>
             <LineChart data={performanceData}>

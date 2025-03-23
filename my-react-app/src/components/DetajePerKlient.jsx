@@ -3,15 +3,17 @@ import { Container, Row, Col, Form, Spinner, Button, OverlayTrigger, Tooltip } f
 import { useParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronRight,faTrashCan,faEye } from '@fortawesome/free-solid-svg-icons';
-import AuthContext, { formatCurrency, normalizoDaten } from '../components/AuthContext';
+import AuthContext, { formatCurrency, formatLongDateToAlbanian, normalizoDaten } from '../components/AuthContext';
 import AnimatedSpinner from './AnimatedSpinner';
 import ModalPerPyetje from './ModalPerPyetje'
 import {ToastContainer } from 'react-toastify';
 import { useToast } from './ToastProvider';
 import PerfomancaKlientit from './PerfomancaKlientit'
 import DetajePerKlientCharts from './DetajePerKlientCharts';
-
+import { useNavigate } from 'react-router-dom';
+import NdryshoServisinPerfunduar from './NdryshoServisinPerfunduar';
 export default function DetajePerKlient() {
+    const navigate = useNavigate();
     const { subjektiID, lloji } = useParams();
     const [subjekti, setSubjekti] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -40,6 +42,10 @@ export default function DetajePerKlient() {
     const [totalsFormatiMujore,setTotalsFormatiMujor] = useState() //kjo i ndan pagesat qe jon ne muaj per klient vetem
     const [triggerReload,setTriggerReload] = useState(false)
     const showToast = useToast()
+
+    const [modalNdryshoServisim,setModalNdryshoServisim] = useState(false)
+    const [dataNdrshoServisim,setDataNdryshoServisim] = useState()
+    
     useEffect(() => {
        
         
@@ -221,6 +227,50 @@ export default function DetajePerKlient() {
             setTriggerReload(!triggerReload)
         }
     }
+
+    const shifraClick = (item) => {
+        const lloji = getLloji(item.shifra)
+        
+        switch(lloji){
+          case 'Shitje'  : navigate(`/ndryshoShitjen/${item.shitjeID}`)
+              break;
+          case 'Blerje' :  navigate(`/ndryshoBlerjen/${item.blerjeID}`)
+              break;
+          case 'Servisim':showServisimModal(item.servisimiID)
+              break;
+        }
+      }
+
+      const getLloji = (shifra) => {
+        if(shifra.startsWith('SH-')) return 'Shitje'
+        if(shifra.startsWith('B-')) return 'Blerje'
+        if(shifra.startsWith('S-')) return 'Servisim'
+    }
+
+    const showServisimModal = async (id) => {
+        try {
+            const result = await window.api.fetchTableServisi();
+            const data = result.find(item => item.servisimiID == id);
+            
+            if (!data) {
+                showToast('Gabim: Nuk u gjet servisi me këtë ID', 'error');
+                return; 
+            }
+    
+            setDataNdryshoServisim(data);
+            setModalNdryshoServisim(true); 
+    
+        } catch (error) {
+            showToast('Gabim gjatë marrjes së të dhënave për ndryshim: ' + error, 'error');
+        }
+    };
+    
+  
+      const handleConfirmNdryshoServisinPerfunduar =  () => {
+        fetchData()
+        setModalNdryshoServisim(false)
+      }
+
     return (
         <Container fluid >
            <Row className='my-4'>
@@ -304,14 +354,20 @@ export default function DetajePerKlient() {
                                             return (
                                                 <tr key={index}>
                                                     <th scope="row">{lloji == 'klient' ? combinedData.length - index :blerjet.length - index}</th>
-                                                    <td>{item.shifra}</td>
+                                                    <td>
+                                                        <Button variant='' className='hover ' style={{color:'#24AD5D',fontSize:'15px'}} onClick={() => shifraClick(item)}
+                                                            onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                                            onMouseLeave={(e) => e.target.style.textDecoration = 'none'}>
+                                                            {item.shifra}
+                                                        </Button>
+                                                    </td>
                                                     <td>{formatCurrency(item.totaliPerPagese)}</td>
                                                     <td>{formatCurrency(item.totaliPageses)}</td>
                                                     <td className={item.mbetjaPerPagese > 0 ? 'text-danger fw-bold' : 'text-success fw-bold'}>
                                                         {formatCurrency(item.mbetjaPerPagese)}
                                                     </td> 
                                                     {lloji == 'klient' ?  
-                                                    <td>{item.shifra.startsWith('SH') ? new Date(item.dataShitjes).toLocaleDateString() :new Date(item.dataPerfundimit).toLocaleDateString()}</td>
+                                                    <td>{item.shifra.startsWith('SH') ? formatLongDateToAlbanian(item.dataShitjes) : formatLongDateToAlbanian(item.dataPerfundimit)}</td>
                                                     :  
                                                     <td>{new Date(item.dataBlerjes).toLocaleDateString()}</td>
                                                     }
@@ -367,7 +423,7 @@ export default function DetajePerKlient() {
                                         <tr key={index}>
                                         <th scope="row">{filteredPagesat.length - index}</th>
                                         <td className="fw-bold">{formatCurrency(item.shumaPageses)}</td>
-                                        <td>{new Date(item.dataPageses).toLocaleDateString()}</td>
+                                        <td>{formatLongDateToAlbanian(item.dataPageses)}</td>
                                         <td>{item.menyraPageses}</td>
                                         <td>
                                             <Button  variant='btn btn-outline-danger' disabled = {pagesaAktiveOnline} onClick={() => deletePagesa(item)}>
@@ -402,7 +458,7 @@ export default function DetajePerKlient() {
         <Row>
             <DetajePerKlientCharts totals = {totals} nrTransaksioneve={combinedData.length} totalsFormatiMujore={totalsFormatiMujore} lloji = {lloji}/>
         </Row>
-
+        <NdryshoServisinPerfunduar show={modalNdryshoServisim} handleClose={() => setModalNdryshoServisim(false)} data={dataNdrshoServisim} handleConfirm={handleConfirmNdryshoServisinPerfunduar}/>
         <ModalPerPyetje show={modalPerPyetje} handleClose={() => setModalPerPyetje(false)} handleConfirm={handleConfirmModal}/>
         </Container>
     );

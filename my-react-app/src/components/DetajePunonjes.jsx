@@ -43,6 +43,7 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
     const [startDate, setStartDate] = useState();
     const [endDate, setEndDate] = useState();
     const [triggerReload, setTriggerReload] = useState(false);
+    const [dataPunesimit,setDataPunesimit] = useState()
     const showToast = useToast()
     
     const albanianMonths = [
@@ -65,6 +66,12 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
             JOIN bonusetPunonjesit bp ON bp.bonusetID = b.bonusetID
             LEFT JOIN menyraPageses m ON m.menyraPagesesID = bp.menyraPagesesID
             `)
+            const dataPunonjesit = await window.api.fetchTableQuery(`
+                SELECT dataPunësimit from punonjesit where punonjesID = ${punonjesID}
+            `)
+            if(dataPunonjesit.length > 0){
+                setDataPunesimit(dataPunonjesit[0].dataPunësimit)
+            }
             setPushimet(fetchedPushimet.filter(item => punonjesID == item.punonjesID));
             setBonuset(fetchedBonuset);
             setPagat(fetchedPaga.filter(item => punonjesID == item.punonjesID));
@@ -244,19 +251,16 @@ export default function DetajePunonjes({punonjesID,emri,defaultPaga}) {
         setMuajiEmertim(albanianMonths[muaji - 1]); 
         
         const bonusetPerPunonjes = [];
-      
-    
         bonuset.forEach(bonusi => {
             const matchingBonusInPunonjesit = bonusetNeDetaje.find(bonusDetaj => 
-                bonusDetaj.bonusetID === bonusi.bonusetID && bonusDetaj.punonjesiID === punonjesID && bonusDetaj.statusi === 1
+                bonusDetaj.bonusetID === bonusi.bonusetID && bonusDetaj.punonjesiID === punonjesID && bonusDetaj.statusi === 1 
             );
-    
             if (!matchingBonusInPunonjesit) {
                 const bonusDate = new Date(bonusi.dataBonuseve);
                 const bonusMonth = bonusDate.getMonth() + 1; 
                 const bonusYear = bonusDate.getFullYear();
-    
-                if (bonusMonth === muaji && bonusYear === viti) {
+                
+                if (bonusMonth == muaji && bonusYear == viti && bonusi.dataBonuseve > dataPunesimit) {
                     bonusetPerPunonjes.push({
                         ...bonusi, 
                     });

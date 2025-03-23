@@ -7,9 +7,12 @@ import ModalPerPyetje from '../ModalPerPyetje';
 import AnimatedSpinner from '../AnimatedSpinner';
 import {ToastContainer } from 'react-toastify';
 import { useToast } from '../ToastProvider';
+import KategoriteCharts from './KategoriteCharts';
 
 export default function Kategorite() {
   const [kategorite, setKategorite] = useState([]);
+  const [kategorieDetails, setKategorieDetails] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const [emertimiPerTeShtuar, setEmertimiPerTeShtuar] = useState();
   const [tvshPerTeShtuar, setTvshPerTeShtuar] = useState();
   const [komponenta, setKomponenta] = useState(false);
@@ -27,11 +30,37 @@ export default function Kategorite() {
   }, [triggerReload]);
 
   const fetchData = async () => {
-    await window.api.fetchTableKategoria().then((receivedData) => {
-      setKategorite(receivedData);
+    try {
+      const kategoriteData = await window.api.fetchTableKategoria();
+      setKategorite(kategoriteData); 
+  
+      const kategoriDetailsData = await window.api.fetchTableQuery(`
+        SELECT 
+          k.kategoriaID, 
+          COALESCE(SUM(sp.sasia), 0) + COALESCE(SUM(svp.sasia), 0) AS TotaliShitur,
+          COALESCE(SUM(sp.profitiProduktit), 0) + COALESCE(SUM(svp.profitiProduktit), 0) AS TotaliFitimit
+        FROM kategoria k
+        LEFT JOIN produkti p ON k.kategoriaID = p.kategoriaID
+        LEFT JOIN shitjeProdukti sp ON p.produktiID = sp.produktiID
+        LEFT JOIN servisProdukti svp ON p.produktiID = svp.produktiID
+        GROUP BY k.kategoriaID, k.emertimi;
+      `);
+      setKategorieDetails(kategoriDetailsData); 
+  
+      const mergedArray = kategoriteData.map(item1 => {
+        const item2 = kategoriDetailsData.find(item => item.kategoriaID === item1.kategoriaID);
+        return { ...item1, ...item2 };
+      });
+  
+      setChartData(mergedArray);
+  
+    } catch (error) {
+      showToast('Gabim gjate marrjes se te dhenave: ' + error, 'error');
+    } finally {
       setLoading(false);
-    });
+    }
   }
+  
 
   const handleCheckKomponenta = () => {
     setKomponenta(!komponenta);
@@ -51,7 +80,7 @@ export default function Kategorite() {
       await window.api.insertKategorine(data);
       showToast('Kategoria u Regjistrua me Sukses!','success');
     } catch (error) {
-      showToast('Gabim gjate regjistrimit: ' ,'error');
+      showToast('Gabim gjate regjistrimit: '+error ,'error');
 
     }finally{
       setSubmitLoading(false);
@@ -228,7 +257,9 @@ export default function Kategorite() {
         </Col>
       </Row>
 
-      
+      <Row>
+        {chartData.length > 0 && <KategoriteCharts chartData={chartData}/>}
+      </Row>
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>

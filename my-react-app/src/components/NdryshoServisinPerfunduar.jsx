@@ -26,12 +26,15 @@ function NdryshoServisinPerfunduar({ show, handleClose,data = {}, handleConfirm}
     const [menyraPagesesIDFillestare,setMenyraPagesesIDFillestare] = useState()
     const [transaksioniIDFillestare,setTransaksioniIDFillestare] = useState()
     const showToast = useToast()
-    useEffect(() => {     
+
+   useEffect(() => {  
+    if (data && Object.keys(data).length > 0) {  
         setProducts([{}]);   
-            fetchDataFillestare();
-            console.log('data',data)
-    }, [data]);
-    
+         fetchDataFillestare();
+        console.log('data', data);
+    }
+}, [data]);
+
     const fetchDataFillestare = async () => {
         try {
             setLoading(true);

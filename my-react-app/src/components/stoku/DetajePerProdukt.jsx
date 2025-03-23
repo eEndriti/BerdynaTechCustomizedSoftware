@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { Container, Row, Col, Form } from 'react-bootstrap';
+import { useParams,useNavigate } from "react-router-dom";
+import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import AnimatedSpinner from '../AnimatedSpinner';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserSecret } from '@fortawesome/free-solid-svg-icons';
-import { formatCurrency } from "../AuthContext";
+import { formatCurrency, formatLongDateToAlbanian } from "../AuthContext";
+import { useToast } from "../ToastProvider";
+import NdryshoServisinPerfunduar from "../NdryshoServisinPerfunduar";
 
 export default function DetajePerProdukt() {
+  const navigate = useNavigate();
   const { produktiID } = useParams();
   const [loading, setLoading] = useState(true);
   const [produkti, setProdukti] = useState(null); // Change to null to handle loading state
@@ -18,52 +21,66 @@ export default function DetajePerProdukt() {
   const [sasiaShitur,setSasiaShitur] = useState(0)
   const [showProfiti,setShowProfiti] = useState(false)
   const [profiti,setProfiti] = useState()
+  const showToast = useToast();
+
+  const [modalNdryshoServisim,setModalNdryshoServisim] = useState(false)
+  const [dataNdrshoServisim,setDataNdryshoServisim] = useState()
   
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const produktiData = await window.api.fetchTableProdukti();
-        const produkti = produktiData.filter(item => item.produktiID == produktiID);
-        setProdukti(produkti);
-        console.log(produkti)
-        const transaksioneData = await window.api.fetchTableQuery(`
-          SELECT 'blerje' AS lloji, b.shifra, s.emertimi AS subjekti, bp.sasia,'0' as profitiProduktit, bp.cmimiPerCope
-          FROM blerje b
-          JOIN blerjeProdukt bp ON b.blerjeID = bp.blerjeID
-          JOIN subjekti s ON b.subjektiID = s.subjektiID
-          JOIN transaksioni t ON t.transaksioniID = b.transaksioniID AND t.lloji = 'blerje'
-          WHERE bp.produktiID = ${produktiID}
-
-          UNION ALL
-
-          SELECT 'shitje' AS lloji, sh.shifra, s.emertimi AS subjekti, sp.sasia,sp.profitiProduktit as 'profitiProduktit',  sp.cmimiShitjesPerCope
-          FROM shitje sh
-          JOIN shitjeProdukti sp ON sh.shitjeID = sp.shitjeID
-          JOIN subjekti s ON sh.subjektiID = s.subjektiID
-          JOIN transaksioni t ON t.transaksioniID = sh.transaksioniID AND t.lloji = 'shitje'
-          WHERE sp.produktiID = ${produktiID}
-
-          UNION ALL
-
-          SELECT 'shpenzim' AS lloji, sh.shifra, 'sp' AS subjekti,'0' as profitiProduktit, shp.sasia, shp.cmimiFurnizimit
-          FROM shpenzimi sh
-          JOIN shpenzimProdukti shp ON sh.shpenzimiID = shp.shpenzimProduktiID
-          JOIN transaksioni t ON t.transaksioniID = sh.transaksioniID AND t.lloji = 'shpenzim'
-          WHERE shp.produktiID = ${produktiID}
-        `);
-        
-        setTransaksionet(transaksioneData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false); // Set loading to false after both data fetches are complete
-      }
-    };
+    
 
     fetchData();
   }, [produktiID]);
 
-  // Filter the transactions based on the filter criteria
+  const fetchData = async () => {
+    try {
+      const produktiData = await window.api.fetchTableProdukti();
+      const produkti = produktiData.filter(item => item.produktiID == produktiID);
+      setProdukti(produkti);
+      console.log(produkti)
+      const transaksioneData = await window.api.fetchTableQuery(`
+        SELECT 'Blerje' AS lloji, b.shifra ,b.blerjeID as 'llojiID', b.dataBlerjes as 'dataTransaksionit', s.emertimi AS subjekti, bp.sasia,'0' as profitiProduktit, bp.cmimiPerCope
+        FROM blerje b
+        JOIN blerjeProdukt bp ON b.blerjeID = bp.blerjeID
+        JOIN subjekti s ON b.subjektiID = s.subjektiID
+        JOIN transaksioni t ON t.transaksioniID = b.transaksioniID AND t.lloji = 'blerje'
+        WHERE bp.produktiID = ${produktiID}
+
+        UNION ALL
+
+        SELECT 'Shitje' AS lloji, sh.shifra,sh.shitjeID as 'llojiID',sh.dataShitjes as 'dataTransaksionit', s.emertimi AS subjekti, sp.sasia,sp.profitiProduktit as 'profitiProduktit',  sp.cmimiShitjesPerCope
+        FROM shitje sh
+        JOIN shitjeProdukti sp ON sh.shitjeID = sp.shitjeID
+        JOIN subjekti s ON sh.subjektiID = s.subjektiID
+        JOIN transaksioni t ON t.transaksioniID = sh.transaksioniID AND t.lloji = 'shitje'
+        WHERE sp.produktiID = ${produktiID}
+
+        UNION ALL
+
+        SELECT 'Shpenzim' AS lloji, sh.shifra,sh.shpenzimiID as 'llojiID',sh.dataShpenzimit as 'dataTransaksionit', 'sp' AS subjekti,'0' as profitiProduktit, shp.sasia, shp.cmimiFurnizimit
+        FROM shpenzimi sh
+        JOIN shpenzimProdukti shp ON sh.shpenzimiID = shp.shpenzimiID
+        JOIN transaksioni t ON t.transaksioniID = sh.transaksioniID AND t.lloji = 'shpenzim'
+        WHERE shp.produktiID = ${produktiID}
+
+        UNION ALL
+
+        SELECT 'Servisim' AS lloji, se.shifra,se.servisimiID as 'llojiID',se.dataPerfundimit as 'dataTransaksionit', s.emertimi AS subjekti, sp.sasia,sp.profitiProduktit as 'profitiProduktit',  sp.cmimiShitjesPerCope
+        FROM servisimi se 
+        JOIN servisProdukti sp ON se.servisimiID = sp.servisimiID
+        JOIN subjekti s ON se.subjektiID = s.subjektiID
+        JOIN transaksioni t ON t.transaksioniID = se.transaksioniID AND t.lloji = 'servisim'
+        WHERE sp.produktiID =  ${produktiID}
+      `);
+      transaksioneData.sort((a, b) => new Date(a.dataTransaksionit) - new Date(b.dataTransaksionit));
+      setTransaksionet(transaksioneData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false); 
+    }
+  };
+
   useEffect(() => {
     const filteredData = transaksionet.filter(item => {
       return (
@@ -91,7 +108,47 @@ export default function DetajePerProdukt() {
     
   }, [filteredTransaksionet]);
 
+  const shifraClick = (item) => {
+    const lloji = item.lloji
+    console.log('item',item)
+    console.log('lloji',lloji)
+    switch(lloji){
+      case 'Shitje'  : navigate(`/ndryshoShitjen/${item.llojiID}`)
+          break;
+      case 'Blerje' : navigate(`/ndryshoBlerjen/${item.llojiID}`)
+          break;
+      case 'Shpenzim' : showToast('Ky Shpenzim eshte nga stoku dhe nuk mund te ndryshohet, vetem te fshihet', 'warning')
+          break;
+      case 'Servisim': showServisimModal(item.llojiID)
+          break;   
+    }
+  }
 
+  
+
+  const showServisimModal = async (id) => {
+    try {
+        const result = await window.api.fetchTableServisi();
+        const data = result.find(item => item.servisimiID == id);
+        
+        if (!data) {
+            showToast('Gabim: Nuk u gjet servisi me këtë ID', 'error');
+            return; 
+        }
+
+        setDataNdryshoServisim(data);
+        setModalNdryshoServisim(true); 
+
+    } catch (error) {
+        showToast('Gabim gjatë marrjes së të dhënave për ndryshim: ' + error, 'error');
+    }
+};
+
+
+  const handleConfirmNdryshoServisinPerfunduar =  () => {
+    fetchData()
+    setModalNdryshoServisim(false)
+  }
  
   return (
     <>
@@ -162,6 +219,7 @@ export default function DetajePerProdukt() {
                       <th scope="col">Shifra</th>
                       <th scope="col">Lloji</th>
                       <th scope="col">Subjekti</th>
+                      <th scope="col">Data e Transaksionit</th>
                       <th scope="col">Sasia</th>
                       <th scope="col">Cmimi per Cope</th>
                       <th scope="col">Totali</th>
@@ -174,9 +232,16 @@ export default function DetajePerProdukt() {
                         return (
                           <tr key={index}>
                             <th scope="row">{filteredTransaksionet.length - index}</th>
-                            <td>{item.shifra || ''}</td>
+                            <td>
+                              <Button variant='' className='hover ' style={{color:'#24AD5D',fontSize:'15px'}} onClick={() => shifraClick(item)}
+                                onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                onMouseLeave={(e) => e.target.style.textDecoration = 'none'}>
+                                {item.shifra || ''}
+                              </Button>
+                            </td>
                             <td>{item.lloji}</td>
                             <td>{item.subjekti}</td>
+                            <td>{formatLongDateToAlbanian(item.dataTransaksionit)}</td>
                             <td>{item.sasia}</td>
                             <td>{formatCurrency(item.cmimiPerCope)}</td>
                             <td>{formatCurrency(totali)|| ''} </td>
@@ -193,7 +258,7 @@ export default function DetajePerProdukt() {
               </div>
             </div>
           </Row>
-          
+              <NdryshoServisinPerfunduar show={modalNdryshoServisim} handleClose={() => setModalNdryshoServisim(false)} data={dataNdrshoServisim} handleConfirm={handleConfirmNdryshoServisinPerfunduar}/>
         </Container>
       )}
     </>
