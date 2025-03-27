@@ -1849,21 +1849,22 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
          transaksioniID = await insertTransaksionin(dataPerTransaksion,connection)
 
          await updateLlojiIDTransaksion(data.shitjeID,transaksioniID,connection)
-      const updateShitjeQuery = `
-          UPDATE shitje
-          SET 
-              lloji = @lloji,
-              komenti = @komenti,
-              totaliPerPagese = @totaliPerPagese,
-              totaliPageses = @totaliPageses,
-              mbetjaPerPagese = @mbetjaPerPagese,
-              dataShitjes = @dataShitjes,
-              menyraPagesesID = @menyraPagesesID,
-              subjektiID = @subjektiID,
-              kohaGarancionit = @kohaGarancionit
-          OUTPUT INSERTED.shitjeID
-          WHERE shitjeID = @shitjeID
-      `;
+
+         const updateShitjeQuery = `
+              UPDATE shitje
+              SET 
+                  lloji = @lloji,
+                  komenti = @komenti,
+                  totaliPerPagese = @totaliPerPagese,
+                  totaliPageses = @totaliPageses,
+                  mbetjaPerPagese = @mbetjaPerPagese,
+                  dataShitjes = @dataShitjes,
+                  menyraPagesesID = @menyraPagesesID,
+                  subjektiID = @subjektiID,
+                  kohaGarancionit = @kohaGarancionit
+              OUTPUT INSERTED.shitjeID
+              WHERE shitjeID = @shitjeID
+          `;
       
 
     const shitjeResult = await connection.request()
@@ -1882,11 +1883,12 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
       const shitjeID = shitjeResult.recordset[0].shitjeID;
 
       let profitiShitjes = 0
-
+      let profitiPerBonuse = 0
       await anuloShitjeProdukti(data);
       console.log('data per ndryshim shitje',data)
 
       for (const produkt of data.produktet) {
+
           console.log('nje produkt te ndryshim shitje,', produkt)
           const insertShitjeProduktiQuery = `
           INSERT INTO shitjeProdukti (
@@ -1905,7 +1907,207 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
             .input('profitiProduktit', sql.Decimal(18, 2), produkt.profiti)
             .query(insertShitjeProduktiQuery);
 
-            profitiShitjes = produkt.profiti + profitiShitjes
+             if(produkt.meFatureTeRregullt == 'po'){
+            
+                let tvshHyrese = (produkt.cmimiBlerjes * produkt.sasiaShitjes) * produkt.tvsh / 100
+                let tvshDalese = produkt.vleraTotaleProduktit * produkt.tvsh / 100
+                let tvsh = tvshDalese - tvshHyrese
+                profitiPerBonuse = (produkt.profiti - tvsh) + profitiPerBonuse
+                profitiShitjes = produkt.profiti + profitiShitjes
+                console.log('produkt me fature',produkt,profitiPerBonuse,profitiShitjes,tvsh)
+
+              }else if(produkt.meFatureTeRregullt == 'jo'){
+
+                profitiShitjes = produkt.profiti + profitiShitjes
+                profitiPerBonuse = Number(produkt.profiti) + profitiPerBonuse
+                console.log('produkt pa fature',produkt,profitiPerBonuse,profitiShitjes)
+
+              }
+
+          // Update the 'sasia' in 'produkti' table
+         if(!produkt.sasiStatike){
+            const updateProduktiQuery = `
+            UPDATE produkti
+            SET sasia = sasia - @sasia
+            WHERE produktiID = @produktiID
+          `;
+
+          await connection.request()
+            .input('produktiID', sql.Int, produkt.produktiID)
+            .input('sasia', sql.Int, produkt.sasiaShitjes)
+            .query(updateProduktiQuery);
+         }
+        }
+
+      let statusi;
+      if (data.mbetjaPerPagese <= 0) {
+        statusi =  0;
+      } else {
+        statusi =  1;
+      }
+
+      const updateProfitiShitjes = `
+      UPDATE profiti
+      SET 
+        shuma = @shuma,
+        statusi = @statusi,
+        dataProfitit = @dataProfitit,
+        shumaPerBonuse = @shumaPerBonuse
+      WHERE 
+        transaksioniID = @transaksioniID
+    `;
+
+    await connection.request()
+      .input('shuma', sql.Decimal(18, 2), profitiShitjes) 
+      .input('transaksioniID', sql.Int, data.transaksioniIDFillestar) 
+      .input('dataProfitit', sql.DateTime, dataDheOra) 
+      .input('statusi', sql.Int, statusi) 
+      .input('shumaPerBonuse', sql.Decimal(18, 2), profitiPerBonuse) 
+      .query(updateProfitiShitjes);
+
+      const tp = newTp - oldTp // sa € osht shtu ose minusu pagesa 
+     
+      if((logjikaPerPagese == 'shtohet+' || logjikaPerPagese == 'shtohet-') || (data.menyraPagesesID != data.menyraPagesesIDFillestare)){
+
+        if(data.menyraPagesesID != data.menyraPagesesIDFillestare){
+
+            await ndryshoBalancin(data.menyraPagesesIDFillestare,data.totaliPagesesFillestare,'-',connection)
+            await ndryshoBalancin(data.menyraPagesesID,data.totaliPageses,'+',connection)
+    
+        }else{
+              await ndryshoBalancin(data.menyraPagesesID,tp,'+',connection)
+          } 
+
+      }      
+    return { success: true };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { success: false, error: error.message };
+  }  
+});
+
+ipcMain.handle('ndryshoShitjenAprovuarOnline', async (event, data) => {
+  let connection;
+  let dataDheOra
+
+  let transaksioniID = null
+  console.log('inside ndrysho Shitjen aprovuar online')
+  try {
+    dataDheOra = await getDateTime(); 
+
+    connection = await sql.connect(config);
+    let pershkrimi
+    const newTotaliPerPagese = data.totaliPerPagese
+    const oldTotaliPerPagese = data.totaliPerPageseFillestare
+    const newKostoPostes = data.kostoPostes
+    const oldKostoPostes = data.oldKostoPostes
+    let logjikaPerPagese 
+    console.log(newTotaliPerPagese,oldTotaliPerPagese,newKostoPostes,oldKostoPostes)
+            // Rasti 1 , pagesa nuk ndryshon
+        if (newTotaliPerPagese !== oldTotaliPerPagese && newKostoPostes === oldKostoPostes) {
+          pershkrimi = `Totali për Pagesë është ndryshuar, pa ndikuar ne Kosto te Postes ${oldKostoPostes}. Ka mundësi që janë shtuar ose hequr produkte.`;
+          logjikaPerPagese = 'nukNdryshon'
+        }else if(newKostoPostes > oldKostoPostes) { 
+            pershkrimi = `Kosto e Postes eshte Rritur:${newKostoPostes}, Produktet nuk jane Ndryshuar.`;
+            logjikaPerPagese = 'shtohet+'
+
+        } else if(newKostoPostes < oldKostoPostes) { 
+            pershkrimi = `Kosto e Postes eshte Zvogluar:${newKostoPostes}, Produktet nuk jane Ndryshuar.`;
+            logjikaPerPagese = 'shtohet-'
+
+        }
+        else {
+          pershkrimi = "Shitja është ndryshuar për arsye të tjera. Kontrollo detajet.";
+          logjikaPerPagese = 'nukNdryshon'
+        }
+
+        const dataPerTransaksion = ({
+          ...data,
+          totaliIPageses:data.totaliPageses,
+          dataDheOra,
+          pershkrimi,
+          lloji:'Modifikim Shitje Online',
+          eshtePublik:1,
+          mbetjaPerPagese:0,
+        })
+    
+         transaksioniID = await insertTransaksionin(dataPerTransaksion,connection)
+
+         await updateLlojiIDTransaksion(data.shitjeID,transaksioniID,connection)
+
+         const updateShitjeQuery = `
+              UPDATE shitje
+              SET 
+                  lloji = @lloji,
+                  komenti = @komenti,
+                  totaliPerPagese = @totaliPerPagese,
+                  totaliPageses = @totaliPageses,
+                  mbetjaPerPagese = @mbetjaPerPagese,
+                  dataShitjes = @dataShitjes,
+                  menyraPagesesID = @menyraPagesesID,
+                  subjektiID = @subjektiID,
+                  kohaGarancionit = @kohaGarancionit
+              OUTPUT INSERTED.shitjeID
+              WHERE shitjeID = @shitjeID
+          `;
+      
+
+    const shitjeResult = await connection.request()
+      .input('lloji', sql.VarChar, data.lloji)
+      .input('komenti', sql.VarChar, data.komenti)
+      .input('totaliPerPagese', sql.Decimal(18, 2), data.totaliPerPagese)
+      .input('totaliPageses', sql.Decimal(18, 2), data.totaliPageses)
+      .input('mbetjaPerPagese', sql.Decimal(18, 2), 0)
+      .input('dataShitjes', sql.DateTime, data.dataShitjes)
+      .input('menyraPagesesID', sql.Int, data.menyraPagesesID)
+      .input('subjektiID', sql.Int, data.subjektiID)
+      .input('kohaGarancionit', sql.Int, data.kohaGarancionit)
+      .input('shitjeID', sql.Int, data.shitjeID)
+      .query(updateShitjeQuery);
+
+      const shitjeID = shitjeResult.recordset[0].shitjeID;
+
+      let profitiShitjes = 0
+      let profitiPerBonuse = 0
+      await anuloShitjeProdukti(data);
+      console.log('data per ndryshim shitje',data)
+
+      for (const produkt of data.produktet) {
+
+          console.log('nje produkt te ndryshim shitje,', produkt)
+          const insertShitjeProduktiQuery = `
+          INSERT INTO shitjeProdukti (
+            shitjeID, produktiID, sasia, cmimiShitjesPerCope, totaliProduktit, komenti, profitiProduktit
+          ) VALUES (
+            @shitjeID, @produktiID, @sasia, @cmimiShitjesPerCope, @totaliProduktit, @komenti, @profitiProduktit
+          )
+          `;
+              await connection.request()
+            .input('shitjeID', sql.Int, shitjeID)
+            .input('produktiID', sql.Int, produkt.produktiID)
+            .input('sasia', sql.Int, produkt.sasiaShitjes)
+            .input('cmimiShitjesPerCope', sql.Decimal(18, 2), produkt.cmimiPerCope)
+            .input('totaliProduktit', sql.Decimal(18, 2), produkt.cmimiPerCope * produkt.sasiaShitjes)
+            .input('komenti', sql.VarChar, produkt.komenti)
+            .input('profitiProduktit', sql.Decimal(18, 2), produkt.profiti)
+            .query(insertShitjeProduktiQuery);
+
+            if(produkt.meFatureTeRregullt == 'po'){
+
+              let tvshHyrese = (produkt.cmimiBlerjes * produkt.sasiaShitjes) * produkt.tvsh / 100
+              let tvshDalese = produkt.vleraTotaleProduktit * produkt.tvsh / 100
+              let tvsh = tvshDalese - tvshHyrese
+              profitiPerBonuse = (produkt.profiti - tvsh) + profitiPerBonuse
+              profitiShitjes = produkt.profiti + profitiShitjes
+              console.log('produkt me fature',produkt,profitiPerBonuse,profitiShitjes,tvsh)
+
+            }else if(produkt.meFatureTeRregullt == 'jo'){
+
+              profitiShitjes = produkt.profiti + profitiShitjes
+              profitiPerBonuse = produkt.profiti + profitiPerBonuse
+              console.log('produkt pa fature',produkt,profitiPerBonuse,profitiShitjes)
+
+            }
 
           // Update the 'sasia' in 'produkti' table
          if(!produkt.sasiStatike){
@@ -1935,19 +2137,41 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
         shuma = @shuma,
         statusi = @statusi,
         dataProfitit = @dataProfitit
+        shumaPerBonuse = @shumaPerBonuse
       WHERE 
         transaksioniID = @transaksioniID
     `;
 
     await connection.request()
-      .input('shuma', sql.Decimal(18, 2), profitiShitjes) 
+      .input('shuma', sql.Decimal(18, 2), profitiShitjes - data.kostoPostes) 
+      .input('shumaPerBonuse', sql.Decimal(18, 2), shumaPerBonuse - data.kostoPostes) 
       .input('transaksioniID', sql.Int, data.transaksioniIDFillestar) 
       .input('dataProfitit', sql.DateTime, dataDheOra) 
       .input('statusi', sql.Int, statusi) 
       .query(updateProfitiShitjes);
 
-      const tp = newTp - oldTp // sa € osht shtu ose minusu pagesa 
+      
 
+      if(data.lloji =='online'){
+        console.log('brenda shitjes online')
+
+        const updateShitjeOnline = `
+        UPDATE shitjeOnline
+        SET 
+          kostoPostes = @kostoPostes,
+          totaliIPranimit = @totaliIPranimit
+        WHERE 
+          shitjeID = @shitjeID
+      `;
+  
+      await connection.request()
+        .input('kostoPostes', sql.Decimal(18, 2), data.kostoPostes) 
+        .input('totaliIPranimit', sql.Decimal(18, 2), data.totaliPranuar) 
+        .input('shitjeID', sql.Int, data.shitjeID) 
+        .query(updateShitjeOnline);
+  
+      }
+     
       if((logjikaPerPagese == 'shtohet+' || logjikaPerPagese == 'shtohet-') || (data.menyraPagesesID != data.menyraPagesesIDFillestare)){
 
         if(data.menyraPagesesID != data.menyraPagesesIDFillestare){
@@ -1956,7 +2180,7 @@ ipcMain.handle('ndryshoShitje', async (event, data) => {
             await ndryshoBalancin(data.menyraPagesesID,data.totaliPageses,'+',connection)
     
         }else{
-              await ndryshoBalancin(data.menyraPagesesID,tp,'+',connection)
+              await ndryshoBalancin(data.menyraPagesesID,data.totaliIPranuar,'+',connection)
           } 
 
       }      
@@ -3050,6 +3274,8 @@ ipcMain.handle('perfundoShitjenOnline', async (event, data) => {
               const updateProfitiShitjes = `
               UPDATE profiti
               SET 
+                shuma = shuma - @kostoPostes,
+                shumaPerBonuse = shumaPerBonuse - @kostoPostes,
                 statusi = @statusi,
                 transaksioniID = @transaksioniID,
                 dataProfitit = @dataProfitit
@@ -3058,10 +3284,12 @@ ipcMain.handle('perfundoShitjenOnline', async (event, data) => {
             `;
         
             await connection.request()
+              .input('kostoPostes', sql.Decimal(18, 2), data.kostoPostes)
               .input('transaksioniID', sql.Int, transaksioniID) 
               .input('statusi', sql.Int, 0) 
               .input('dataProfitit', sql.DateTime, dataDheOra) 
               .input('profitiID', sql.Int, data.profitiID) 
+              .input('shumaPerBonuse', sql.Int, data.kostoPostes) 
               .query(updateProfitiShitjes);
 
             const dataPerPagesa = {
@@ -3075,7 +3303,7 @@ ipcMain.handle('perfundoShitjenOnline', async (event, data) => {
 
             await insertPagesa(dataPerPagesa,connection)
             await ndryshoBalancin(data.menyraPagesesID,data.totaliIPranuar,'+',connection)
-            await ndryshoGjendjenEArkes(data.menyraPagesesID,data.totaliIPranuar,'+',data.nderrimiID,connection)//tested ok
+            await ndryshoGjendjenEArkes(data.menyraPagesesID,data.totaliIPranuar,'+',data.nderrimiID,connection)
 
     return { success: true };
   } catch (error) {
@@ -4294,10 +4522,47 @@ ipcMain.handle('ndryshoParametrat', async (event, data) => {
   }  
 });
 
+//per me shkru garancion
 ipcMain.on('savePDF', (event, { pdfBase64, folderPath, fileName }) => { const filePath = path.join(folderPath, fileName); const buffer = Buffer.from(pdfBase64, 'base64'); fs.writeFile(filePath, buffer, (error) => { if (error) { console.error('Failed to save PDF:', error); } else { console.log('PDF saved successfully to', filePath); } }); });
 
-
 ipcMain.on('openFile', (event, filePath) => { shell.openPath(filePath) .then(() => console.log('File opened successfully')) .catch((error) => console.error('Failed to open file:', error)); });
+
+
+
+ipcMain.handle('print-label', async (event, content) => {
+  const printWindow = new BrowserWindow({
+    show: false,
+    webPreferences: { webSecurity: false }
+  });
+
+  try {
+    await printWindow.loadURL(`data:text/html;charset=UTF-8,${encodeURIComponent(content)}`);
+    
+    const options = {
+      silent: false, // Set to true for automatic printing
+      pageSize: {
+        height: 101600,  // 4 inches (for 4" roll paper, 1 inch = 25400 microns)
+        width: 50800     // 2 inches in microns (25400 * 2)
+      },
+      margins: {
+        marginType: 'none'
+      },
+      printBackground: false,
+      scaleFactor: 100
+    };
+
+    printWindow.webContents.print(options, (success, error) => {
+      if (!success) console.error('Print failed:', error);
+      printWindow.destroy();
+    });
+    
+  } catch (error) {
+    console.error('Print error:', error);
+    printWindow.destroy();
+  }
+});
+
+
 
 
 const createWindow = () => {
@@ -4307,6 +4572,8 @@ const createWindow = () => {
       preload: path.join(__dirname, 'renderer.js'), // Ensure the correct path to preload.js
       contextIsolation: true,  // Enable context isolation for security
       nodeIntegration: true,  // Disable nodeIntegration for security
+      enableRemoteModule: false
+,
     }
   });
   win.maximize()

@@ -22,7 +22,6 @@ export default function SearchInput({ filter,value, onSelect,lloji }) {
         try{
           await window.api.fetchTableSubjekti(filter).then(receivedData => {
             let  filteredData = receivedData.filter(item => item.lloji == filter);
-            console.log('aKaUser:',authData.aKaUser)
             if(authData.aKaUser != 'admin' && filter == 'furnitor'){
               console.log('data',data)
               filteredData = filteredData.filter(item => item.emertimi == 'posta')
@@ -42,7 +41,7 @@ export default function SearchInput({ filter,value, onSelect,lloji }) {
 
     fetchData();
   
-  }, []);
+  }, [authData.aKaUser]);
 
   useEffect(() => {
     setQuery(value);

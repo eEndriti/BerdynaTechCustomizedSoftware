@@ -41,6 +41,10 @@ export default function NdryshoShitjen() {
     const [shitjeProdukti,setShitjeProdukti] = useState()
     const [llojiFillestarIShitjes,setLlojiFillestarIShitjes] = useState()
     const showToast = useToast()
+    const [kostoPostes,setKostoPostes] = useState()
+    const [totaliPranuar,setTotaliPranuar] = useState()
+    const [oldKostoPostes,setOldKostoPostes] = useState()
+
     useEffect(() => {
        
         fetchData();
@@ -86,9 +90,10 @@ export default function NdryshoShitjen() {
                     handleSelectSubjekti(subjectData[0]);
     
                     const productData = await window.api.fetchTableQuery(
-                        `select p.produktiID, p.shifra, p.emertimi, p.pershkrimi, shp.cmimiShitjesPerCope as 'cmimiPerCope', p.sasia, shp.sasia as 'sasiaShitjes', shp.totaliProduktit, shp.komenti , p.sasiStatike
+                        `select p.produktiID, p.shifra,p.meFatureTeRregullt, p.cmimiBlerjes,p.emertimi, p.pershkrimi, shp.cmimiShitjesPerCope as 'cmimiPerCope', p.sasia, shp.sasia as 'sasiaShitjes', shp.totaliProduktit, shp.komenti , p.sasiStatike,k.tvsh
                         from produkti p
                         join shitjeProdukti shp on shp.produktiID = p.produktiID
+						join kategoria k on k.kategoriaID = p.kategoriaID
                         where shp.shitjeID = ${shitjeID}`
                     );
                     setProduktetFillestare(productData);
@@ -97,6 +102,7 @@ export default function NdryshoShitjen() {
                     setMenyratPageses(menyratPagesesData)
 
                     setLlojiShitjes(shitje[0].lloji);
+                    
                     setDataShitjes(shitje[0].dataShitjes.toISOString().slice(0, 10));
                     setKomentiShitjes(shitje[0].komenti)
                     if(shitje[0].kohaGarancionit > 0) {
@@ -111,6 +117,8 @@ export default function NdryshoShitjen() {
                     setMenyraPagesesID(shitje[0].menyraPagesesID)
                     setNrPorosise(shitje[0].nrPorosise)
                     setLlojiFillestarIShitjes(shitje[0].lloji)
+                    setKostoPostes(shitje[0].totaliPerPagese-shitje[0].totaliPageses)
+                    setOldKostoPostes(shitje[0].totaliPerPagese-shitje[0].totaliPageses)
                 } catch (error) {
                     showToast('Error fetching data:' + error , 'error');
                 }
@@ -141,21 +149,32 @@ export default function NdryshoShitjen() {
     }, [produktetFillestare]);
 
     useEffect(() => {
+        const profitii = 0
+
         const total = products.reduce((acc, product) => {
           const cmimiPerCope = parseFloat(product.cmimiPerCope) || 0;
           const sasiaShitjes = parseFloat(product.sasiaShitjes) || 0;
           const cmimiBlerjes = parseFloat(product.cmimiBlerjes) || 0;
-    
+            console.log('vlerat',cmimiBlerjes,sasiaShitjes,cmimiPerCope)
           const totali = cmimiPerCope * sasiaShitjes;
-          const profit = totali - (cmimiBlerjes * sasiaShitjes);
+          const profit = totali - cmimiBlerjes * sasiaShitjes;
+          /*const profit = totali - (cmimiBlerjes * sasiaShitjes);*/
     
           product.profiti = profit;
+          console.log('profit',profit)
     
           return acc + totali;
         }, 0);
         setTotaliPerPagese(total);
         setTotaliPageses(totaliPagesesFillestare)
+        console.log('product',products)
       }, [products]);
+
+      useEffect(() => {
+        setTotaliPranuar(totaliPerPagese - kostoPostes)
+        setTotaliPageses(totaliPerPagese - kostoPostes)
+        setMbetjaPerPagese(0)
+      },[kostoPostes])
 
 
       const handleSelectSubjekti = (result) => {
@@ -169,6 +188,7 @@ export default function NdryshoShitjen() {
 
 
       const handleProductSelect = (product) => {
+        console.log('produkti selektuar',product)
         const updatedProducts = [...products];
         updatedProducts[selectedRow] = product;
     
@@ -244,6 +264,9 @@ export default function NdryshoShitjen() {
           nderrimiID:authData.nderrimiID,
           dataShitjes,
           llojiFillestarIShitjes,
+          kostoPostes,
+          oldKostoPostes,
+          totaliPranuar,
           profitiID:shitje[0].profitiID,
           kohaGarancionit:aKaGarancion ? kohaGarancionit:0,
           produktet: products.map(product => ({
@@ -251,14 +274,21 @@ export default function NdryshoShitjen() {
             sasiaShitjes: product.sasiaShitjes,
             cmimiPerCope: product.cmimiPerCope,
             komenti: product.komenti,
+            vleraTotaleProduktit:product.sasiaShitjes*product.cmimiPerCope,
             profiti:product.profiti,
-            sasiStatike:product.sasiStatike
+            sasiStatike:product.sasiStatike,
+            cmimiBlerjes:product.cmimiBlerjes,
+            meFatureTeRregullt:product.meFatureTeRregullt,
+            tvsh:product.tvsh
           }))
        };
   
     try {
-
-        await window.api.ndryshoShitje(data);
+        if(llojiShitjes == 'dyqan'){
+            await window.api.ndryshoShitje(data);
+        }else if(llojiShitjes == 'online'){
+            await window.api.ndryshoShitjenAprovuarOnline(data);
+        }
         navigate('/faqjaKryesore/' , {state:{showToast:true , message:'Shitja u Ndryshua me Sukses!' , type:'success'}})
 
     } catch (error) {
@@ -510,6 +540,9 @@ export default function NdryshoShitjen() {
                             </InputGroup>
                         </Col>
                         </Form.Group>
+
+                        
+
                         {llojiShitjes == 'dyqan'? <>
                         <Form.Group as={Row} controlId="totaliPageses" className="mb-2">
                         <Form.Label column xs={6} className="text-end">Totali Pageses:</Form.Label>
@@ -539,7 +572,38 @@ export default function NdryshoShitjen() {
                             </InputGroup>
                         </Col>
                         </Form.Group>
-                        </>:
+                        </>
+                        :<>
+                        <Form.Group as={Row} controlId="kostoPostes" className="mb-2">
+                        <Form.Label column xs={6} className="text-end">Kosto e Postes:</Form.Label>
+                        <Col xs={6}>
+                            <InputGroup>
+                            <Form.Control
+                                type="text"
+                                value={kostoPostes}
+                                placeholder='0'
+                                onChange={(e) => setKostoPostes(e.target.value)}
+                                
+                            />
+                            <InputGroup.Text>€</InputGroup.Text>
+                            </InputGroup>
+                        </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row} controlId="totaliIPranuar" className="mb-2">
+                        <Form.Label column xs={6} className="text-end">Totali I Pranuar:</Form.Label>
+                        <Col xs={6}>
+                            <InputGroup>
+                            <Form.Control
+                                type="text"
+                                value={totaliPranuar}
+                                readOnly
+
+                            />
+                            <InputGroup.Text>€</InputGroup.Text>
+                            </InputGroup>
+                        </Col>
+                        </Form.Group>
                         <Form.Group as={Row} controlId="nrPorosiseShuma" className="mb-2">
                         <Form.Label column xs={6} className="text-end">Nr. Porosise:</Form.Label>
                         <Col xs={6}>
@@ -551,7 +615,7 @@ export default function NdryshoShitjen() {
                         />
                         </Col>
                     </Form.Group>
-                    }
+                    </>}
                     </div>
                     <div className="d-flex flex-row justify-content-end">
                         {menyratPageses.map((menyraPageses) => (

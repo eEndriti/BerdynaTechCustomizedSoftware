@@ -1,128 +1,60 @@
-import React, { useRef } from "react";
-import { useReactToPrint } from "react-to-print";
-import JsBarcode from "jsbarcode";
-import { Container, Row, Col, Button, Image } from "react-bootstrap";
+import React, { useRef } from 'react';
 
-const PrintoLabell = ({ type = 'service', data }) => {
-  const labelRef = useRef();
+const PrintoLabell = () => {
+  const labelRef = useRef(null);
 
-  const generateBarcode = (id) => {
-    const canvas = document.createElement("canvas");
-    JsBarcode(canvas, id, {
-      format: "CODE128",
-      displayValue: true, // Show ID below the barcode
-      fontSize: 12,
-      width: 2,
-      height: 40,
-    });
-    return canvas.toDataURL("image/png");
+  const handlePrint = () => {
+    const content = labelRef.current.innerHTML;
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print Label</title>
+          <style>
+            @page { margin: 0; }
+            body { margin: 0; display: flex; align-items: center; justify-content: center; }
+            .label { 
+              width: 2in; 
+              height: 1in; 
+              border: 1px solid #000; 
+              display: flex; 
+              flex-direction: column; 
+              align-items: center; 
+              justify-content: center;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="label">${content}</div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.onload = () => {
+      printWindow.print();
+      printWindow.close();
+    };
   };
 
-  const renderLabel = () => {
-    const barcodeImage = generateBarcode('SH-456872');
-    switch (type) {
-      case "service":
-        return (
-          <Container
-            ref={labelRef}
-            className="label"
-            style={{
-              width: "2in",
-              height: "1in",
-              border: "1px solid black",
-              padding: "1px",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Row>
-              <Col className="text-center">{'Ardit'}</Col>
-              <Col className="text-center">{'03554921588'}</Col>
-            </Row>
-            <Row className="d-flex flex-row justify-content-center">
-                <Col style={{fontSize:'12px'}} >{'A+ Q- D+ G+'}</Col>
-                <Col style={{fontSize:'12px'}} >{'18.01.2025'}</Col>
-            </Row>
-            <Row>
-              <Image style={{maxHeight: '100%' , minHeight:'100%' , fontSize:'25px'}} className="w-100" src={barcodeImage} alt="Barcode" fluid />
-            </Row>                           
-          </Container>
-        );
-      case "product":
-        return (
-          <Container
-            ref={labelRef}
-            className="label"
-            style={{
-              width: "2in",
-              height: "1in",
-              border: "1px solid black",
-              padding: "5px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Row>
-              <Col>
-                <Image src={barcodeImage} alt="Barcode" fluid />
-              </Col>
-            </Row>
-            <Row>
-              <Col className="text-center">{'data.processor'}</Col>
-            </Row>
-            <Row>
-              <Col className="text-center">{'data.specifications'}</Col>
-            </Row>
-            <Row>
-              <Col className="text-center">{'data.price'}</Col>
-            </Row>
-          </Container>
-        );
-      case "minimal":
-        return (
-          <Container
-            ref={labelRef}
-            className="label"
-            style={{
-              width: "2in",
-              height: "1in",
-              border: "1px solid black",
-              padding: "5px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Row>
-              <Col>
-                <Image src={barcodeImage} alt="Barcode" fluid />
-              </Col>
-            </Row>
-            <Row>
-              <Col className="text-center">{'data.price'}</Col>
-            </Row>
-          </Container>
-        );
-      default:
-        return <p>Invalid label type</p>;
-    }
+  const labelStyle = {
+    width: '2in',
+    height: '1in',
+    border: '1px solid #000',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '20px auto'
   };
-
-  const printFn = useReactToPrint({
-    contentRef: labelRef.current,
-    documentTitle: "AwesomeFileName"
-  });
 
   return (
-    <div className="mt-5">
-      <Container ref={labelRef.current} className="label" /> 
-      {renderLabel()}
-      <Button variant="primary" className="mt-3" onClick={printFn}>
-        Print
-      </Button>
+    <div>
+      <div style={labelStyle} ref={labelRef}>
+        <p style={{ margin: 0, fontSize: '10px' }}>Dummy: Product Name</p>
+        <p style={{ margin: 0, fontSize: '8px' }}>Price: $9.99</p>
+      </div>
+      <button onClick={handlePrint}>Print Label</button>
     </div>
   );
 };

@@ -22,7 +22,7 @@ export default function DetajePerProdukt() {
   const [showProfiti,setShowProfiti] = useState(false)
   const [profiti,setProfiti] = useState()
   const showToast = useToast();
-
+  const [margjina,setMargjina] = useState()
   const [modalNdryshoServisim,setModalNdryshoServisim] = useState(false)
   const [dataNdrshoServisim,setDataNdryshoServisim] = useState()
   
@@ -94,7 +94,7 @@ export default function DetajePerProdukt() {
 
   useEffect(() => {
     const totalSasiaShitur = filteredTransaksionet.reduce((total, item) => {
-      return item.lloji == 'shitje' ? total + item.sasia : total;
+      return item.lloji == 'Shitje'  || item.lloji == 'Servisim'? total + item.sasia : total;
     }, 0);
     setSasiaShitur(totalSasiaShitur)
     
@@ -102,10 +102,20 @@ export default function DetajePerProdukt() {
 
   useEffect(() => {
     const totalProfitit = filteredTransaksionet.reduce((total, item) => {
-      return item.lloji == 'shitje' ? total + item.profitiProduktit : total;
+      return item.lloji == 'Shitje' || item.lloji == 'Servisim' ? total + Number(item.profitiProduktit) : total;
     }, 0);
     setProfiti(totalProfitit)
-    
+
+    console.log('trs',filteredTransaksionet)
+
+    const totalQarkullimi = filteredTransaksionet.reduce((total, item) => {
+      return item.lloji == 'Shitje' || item.lloji == 'Servisim' ? total + Number(item.cmimiPerCope * item.sasia) : total;
+    },0)
+
+    const margjina = (totalProfitit / totalQarkullimi) * 100
+    if(margjina > 0){
+      setMargjina(margjina.toFixed(2))
+    }
   }, [filteredTransaksionet]);
 
   const shifraClick = (item) => {
@@ -161,6 +171,7 @@ export default function DetajePerProdukt() {
                   <h5 className="w-25 float-end"><span className="w-25 float-end" onMouseEnter={()=> setShowProfiti(true)} onMouseLeave={() => setShowProfiti(false)}><FontAwesomeIcon icon={faUserSecret} className={showProfiti ? 'text-dark' : 'text-light'}/></span></h5>
             </Col>
           </Row>
+          
             <Row>
               {produkti ? <Col className="border-top border-dark border px-2 py-3 d-flex flex-row flex-wrap justify-content-between">
                 <h5 className="m-2">Shifra: <span className="fs-5 fw-bold float-center">{produkti? produkti[0].shifra : ''}</span></h5>
@@ -169,7 +180,11 @@ export default function DetajePerProdukt() {
                 <h5 className="m-2">Cmimi i Shitjes: <span className="fs-5 fw-bold float-center">{formatCurrency(produkti[0].cmimiShitjes)}</span></h5>
                 <h5 className="m-2">Sasia Aktuale: <span className="fs-5 fw-bold float-center">{produkti[0].sasiStatike ? 'Sasi Statike' : produkti[0].sasia}</span></h5>
                 <h5 className="m-2">Sasia e Shitur: <span className="fs-5 fw-bold float-center">{sasiaShitur}</span></h5>
-                {showProfiti &&                 <h5 className="m-2">Profiti nga ky Produkt: <span className="fs-5 fw-bold float-center">{formatCurrency(profiti)}</span></h5>
+                {showProfiti && 
+                  <>
+                    <h5 className="m-2">Profiti nga ky Produkt: <span className="fs-5 fw-bold float-center">{formatCurrency(profiti)}</span></h5>
+                    <h5 className="m-2">Margjina Aktuale e Profitit: <span className="fs-5 fw-bold float-center">{margjina}%</span></h5>
+                  </>
                 }
               </Col>:''}
             </Row>

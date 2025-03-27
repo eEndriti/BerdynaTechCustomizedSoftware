@@ -34,11 +34,13 @@ export default function Blerjet() {
 
     useEffect(() => {
         fetchData()
-        if(authData.aKaUser != 'admin'){
-            setStartDate(localTodayDate)
-            setEndDate(localTodayDate)
+        if (authData.aKaUser !== undefined) { 
+            if (authData.aKaUser != 'admin') {
+                setEndDate(localTodayDate);
+                setStartDate(localTodayDate);
+            }
         }
-    }, [triggerReload]);
+    }, [triggerReload,authData.aKaUser]);
 
     const fetchData = async () => {
         try {

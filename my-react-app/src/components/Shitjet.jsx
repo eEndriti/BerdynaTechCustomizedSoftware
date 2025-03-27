@@ -35,13 +35,17 @@ export default function Shitjet() {
     const [triggerReload, setTriggerReload] = useState(false);
 
     useEffect(() => {
-        fetchData()
-        if(authData.aKaUser != 'admin'){
-            setEndDate(localTodayDate);
-            setStartDate(localTodayDate)
+        fetchData();
+        console.log('userType', authData.aKaUser);
+    
+        if (authData.aKaUser !== undefined) { 
+            if (authData.aKaUser != 'admin') {
+                setEndDate(localTodayDate);
+                setStartDate(localTodayDate);
+            }
         }
-       
-    }, [triggerReload]);    
+    }, [triggerReload, authData.aKaUser]); 
+     
 
     const fetchData = async () => {
         await window.api.fetchTableShitje().then((receivedData) => {

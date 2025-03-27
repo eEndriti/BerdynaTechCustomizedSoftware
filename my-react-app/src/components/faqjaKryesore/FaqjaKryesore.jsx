@@ -3,7 +3,7 @@ import { Container,Row,Col } from 'react-bootstrap'
 import Transaksionet from './Transaksionet';
 import Porosite from './Porosite';
 import Serviset from './Serviset';
-import {ToastContainer } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import { useToast } from '../ToastProvider';
 import { useLocation } from "react-router-dom";
 

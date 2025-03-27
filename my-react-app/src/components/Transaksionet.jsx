@@ -83,16 +83,6 @@ export default function Transaksionet() {
   const handleCloseModal = () => setShowModal(false);
 
 
-  const calculateTotal = (transaksionet, field) => 
-    transaksionet
-      .reduce((acc, transaksion) => {
-        return transaksion.lloji !== 'Blerje' ? acc + transaksion[field] : acc;
-      }, 0)
-      .toFixed(2);
-
-  const totalPerPagese = calculateTotal(filteredTransaksionet, 'totaliperPagese');
-  const totaliIPaguar = calculateTotal(filteredTransaksionet, 'totaliIPageses');
-  const mbetjaPerPagese = calculateTotal(filteredTransaksionet, 'mbetjaPerPagese');
   
 
   return (
@@ -199,13 +189,7 @@ export default function Transaksionet() {
           </Table>
         </Row>
       )}
-      <Row>
-        <Col className='text-center d-flex flex-wrap justify-content-center align-items-end mt-5 p-2 m-2'>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Totali per Pagese : <span className='fs-4 fw-bold mainTextColor p-2 d-inline'>{totalPerPagese} €</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Totali i Paguar : <span className='fs-4 fw-bold mainTextColor p-2 d-inline'>{totaliIPaguar} €</span></h5>
-          <h5 className='mx-5 mt-2 border rounded p-3'>Mbetja per Pagese : <span className='fs-4 fw-bold mainTextColor p-2 d-inline'>{mbetjaPerPagese} €</span></h5>
-        </Col>
-      </Row>
+     
       <ModalPerPyetje
         show={showModal}
         handleClose={handleCloseModal}

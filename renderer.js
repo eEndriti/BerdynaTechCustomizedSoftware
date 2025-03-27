@@ -92,8 +92,11 @@ contextBridge.exposeInMainWorld('api', {
     ndryshoProduktin: (data) => ipcRenderer.invoke('ndryshoProduktin', data),
     ndryshoSubjektin: (data) => ipcRenderer.invoke('ndryshoSubjektin', data),
     ndryshojeAvansinNderrimitAktual: (data) => ipcRenderer.invoke('ndryshojeAvansinNderrimitAktual', data), 
+    ndryshoShitjenAprovuarOnline: (data) => ipcRenderer.invoke('ndryshoShitjenAprovuarOnline', data), 
+
 
     savePDF: (data) => ipcRenderer.send('savePDF', data  ),
-    openFile: (filePath) => ipcRenderer.send('openFile', filePath)
-
+    openFile: (filePath) => ipcRenderer.send('openFile', filePath),
+    getPrinters: () => ipcRenderer.invoke('get-printers'),
+  printLabel: (options) => ipcRenderer.invoke('print-label', options)
      })

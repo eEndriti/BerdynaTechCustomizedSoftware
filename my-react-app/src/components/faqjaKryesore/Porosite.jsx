@@ -5,8 +5,10 @@ import { faEdit, faTrashCan,faCheck } from '@fortawesome/free-solid-svg-icons';
 import ModalPerPyetje from '../ModalPerPyetje'
 import AuthContext,{formatCurrency} from '../AuthContext';
 import { useToast } from '../ToastProvider';
+import { useNavigate } from 'react-router-dom';
 
 export default function Porosite() {
+  const navigate  = useNavigate()
   const [loading,setLoading] = useState(false)
   const [shitjetOnline,setShitjetOnline] = useState([])
   const [dataPerAprovim,setDataPerAprovim] = useState({kostoPostes:3,totaliIPranuar:0})
@@ -107,6 +109,11 @@ export default function Porosite() {
       showToast("Gabim gjatë aprovimit të shitjes!", "error");
         }
       }
+
+      const shifraClick = (item) => {
+         navigate(`/ndryshoShitjen/${item.shitjeID}`)           
+      }
+  
   return (
    <Container fluid >
      <Col>
@@ -129,7 +136,9 @@ export default function Porosite() {
                     {shitjetOnline.slice().reverse().map((item, index) => (
                       <tr key={index}>
                     <td>{shitjetOnline.length - index}</td>
-                    <td>{item.shifra}</td>
+                    <td>
+                        {item.shifra}
+                    </td>
                         <td>{item.nrPorosise}</td>
                         <td>
                           {item.dataShitjes
@@ -140,13 +149,7 @@ export default function Porosite() {
                         <td>{item.totaliPerPagese}</td>
                         <td>{item.komenti}</td>
                         <td>
-                          <Button
-                            variant="outline-primary"
-                            className="action-btn mx-1"
-                            disabled
-                          >
-                            <FontAwesomeIcon icon={faEdit} />
-                          </Button>
+                          
                           <Button
                             variant="outline-danger"
                             className="action-btn mx-1"
