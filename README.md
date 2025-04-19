@@ -46,14 +46,6 @@ TechStore Manager is a modern desktop application crafted for managing the **ent
 
 ---
 
-
-
-## 📷 Sneak Peek
-
-> [Optional: Add some screenshots, or a demo GIF here]
-
----
-
 ## 💡 Let’s Talk
 
 If you're interested in using, or testing, reach out!  
